@@ -32,6 +32,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(36,28,26
 .kpi-icon svg{width:18px;height:18px}
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.03em}.kpi{font-size:25px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
 .tabs{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+@media(max-width:760px){.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin:0 -16px 14px;padding-left:16px;padding-right:16px}.tabs::-webkit-scrollbar{height:5px}.tabs::-webkit-scrollbar-thumb{background:#E4D5C9;border-radius:99px}.tab{flex:none}}
 .tab{border:1px solid transparent;background:#F1E8E1;color:#5B4B42;border-radius:999px;padding:9px 15px;display:inline-flex;align-items:center;gap:7px;box-shadow:none}
 .tab svg{width:15px;height:15px}
 .tab.active{background:var(--ink);color:#fff}.tab:hover{transform:none;box-shadow:none;background:#EADDD2}.tab.active:hover{background:var(--ink)}
@@ -43,18 +44,33 @@ table{border-collapse:collapse;width:100%}
 #alunos .tablebox tbody tr:hover{background:#FCF8F4}#alunos .tablebox tbody tr:nth-child(even){background:#FDFAF7}
 .countPill{background:var(--brand-soft);color:var(--brand-dark);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;white-space:nowrap}
 .avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:var(--blue-soft);color:var(--blue);font-weight:800;font-size:10px;margin-right:8px;vertical-align:middle}
-.studentCards{display:none;flex-direction:column;gap:10px;margin-top:4px}
-.studentCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px;box-shadow:var(--shadow-sm)}
-.studentCard .schead{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.studentCard .sname{font-weight:800;font-size:15px;display:flex;align-items:center}
-.studentCard .sbody{margin-top:8px;display:flex;flex-direction:column}
-.studentCard .srow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
-.studentCard .srow:first-child{border-top:0}
-.studentCard .slabel{color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.studentCard .sval{text-align:right;max-width:62%}
-.studentCard .sactions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.studentCard .sactions button{flex:1;min-width:84px}
-@media(max-width:760px){#alunos .tablebox{display:none}.studentCards{display:flex}}
+.cardList{display:none;flex-direction:column;gap:10px;margin-top:4px}
+.dataCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px;box-shadow:var(--shadow-sm)}
+.dataCard .schead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dataCard .sname{font-weight:800;font-size:15px;display:flex;align-items:center}
+.dataCard .sbody{margin-top:8px;display:flex;flex-direction:column}
+.dataCard .srow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.dataCard .srow:first-child{border-top:0}
+.dataCard .slabel{color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.dataCard .sval{text-align:right;max-width:62%}
+.dataCard .stotal{font-weight:800;font-size:15px;color:var(--brand-dark)}
+.dataCard .sactions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dataCard .sactions button{flex:1;min-width:84px}
+.dataCard .sedit{width:100%;margin-top:4px}
+.dataCard .schecks{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:8px}
+.agenda{display:none}
+.agendaDay{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.agendaDate{font-weight:800;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.agendaDate .dowChip{background:var(--brand-soft);color:var(--brand-dark);border-radius:999px;padding:2px 9px;font-size:10px;font-weight:800;text-transform:uppercase}
+.agendaEvent{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;cursor:pointer}
+.agendaEvent:first-of-type{border-top:0}
+.agendaEvent .adot{width:8px;height:8px;border-radius:999px;flex:none}
+@media(max-width:760px){
+ #alunos .tablebox,#cobranca .tablebox,#financeiro .tablebox,#feriados .tablebox{display:none}
+ #alunos .cardList,#cobranca .cardList,#financeiro .cardList,#feriados .cardList{display:flex}
+ #cal .calendar{display:none}
+ .agenda{display:block}
+}
 .grid2{display:grid;grid-template-columns:1.5fr .8fr;gap:14px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field label{display:block;font-size:11px;font-weight:800;color:#8A6F5D;margin-bottom:5px}.field input,.field select,.field textarea{width:100%}
 .daysbox{display:flex;gap:6px;flex-wrap:wrap}.daybtn{padding:6px 10px;font-size:11px;background:#F1E8E1;border:1px solid var(--line);border-radius:999px}.daybtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.dow{text-align:center;color:var(--muted);font-size:11px;font-weight:800;padding:5px}.day{min-height:100px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px}.daynum{font-weight:800}.event{margin-top:4px;border-radius:6px;padding:3px 6px;font-size:10px;background:var(--blue-soft);color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event.cancel{background:var(--red-soft);color:var(--red);text-decoration:line-through}.event.move{background:var(--amber-soft);color:var(--amber)}.event.holiday{background:#F1E8E1;color:#8A776D}
@@ -105,20 +121,22 @@ table{border-collapse:collapse;width:100%}
  <section id="cobranca" class="panel active">
   <div class="tablebox"><table><thead><tr>
    <th>Aluno</th><th>Valor/aula</th><th>Dias / horários</th><th>Previstas</th><th>Datas das aulas</th><th>Feriados</th><th>Canceladas</th><th>Remarcadas</th><th>Créditos</th><th>Total</th><th>Ações</th>
-  </tr></thead><tbody id="billBody"></tbody></table></div><div class="note" style="margin-top:10px"><b>Datas das aulas:</b> clique em “📅 Ver aulas” na linha do aluno para ver todas as datas programadas no mês, com horário. Verde = aula programada, vermelho = cancelada e amarelo = remarcada. Clique na aula no calendário para alterar seu status.</div>
+  </tr></thead><tbody id="billBody"></tbody></table></div>
+  <div class="cardList" id="billCards"></div>
+  <div class="note" style="margin-top:10px"><b>Datas das aulas:</b> clique em “📅 Ver aulas” na linha do aluno para ver todas as datas programadas no mês, com horário. Verde = aula programada, vermelho = cancelada e amarelo = remarcada. Clique na aula no calendário para alterar seu status.</div>
  </section>
 
  <section id="alunos" class="panel">
   <div class="card">
    <div class="bar"><button class="primary" onclick="openStudent()">+ Novo aluno</button><span class="note">Tudo nesta tabela é editável. Clique no lápis para alterar nome, valor e dias fixos.</span><span class="countPill" id="studentCount" style="margin-left:auto"></span></div>
    <div class="tablebox"><table><thead><tr><th>Nome</th><th>Valor/hora-aula</th><th>Dias fixos</th><th>Duração</th><th>Status</th><th>Observações</th><th>Ações</th></tr></thead><tbody id="studentBody"></tbody></table></div>
-   <div class="studentCards" id="studentCards"></div>
+   <div class="cardList" id="studentCards"></div>
   </div>
  </section>
 
  <section id="cal" class="panel">
   <div class="grid2">
-   <div class="card"><h3 id="calTitle"></h3><div class="calendar" id="calendarGrid"></div></div>
+   <div class="card"><h3 id="calTitle"></h3><div class="calendar" id="calendarGrid"></div><div class="agenda" id="agendaList"></div></div>
    <div class="card"><h3>Como lançar uma alteração</h3>
     <div class="note">Clique em qualquer aula do calendário. Você poderá marcar <b>realizada</b>, <b>cancelada</b>, <b>remarcada</b>, definir a nova data e escolher se a aula deve ou não ser cobrada. A alteração fica salva no navegador.</div>
     <hr>
@@ -143,12 +161,14 @@ table{border-collapse:collapse;width:100%}
   </div>
   <div class="tablebox"><table><thead><tr><th>Aluno</th><th>Valor</th><th>Vencimento</th><th>Recebido</th><th>Saldo</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="financeBody"></tbody></table></div>
+  <div class="cardList" id="finCards"></div>
  </section>
 
  <section id="feriados" class="panel">
   <div class="card">
    <div class="bar"><button class="primary" onclick="addHoliday()">+ Adicionar feriado</button></div>
    <div class="tablebox"><table><thead><tr><th>Data</th><th>Nome</th><th>Desconta aula?</th><th>Ação</th></tr></thead><tbody id="holidayBody"></tbody></table></div>
+   <div class="cardList" id="holCards"></div>
   </div>
  </section>
 
@@ -245,11 +265,25 @@ function openLessonDates(sid){
 function recalc(){
  let total=0,lessons=0,adjust=0,cancels=0;
  const b=document.getElementById('billBody');b.innerHTML='';
+ const billCards=document.getElementById('billCards');if(billCards)billCards.innerHTML='';
  data.students.filter(s=>s.active).forEach(s=>{
   const c=calcStudent(s);total+=c.total;lessons+=c.chargeCount;adjust+=c.adjust;cancels+=c.cancel;
+  const daysText=s.days.length?s.days.map(d=>d+' '+((s.times&&s.times[d])||'—')).join(' · '):'<span class="pamber">Configurar</span>';
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td class="name"><b>${esc(s.name)}</b></td><td>${money(s.rate)}</td><td>${s.days.length?s.days.map(d=>d+' '+((s.times&&s.times[d])||'—')).join(' · '):'<span class="pamber">Configurar</span>'}</td><td>${c.planned}</td><td><button onclick="openLessonDates('${s.id}')">📅 Ver aulas (${c.planned})</button></td><td>${c.holidays}</td><td>${c.cancel}</td><td>${c.moved}</td><td>${c.credit}</td><td class="money">${money(c.total)}</td><td><button onclick="openStudent('${s.id}')">✎ Editar</button> <button class="success" onclick="copyBillingMessage('${s.id}')">💬 Cobrança</button></td>`;
+  tr.innerHTML=`<td class="name"><b>${esc(s.name)}</b></td><td>${money(s.rate)}</td><td>${daysText}</td><td>${c.planned}</td><td><button onclick="openLessonDates('${s.id}')">📅 Ver aulas (${c.planned})</button></td><td>${c.holidays}</td><td>${c.cancel}</td><td>${c.moved}</td><td>${c.credit}</td><td class="money">${money(c.total)}</td><td><button onclick="openStudent('${s.id}')">✎ Editar</button> <button class="success" onclick="copyBillingMessage('${s.id}')">💬 Cobrança</button></td>`;
   b.appendChild(tr);
+  if(billCards){
+   const extras=[c.holidays?`${c.holidays} feriado(s)`:'',c.cancel?`${c.cancel} cancelada(s)`:'',c.moved?`${c.moved} remarcada(s)`:'',c.credit?`${c.credit} crédito(s)`:''].filter(Boolean).join(' · ');
+   const card=document.createElement('div');card.className='dataCard';
+   card.innerHTML=`<div class="schead"><span class="sname">${esc(s.name)}</span><span class="stotal">${money(c.total)}</span></div>
+   <div class="sbody">
+    <div class="srow"><span class="slabel">Valor/aula</span><span class="sval">${money(s.rate)}</span></div>
+    <div class="srow"><span class="slabel">Dias/horários</span><span class="sval">${daysText}</span></div>
+    ${extras?`<div class="srow"><span class="slabel">Ajustes</span><span class="sval">${extras}</span></div>`:''}
+   </div>
+   <div class="sactions"><button onclick="openLessonDates('${s.id}')">📅 Ver aulas (${c.planned})</button><button onclick="openStudent('${s.id}')">✎ Editar</button><button class="success" onclick="copyBillingMessage('${s.id}')">💬 Cobrança</button></div>`;
+   billCards.appendChild(card);
+  }
  });
  document.getElementById('total').textContent=money(total);document.getElementById('active').textContent=data.students.filter(s=>s.active).length;
  document.getElementById('lessons').textContent=lessons;document.getElementById('adjust').textContent=money(adjust);document.getElementById('cancels').textContent=cancels;
@@ -262,9 +296,24 @@ function paymentStatus(s,c){const p=getPayment(s.id),t=c.total,r=Number(p.receiv
 function statusLabel(st){return st==='paid'?'Pago':st==='partial'?'Parcial':st==='overdue'?'Atrasado':'Pendente'}
 function renderFinance(){
  let previsto=0,recebido=0,pendente=0,atrasado=0,parcial=0;const b=document.getElementById('financeBody');if(!b)return;b.innerHTML='';
+ const finCards=document.getElementById('finCards');if(finCards)finCards.innerHTML='';
  data.students.filter(s=>s.active).forEach(s=>{const c=calcStudent(s),p=getPayment(s.id),st=paymentStatus(s,c),r=Number(p.received||0),saldo=Math.max(0,c.total-r);previsto+=c.total;recebido+=r;if(st==='overdue')atrasado+=saldo;else if(st==='partial')parcial+=saldo;else if(st==='pending')pendente+=saldo;
  const due=String(p.dueDay||data.config.dueDay||5).padStart(2,'0')+'/'+String(month()+1).padStart(2,'0')+'/'+year(),pill=st==='paid'?'pgreen':st==='pending'?'pamber':'pred';
- const tr=document.createElement('tr');tr.innerHTML=`<td><b>${esc(s.name)}</b></td><td class="money">${money(c.total)}</td><td>${due}</td><td>${money(r)}</td><td class="money">${money(saldo)}</td><td><span class="pill ${pill}">${statusLabel(st)}</span></td><td><button class="success" onclick="openPayment('${s.id}')">💰 Dar baixa</button> <button class="primary" onclick="openPixInstructions('${s.id}')">💜 Pix Nubank</button> <button onclick="emailBilling('${s.id}')">📧 E-mail</button></td>`;b.appendChild(tr)});
+ const statusPill=`<span class="pill ${pill}">${statusLabel(st)}</span>`;
+ const tr=document.createElement('tr');tr.innerHTML=`<td><b>${esc(s.name)}</b></td><td class="money">${money(c.total)}</td><td>${due}</td><td>${money(r)}</td><td class="money">${money(saldo)}</td><td>${statusPill}</td><td><button class="success" onclick="openPayment('${s.id}')">💰 Dar baixa</button> <button class="primary" onclick="openPixInstructions('${s.id}')">💜 Pix Nubank</button> <button onclick="emailBilling('${s.id}')">📧 E-mail</button></td>`;b.appendChild(tr);
+ if(finCards){
+  const card=document.createElement('div');card.className='dataCard';
+  card.innerHTML=`<div class="schead"><span class="sname">${esc(s.name)}</span>${statusPill}</div>
+  <div class="sbody">
+   <div class="srow"><span class="slabel">Valor</span><span class="sval">${money(c.total)}</span></div>
+   <div class="srow"><span class="slabel">Vencimento</span><span class="sval">${due}</span></div>
+   <div class="srow"><span class="slabel">Recebido</span><span class="sval">${money(r)}</span></div>
+   <div class="srow"><span class="slabel">Saldo</span><span class="sval stotal">${money(saldo)}</span></div>
+  </div>
+  <div class="sactions"><button class="success" onclick="openPayment('${s.id}')">💰 Dar baixa</button><button class="primary" onclick="openPixInstructions('${s.id}')">💜 Pix Nubank</button><button onclick="emailBilling('${s.id}')">📧 E-mail</button></div>`;
+  finCards.appendChild(card);
+ }
+ });
  document.getElementById('finPrevisto').textContent=money(previsto);document.getElementById('finRecebido').textContent=money(recebido);document.getElementById('finPendente').textContent=money(pendente);document.getElementById('finAtrasado').textContent=money(atrasado);document.getElementById('finParcial').textContent=money(parcial);
 }
 function openPayment(sid){
@@ -313,7 +362,7 @@ function renderStudents(){
   const statusPill=`<span class="pill ${s.active?'pgreen':'pred'}">${s.active?'Ativo':'Inativo'}</span>`;
   const tr=document.createElement('tr');tr.innerHTML=`<td><span class="avatar">${esc(initials(s.name))}</span><b>${esc(s.name)}</b></td><td>${money(s.rate)}</td><td>${daysText}</td><td>${s.duration||60} min</td><td>${statusPill}</td><td>${esc(s.notes||'')}</td><td><button onclick="openStudent('${s.id}')">✎</button> <button class="success" onclick="copyBillingMessage('${s.id}')">💬</button> <button class="danger" onclick="removeStudent('${s.id}')">Excluir</button></td>`;b.appendChild(tr);
   if(cardsBox){
-   const card=document.createElement('div');card.className='studentCard';
+   const card=document.createElement('div');card.className='dataCard';
    card.innerHTML=`<div class="schead"><span class="sname"><span class="avatar">${esc(initials(s.name))}</span>${esc(s.name)}</span>${statusPill}</div>
    <div class="sbody">
     <div class="srow"><span class="slabel">Valor/hora-aula</span><span class="sval">${money(s.rate)}</span></div>
@@ -329,8 +378,19 @@ function renderStudents(){
 }
 function renderHolidays(){
  const b=document.getElementById('holidayBody');b.innerHTML='';
+ const holCards=document.getElementById('holCards');if(holCards)holCards.innerHTML='';
  data.holidays.sort((a,b)=>a.date.localeCompare(b.date)).forEach(h=>{
-  const tr=document.createElement('tr');tr.innerHTML=`<td><input class="edit" type="date" value="${h.date}" onchange="editHoliday('${h.id}','date',this.value)"></td><td><input class="edit" value="${escAttr(h.name)}" onchange="editHoliday('${h.id}','name',this.value)"></td><td><input type="checkbox" ${h.discount?'checked':''} onchange="editHoliday('${h.id}','discount',this.checked)"> Descontar</td><td><button class="danger" onclick="deleteHoliday('${h.id}')">Excluir</button></td>`;b.appendChild(tr)
+  const tr=document.createElement('tr');tr.innerHTML=`<td><input class="edit" type="date" value="${h.date}" onchange="editHoliday('${h.id}','date',this.value)"></td><td><input class="edit" value="${escAttr(h.name)}" onchange="editHoliday('${h.id}','name',this.value)"></td><td><input type="checkbox" ${h.discount?'checked':''} onchange="editHoliday('${h.id}','discount',this.checked)"> Descontar</td><td><button class="danger" onclick="deleteHoliday('${h.id}')">Excluir</button></td>`;b.appendChild(tr);
+  if(holCards){
+   const card=document.createElement('div');card.className='dataCard';
+   card.innerHTML=`<div class="schead"><span class="sname">${escAttr(h.name)||'Feriado'}</span><button class="danger" onclick="deleteHoliday('${h.id}')">Excluir</button></div>
+   <div class="sbody">
+    <div class="srow" style="flex-direction:column;align-items:stretch"><span class="slabel">Data</span><input class="edit sedit" type="date" value="${h.date}" onchange="editHoliday('${h.id}','date',this.value)"></div>
+    <div class="srow" style="flex-direction:column;align-items:stretch"><span class="slabel">Nome</span><input class="edit sedit" value="${escAttr(h.name)}" onchange="editHoliday('${h.id}','name',this.value)"></div>
+    <label class="schecks"><input type="checkbox" ${h.discount?'checked':''} onchange="editHoliday('${h.id}','discount',this.checked)"> Descontar aula neste dia</label>
+   </div>`;
+   holCards.appendChild(card);
+  }
  })
 }
 function renderCalendar(){
@@ -338,10 +398,24 @@ function renderCalendar(){
  dayNames.forEach(x=>{let e=document.createElement('div');e.className='dow';e.textContent=x;g.appendChild(e)});
  let first=new Date(y,m,1).getDay();for(let i=0;i<first;i++)g.appendChild(document.createElement('div'));
  let n=new Date(y,m+1,0).getDate();
+ const agenda=document.getElementById('agendaList');if(agenda)agenda.innerHTML='';
  for(let d=1;d<=n;d++){let dt=new Date(y,m,d),iso=keyDate(dt),cell=document.createElement('div');cell.className='day';cell.innerHTML='<div class="daynum">'+d+'</div>';
-  let hol=data.holidays.find(h=>h.date===iso);if(hol){let e=document.createElement('div');e.className='event holiday';e.textContent='⚪ '+hol.name;cell.appendChild(e)}
-  data.students.filter(s=>s.active&&s.days.includes(dayNames[dt.getDay()])).forEach(s=>{let ev=getEv(s.id,iso),e=document.createElement('div');e.className='event '+(ev.credit===true?'move':ev.status==='cancelled'?'cancel':(ev.status==='moved'||ev.status==='rescheduled')?'move':'');e.textContent=(ev.credit===true?'🟣 ':ev.status==='cancelled'?'🔴 ':ev.status==='moved'?'🟠 ':ev.status==='rescheduled'?'🟢 ':'🔵 ')+s.name+' · '+((s.times&&s.times[dayNames[dt.getDay()]])||'')+' · '+money(s.rate);e.onclick=()=>openEvent(s.id,iso);cell.appendChild(e)});
-  g.appendChild(cell)
+  const dayBox=document.createElement('div');dayBox.className='agendaDay';
+  dayBox.innerHTML=`<div class="agendaDate">${String(d).padStart(2,'0')}/${String(m+1).padStart(2,'0')} <span class="dowChip">${dayNames[dt.getDay()]}</span></div>`;
+  let hasEntries=false;
+  let hol=data.holidays.find(h=>h.date===iso);
+  if(hol){let e=document.createElement('div');e.className='event holiday';e.textContent='⚪ '+hol.name;cell.appendChild(e);
+   const row=document.createElement('div');row.className='agendaEvent';row.innerHTML=`<span>⚪ ${esc(hol.name)}</span>`;dayBox.appendChild(row);hasEntries=true;
+  }
+  data.students.filter(s=>s.active&&s.days.includes(dayNames[dt.getDay()])).forEach(s=>{
+   let ev=getEv(s.id,iso);
+   const cls=ev.credit===true?'move':ev.status==='cancelled'?'cancel':(ev.status==='moved'||ev.status==='rescheduled')?'move':'';
+   const label=(ev.credit===true?'🟣 ':ev.status==='cancelled'?'🔴 ':ev.status==='moved'?'🟠 ':ev.status==='rescheduled'?'🟢 ':'🔵 ')+s.name+' · '+((s.times&&s.times[dayNames[dt.getDay()]])||'')+' · '+money(s.rate);
+   let e=document.createElement('div');e.className='event '+cls;e.textContent=label;e.onclick=()=>openEvent(s.id,iso);cell.appendChild(e);
+   const row=document.createElement('div');row.className='agendaEvent';row.innerHTML=`<span>${esc(label)}</span>`;row.onclick=()=>openEvent(s.id,iso);dayBox.appendChild(row);hasEntries=true;
+  });
+  g.appendChild(cell);
+  if(agenda&&hasEntries)agenda.appendChild(dayBox);
  }
 }
 function openStudent(id){
@@ -621,7 +695,7 @@ async function adcSyncToCloud(){
       const {data:byName,error:e1}=await adcSupabase.from('Alunos').select('id,nome').eq('nome',s.name).limit(1);
       if(e1)throw e1;
       existing=byName?.[0]||null;
-      const payload={'nome':s.name,'e-mail':s.email||null,'valor_hora':Number(s.rate||0),'ativo':s.active!==false};
+      const payload={'nome':s.name,'email':s.email||null,'valor_hora':Number(s.rate||0),'ativo':s.active!==false};
       let row;
       if(existing){
         const r=await adcSupabase.from('Alunos').update(payload).eq('id',existing.id).select('id').single();
@@ -637,11 +711,11 @@ async function adcSyncToCloud(){
     for(const s of data.students){
       const dbid=studentMap[s.id]; if(!dbid)continue;
       // Desativa os horários atuais do aluno antes de recriar a configuração.
-      const off=await adcSupabase.from('horários').update({ativo:false}).eq('aluno_id',dbid);
+      const off=await adcSupabase.from('horarios').update({ativo:false}).eq('aluno_id',dbid);
       if(off.error)throw off.error;
       for(const d of (s.days||[])){
         const tm=(s.times&&s.times[d])||'00:00';
-        const r=await adcSupabase.from('horários').insert({aluno_id:dbid,dia_semana:d,hora_inicio:tm,valor_hora:Number(s.rate||0),ativo:true});
+        const r=await adcSupabase.from('horarios').insert({aluno_id:dbid,dia_semana:d,hora_inicio:tm,valor_hora:Number(s.rate||0),ativo:true});
         if(r.error)throw r.error;
       }
     }
