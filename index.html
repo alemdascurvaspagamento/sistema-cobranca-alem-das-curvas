@@ -526,7 +526,7 @@ async function adcSaveKey(){
 }
 
 function adcAddButtons(){
-  const bar=document.querySelector('header>div:last-child');
+  const bar=document.querySelector('header');
   if(!bar || document.getElementById('adcConnectBtn')) return;
   const b=document.createElement('button');
   b.id='adcConnectBtn'; b.textContent='☁️ Conectar banco';
