@@ -570,11 +570,11 @@ async function adcSyncToCloud(){
     for(const s of data.students){
       const dbid=studentMap[s.id]; if(!dbid)continue;
       // Desativa os horários atuais do aluno antes de recriar a configuração.
-      const off=await adcSupabase.from('horários').update({ativo:false}).eq('aluno_id',dbid);
+      const off=await adcSupabase.from('horarios').update({ativo:false}).eq('aluno_id',dbid);
       if(off.error)throw off.error;
       for(const d of (s.days||[])){
         const tm=(s.times&&s.times[d])||'00:00';
-        const r=await adcSupabase.from('horários').insert({aluno_id:dbid,dia_semana:d,hora_inicio:tm,valor_hora:Number(s.rate||0),ativo:true});
+        const r=await adcSupabase.from('horarios').insert({aluno_id:dbid,dia_semana:d,hora_inicio:tm,valor_hora:Number(s.rate||0),ativo:true});
         if(r.error)throw r.error;
       }
     }
