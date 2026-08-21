@@ -554,7 +554,7 @@ async function adcSyncToCloud(){
       const {data:byName,error:e1}=await adcSupabase.from('Alunos').select('id,nome').eq('nome',s.name).limit(1);
       if(e1)throw e1;
       existing=byName?.[0]||null;
-      const payload={'nome':s.name,'e-mail':s.email||null,'valor_hora':Number(s.rate||0),'ativo':s.active!==false};
+      const payload={'nome':s.name,'email':s.email||null,'valor_hora':Number(s.rate||0),'ativo':s.active!==false};
       let row;
       if(existing){
         const r=await adcSupabase.from('Alunos').update(payload).eq('id',existing.id).select('id').single();
