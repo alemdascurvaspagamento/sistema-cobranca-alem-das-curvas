@@ -1,0 +1,65 @@
+name: Security Phase 2 Hardening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Harden frontend
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+          new = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"
+          if old not in s:
+              raise SystemExit('Supabase CDN reference not found')
+          s = s.replace(old, new)
+
+          sw = "<script id=\"coachflow-v12-1-sw\">if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>"
+          s = s.replace(sw, '')
+
+          csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://yjpxjzgvshaabjpdpbsc.supabase.co wss://yjpxjzgvshaabjpdpbsc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests\">"
+          if 'http-equiv=\"Content-Security-Policy\"' not in s:
+              s = s.replace('<meta charset=\"utf-8\">', csp + '\n<meta charset=\"utf-8\">', 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Verify hardening
+        shell: bash
+        run: |
+          grep -Fq 'supabase-js@2.115.0' index.html
+          ! grep -Fq 'supabase-js@2"' index.html
+          ! grep -Fq 'coachflow-v12-1-sw' index.html
+          grep -Fq 'Content-Security-Policy' index.html
+          ! test -f sw.js
+          grep -Fq 'const initialStudents = [];' index.html
+          grep -Fq 'const COACHFLOW_BACKUP_V12_3 = {};' index.html
+
+      - name: Commit hardening and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm -f .github/workflows/security-phase2.yml
+          git commit -m 'security: harden frontend dependencies and CSP'
+          git push origin main
