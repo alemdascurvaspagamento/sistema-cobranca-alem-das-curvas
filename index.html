@@ -536,6 +536,8 @@ if(!data.config || typeof data.config!=='object'){
   // o painel quebrava ao tentar ler as configurações (ex.: regra de cancelamento).
   data.config={cancelRule:'charge',holidayRule:'discount',moveRule:'credit',dueDay:5,pixKey:'',businessName:'Além das Curvas',ownerName:'',ownerEmail:''};
 }
+if(!Array.isArray(data.students))data.students=[];
+if(!data.payments || typeof data.payments!=='object')data.payments={};
 
 if(!Array.isArray(data.extraIncome))data.extraIncome=[];
 if(!Array.isArray(data.expenses))data.expenses=[];
