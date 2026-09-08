@@ -538,6 +538,8 @@ if(!data.config || typeof data.config!=='object'){
 }
 if(!Array.isArray(data.students))data.students=[];
 if(!data.payments || typeof data.payments!=='object')data.payments={};
+if(!data.events || typeof data.events!=='object')data.events={};
+if(!Array.isArray(data.holidays))data.holidays=defaultHolidays.map(([date,name,discount])=>({id:'h'+date,date,name,discount}));
 
 if(!Array.isArray(data.extraIncome))data.extraIncome=[];
 if(!Array.isArray(data.expenses))data.expenses=[];
