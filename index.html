@@ -530,6 +530,12 @@ if(!data){
   // Primeira abertura: usa o backup fornecido, preservando todos os cadastros e lançamentos.
   data=JSON.parse(JSON.stringify(COACHFLOW_BACKUP_V12_3));
 }
+if(!data.config || typeof data.config!=='object'){
+  // V13.1 — corrige tela em branco/erro em qualquer navegador novo: antes desse ajuste,
+  // "config" só existia se viesse do backup ou de uma sessão já salva; sem os dois,
+  // o painel quebrava ao tentar ler as configurações (ex.: regra de cancelamento).
+  data.config={cancelRule:'charge',holidayRule:'discount',moveRule:'credit',dueDay:5,pixKey:'',businessName:'Além das Curvas',ownerName:'',ownerEmail:''};
+}
 
 if(!Array.isArray(data.extraIncome))data.extraIncome=[];
 if(!Array.isArray(data.expenses))data.expenses=[];
