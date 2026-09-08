@@ -4,6 +4,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111827">
 <link rel="apple-touch-icon" href="icons/coachflow-192.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://yjpxjzgvshaabjpdpbsc.supabase.co wss://yjpxjzgvshaabjpdpbsc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CoachFlow — Gestão para Profissionais de Treinamento — V13.0 Segurança</title>
@@ -1859,7 +1860,7 @@ function adcLoadSupabase(){
  return new Promise((resolve,reject)=>{
   if(window.supabase?.createClient) return resolve();
   const sc=document.createElement('script');
-  sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0';
   sc.onload=()=>resolve(); sc.onerror=()=>reject(new Error('Não foi possível carregar a biblioteca do Supabase.'));
   document.head.appendChild(sc);
  });
@@ -2866,5 +2867,5 @@ window.addEventListener('load',()=>{
   if(localStorage.getItem(ADC_SUPABASE_KEY_STORAGE)) adcInitSupabase(false);
 });
 </script>
-<script id="coachflow-v12-1-sw">if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script></body>
+</body>
 </html>
