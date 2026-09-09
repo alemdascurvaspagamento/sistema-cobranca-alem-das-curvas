@@ -1,4 +1,4 @@
-/* CoachFlow API client v3 */
+/* CoachFlow API client v4 */
 (function (global) {
   'use strict';
   const SUPABASE_URL = 'https://yjpxjzgvshaabjpdpbsc.supabase.co';
@@ -57,7 +57,14 @@
     const nativeFrom = sb.from.bind(sb);
     function proxyFrom(table) {
       if (!ALLOWED_TABLES.has(table)) return nativeFrom(table);
-      return { select(columns) { return builder(table, 'select', { columns: columns || '*' }); }, insert(data) { return builder(table, 'insert', { data }); }, update(data) { return builder(table, 'update', { data }); }, delete() { return builder(table, 'delete'); }, upsert(data) { return builder(table, 'insert', { data }); } };
+      return {
+        select(columns) { return builder(table, 'select', { columns: columns || '*' }); },
+        insert(data) { return builder(table, 'insert', { data }); },
+        update(data) { return builder(table, 'update', { data }); },
+        delete() { return builder(table, 'delete'); },
+        /* Temporary compatibility path: deployed API v2 has no upsert action. RLS still scopes this authenticated native call. */
+        upsert(data, options) { return nativeFrom(table).upsert(data, options); }
+      };
     }
     proxyFrom.__coachflowProxy = true;
     sb.from = proxyFrom;
