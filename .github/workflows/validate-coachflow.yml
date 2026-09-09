@@ -1,0 +1,27 @@
+name: Validate CoachFlow
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate API client syntax
+        run: node --check coachflow-api-client.js
+      - name: Validate API client wiring
+        shell: bash
+        run: |
+          grep -q 'COACHFLOW_API_CLIENT' index.html
+          grep -q 'coachflow-api-client.js' index.html
+          grep -q 'functions/v1/coachflow-api' coachflow-api-client.js
+      - name: Validate security headers
+        shell: bash
+        run: |
+          grep -q 'Content-Security-Policy' index.html
+          grep -q 'upgrade-insecure-requests' index.html
