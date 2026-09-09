@@ -1,7 +1,4 @@
-/* CoachFlow API client v2
- * Backend: Supabase Edge Function /functions/v1/coachflow-api
- * Compatibility layer: keeps auth on Supabase, routes application-table CRUD through the API.
- */
+/* CoachFlow API client v3 */
 (function (global) {
   'use strict';
   const SUPABASE_URL = 'https://yjpxjzgvshaabjpdpbsc.supabase.co';
@@ -53,12 +50,21 @@
     };
     return api;
   }
-  const nativeFrom = global.adcSupabase && global.adcSupabase.from;
-  if (global.adcSupabase && nativeFrom) {
-    global.adcSupabase.from = function (table) {
-      if (!ALLOWED_TABLES.has(table)) return nativeFrom.call(global.adcSupabase, table);
+  function installProxy() {
+    const sb = global.adcSupabase;
+    if (!sb || typeof sb.from !== 'function') return false;
+    if (sb.from.__coachflowProxy) return true;
+    const nativeFrom = sb.from.bind(sb);
+    function proxyFrom(table) {
+      if (!ALLOWED_TABLES.has(table)) return nativeFrom(table);
       return { select(columns) { return builder(table, 'select', { columns: columns || '*' }); }, insert(data) { return builder(table, 'insert', { data }); }, update(data) { return builder(table, 'update', { data }); }, delete() { return builder(table, 'delete'); }, upsert(data) { return builder(table, 'insert', { data }); } };
-    };
+    }
+    proxyFrom.__coachflowProxy = true;
+    sb.from = proxyFrom;
+    global.coachflowApi = { url: API_URL, select: (table, options) => request(table, 'select', options), insert: (table, data) => request(table, 'insert', { data }), update: (table, id, data) => request(table, 'update', { id, data }), remove: (table, id) => request(table, 'delete', { id }) };
+    return true;
   }
-  global.coachflowApi = { url: API_URL, select: (table, options) => request(table, 'select', options), insert: (table, data) => request(table, 'insert', { data }), update: (table, id, data) => request(table, 'update', { id, data }), remove: (table, id) => request(table, 'delete', { id }) };
+  let attempts = 0;
+  const timer = setInterval(() => { attempts += 1; if (installProxy() || attempts >= 300) clearInterval(timer); }, 10);
+  installProxy();
 })(window);
