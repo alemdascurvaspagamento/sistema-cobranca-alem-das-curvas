@@ -57,11 +57,11 @@ jobs:
           const fs = require('fs');
           const vm = require('vm');
           const source = fs.readFileSync('coachflow-api-client.js', 'utf8');
-          const calls = [];
+          const intervals = [];
           const sb = {
-            setInterval: (fn) => { fn(); return 1; },
-            clearInterval: () => {},
-            fetch: async (...args) => { calls.push(args); return { ok:true, json:async()=>({data:[]}) }; },
+            setInterval: (fn) => { const token = { fn }; intervals.push(token); return token; },
+            clearInterval: (token) => { if (token) token.cleared = true; },
+            fetch: async () => ({ ok:true, json:async()=>({data:[]}) }),
             adcSupabase: {
               auth: { getSession: async()=>({data:{session:{access_token:'test-token'}},error:null}) },
               from: function nativeFrom(table){ return { native:true, table, upsert: () => ({nativeUpsert:true}) }; }
@@ -69,6 +69,7 @@ jobs:
           };
           sb.window = sb;
           vm.runInNewContext(source, sb, {timeout: 2000});
+          for (const token of intervals) token.fn();
           if (!sb.adcSupabase.from('Alunos').select) throw new Error('Alunos proxy not installed');
           if (!sb.adcSupabase.from('not_allowed').native) throw new Error('Non-application table was not preserved');
           if (!sb.adcSupabase.from('Alunos').upsert({x:1}).nativeUpsert) throw new Error('Upsert compatibility path missing');
