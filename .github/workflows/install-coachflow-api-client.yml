@@ -1,0 +1,41 @@
+name: Install CoachFlow API client
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  install-client:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject API client into published page
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '<!-- COACHFLOW_API_CLIENT -->'
+          if marker in s:
+              raise SystemExit(0)
+          tag = marker + '\n<script src="./coachflow-api-client.js"></script>'
+          if '</body>' in s:
+              s = s.replace('</body>', tag + '\n</body>', 1)
+          elif '</html>' in s:
+              s = s.replace('</html>', tag + '\n</html>', 1)
+          else:
+              s += '\n' + tag + '\n'
+          p.write_text(s, encoding='utf-8')
+      - name: Commit published page change
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'chore: load CoachFlow API client'
+          git push
