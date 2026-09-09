@@ -45,13 +45,10 @@ jobs:
       - name: Validate query compatibility surface
         shell: bash
         run: |
-          for method in select insert update delete eq neq gt gte lt lte in is ilike order limit single maybeSingle; do
+          for method in select insert update delete upsert eq neq gt gte lt lte in is ilike order limit single maybeSingle; do
             grep -q "$method" coachflow-api-client.js
           done
-          if grep -qE '\.upsert[[:space:]]*\(' index.html; then
-            echo 'Unsupported direct upsert usage detected in index.html'
-            exit 1
-          fi
+          grep -q 'upsert(data, options)' coachflow-api-client.js
 
       - name: Validate API client mock installation
         shell: bash
@@ -67,13 +64,14 @@ jobs:
             fetch: async (...args) => { calls.push(args); return { ok:true, json:async()=>({data:[]}) }; },
             adcSupabase: {
               auth: { getSession: async()=>({data:{session:{access_token:'test-token'}},error:null}) },
-              from: function nativeFrom(table){ return { native:true, table }; }
+              from: function nativeFrom(table){ return { native:true, table, upsert: () => ({nativeUpsert:true}) }; }
             }
           };
           sb.window = sb;
           vm.runInNewContext(source, sb, {timeout: 2000});
           if (!sb.adcSupabase.from('Alunos').select) throw new Error('Alunos proxy not installed');
           if (!sb.adcSupabase.from('not_allowed').native) throw new Error('Non-application table was not preserved');
+          if (!sb.adcSupabase.from('Alunos').upsert({x:1}).nativeUpsert) throw new Error('Upsert compatibility path missing');
           if (typeof sb.coachflowApi?.select !== 'function') throw new Error('coachflowApi helper missing');
           console.log('CoachFlow API client mock validation passed');
           NODE
