@@ -1,4 +1,4 @@
-/* CoachFlow API client v4 */
+/* CoachFlow API client v5 */
 (function (global) {
   'use strict';
   const SUPABASE_URL = 'https://yjpxjzgvshaabjpdpbsc.supabase.co';
@@ -72,6 +72,7 @@
     return true;
   }
   let attempts = 0;
-  const timer = setInterval(() => { attempts += 1; if (installProxy() || attempts >= 300) clearInterval(timer); }, 10);
+  let timer;
+  timer = setInterval(() => { attempts += 1; if (installProxy() || attempts >= 300) clearInterval(timer); }, 10);
   installProxy();
 })(window);
