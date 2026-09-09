@@ -12,16 +12,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Validate API client syntax
         run: node --check coachflow-api-client.js
+
       - name: Validate API client wiring
         shell: bash
         run: |
           grep -q 'COACHFLOW_API_CLIENT' index.html
           grep -q 'coachflow-api-client.js' index.html
           grep -q 'functions/v1/coachflow-api' coachflow-api-client.js
+          grep -q 'getSession' coachflow-api-client.js
+          grep -q 'Authorization' coachflow-api-client.js
+
+      - name: Validate supported application tables
+        shell: bash
+        run: |
+          for table in Alunos horarios aulas cobrancas pagamentos feriados ganhos_extras configuracoes despesas despesas_fixas despesas_fixas_lancamentos; do
+            grep -q "$table" coachflow-api-client.js
+            grep -q "$table" index.html
+          done
+
       - name: Validate security headers
         shell: bash
         run: |
           grep -q 'Content-Security-Policy' index.html
           grep -q 'upgrade-insecure-requests' index.html
+          ! grep -q 'serviceWorker.register' index.html
+          ! grep -q 'service_role' index.html
+          ! grep -q '/rest/v1/' index.html
+
+      - name: Validate query compatibility surface
+        shell: bash
+        run: |
+          for method in select insert update delete eq neq gt gte lt lte in is ilike order limit single maybeSingle; do
+            grep -q "$method" coachflow-api-client.js
+          done
+          if grep -qE '\.upsert[[:space:]]*\(' index.html; then
+            echo 'Unsupported direct upsert usage detected in index.html'
+            exit 1
+          fi
+
+      - name: Validate API client mock installation
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const source = fs.readFileSync('coachflow-api-client.js', 'utf8');
+          const calls = [];
+          const sb = {
+            setInterval: (fn) => { fn(); return 1; },
+            clearInterval: () => {},
+            fetch: async (...args) => { calls.push(args); return { ok:true, json:async()=>({data:[]}) }; },
+            adcSupabase: {
+              auth: { getSession: async()=>({data:{session:{access_token:'test-token'}},error:null}) },
+              from: function nativeFrom(table){ return { native:true, table }; }
+            }
+          };
+          sb.window = sb;
+          vm.runInNewContext(source, sb, {timeout: 2000});
+          if (!sb.adcSupabase.from('Alunos').select) throw new Error('Alunos proxy not installed');
+          if (!sb.adcSupabase.from('not_allowed').native) throw new Error('Non-application table was not preserved');
+          if (typeof sb.coachflowApi?.select !== 'function') throw new Error('coachflowApi helper missing');
+          console.log('CoachFlow API client mock validation passed');
+          NODE
