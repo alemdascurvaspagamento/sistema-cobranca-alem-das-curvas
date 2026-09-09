@@ -1,6 +1,6 @@
-/* CoachFlow API client v1
+/* CoachFlow API client v2
  * Backend: Supabase Edge Function /functions/v1/coachflow-api
- * This module is intentionally standalone so the legacy Supabase sync can be migrated safely module-by-module.
+ * Compatibility layer: keeps auth on Supabase, routes application-table CRUD through the API.
  */
 (function (global) {
   'use strict';
@@ -39,6 +39,51 @@
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || ('CoachFlow API HTTP ' + response.status));
     return payload.data;
+  }
+
+  function builder(table, action, initial) {
+    const state = Object.assign({ filters: [] }, initial || {});
+    const api = {
+      select(columns) { state.columns = columns || '*'; return api; },
+      eq(column, value) { state.filters.push({ column, op: 'eq', value }); return api; },
+      neq(column, value) { state.filters.push({ column, op: 'neq', value }); return api; },
+      gt(column, value) { state.filters.push({ column, op: 'gt', value }); return api; },
+      gte(column, value) { state.filters.push({ column, op: 'gte', value }); return api; },
+      lt(column, value) { state.filters.push({ column, op: 'lt', value }); return api; },
+      lte(column, value) { state.filters.push({ column, op: 'lte', value }); return api; },
+      in(column, value) { state.filters.push({ column, op: 'in', value }); return api; },
+      is(column, value) { state.filters.push({ column, op: 'is', value }); return api; },
+      ilike(column, value) { state.filters.push({ column, op: 'ilike', value }); return api; },
+      order(column, options) { state.order = { column, ascending: !options || options.ascending !== false }; return api; },
+      limit(value) { state.limit = value; return api; },
+      single() { state.single = true; return api; },
+      maybeSingle() { state.maybeSingle = true; return api; },
+      then(resolve, reject) {
+        return request(table, action, state).then((data) => {
+          let result = data;
+          if (state.single || state.maybeSingle) {
+            if (Array.isArray(data)) result = data.length ? data[0] : null;
+          }
+          return resolve ? resolve({ data: result, error: null }) : result;
+        }).catch((error) => reject ? reject({ data: null, error }) : Promise.reject(error));
+      },
+      catch(reject) { return api.then(undefined, reject); }
+    };
+    return api;
+  }
+
+  const nativeFrom = global.adcSupabase && global.adcSupabase.from;
+  if (global.adcSupabase && nativeFrom) {
+    global.adcSupabase.from = function (table) {
+      if (!ALLOWED_TABLES.has(table)) return nativeFrom.call(global.adcSupabase, table);
+      return {
+        select(columns) { return builder(table, 'select', { columns: columns || '*' }); },
+        insert(data) { return builder(table, 'insert', { data }); },
+        update(data) { return builder(table, 'update', { id: null, data }); },
+        delete() { return builder(table, 'delete', { id: null }); },
+        upsert(data) { return builder(table, 'insert', { data }); }
+      };
+    };
   }
 
   global.coachflowApi = {
