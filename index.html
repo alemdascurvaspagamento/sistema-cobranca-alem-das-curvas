@@ -1177,11 +1177,24 @@ function openAnnualGoal(){
  document.getElementById('modalContent').innerHTML=`<h2>Meta de receita — ${y}</h2><p class="note">Defina quanto você quer efetivamente receber no ano. O CoachFlow calcula automaticamente as referências mensal, trimestral e semestral e compara com os pagamentos registrados.</p><div class="field" style="margin-top:14px"><label>Meta anual de recebimentos</label><input id="annualGoalInput" type="number" min="0" step="100" inputmode="decimal" value="${current||''}" placeholder="Ex.: 240000"></div><div class="actions"><button onclick="closeModal()">Cancelar</button><button class="primary" onclick="saveAnnualGoal()">Salvar meta</button></div>`;
  document.getElementById('modal').classList.add('show');
 }
-function saveAnnualGoal(){
+async function saveAnnualGoal(){
  const y=year(),v=Math.max(0,Number(document.getElementById('annualGoalInput').value||0));
  if(!data.revenueGoals||typeof data.revenueGoals!=='object')data.revenueGoals={};
  if(v>0)data.revenueGoals[y]=v;else delete data.revenueGoals[y];
  save();closeModal();renderAnnualGoal();
+ try{
+  if(!(await adcEnsureSessionV2()))throw new Error('Sessão expirada. Entre novamente para sincronizar a meta.');
+  const ownerId=await adcGetOwnerIdV3();
+  let r;
+  if(v>0)r=await adcSupabase.from('metas_receita').upsert({owner_id:ownerId,ano:y,meta_anual:v,updated_at:new Date().toISOString()},{onConflict:'owner_id,ano'});
+  else r=await adcSupabase.from('metas_receita').delete().eq('owner_id',ownerId).eq('ano',y);
+  if(r.error)throw r.error;
+  adcSetCloudStatus('Meta sincronizada ✓','online');
+ }catch(e){
+  console.error('Meta de receita',e);
+  adcSetCloudStatus('Meta pendente de sincronização','error');
+  alert('A meta foi salva neste dispositivo, mas ainda não foi confirmada no banco.\n\nDetalhe: '+(e.message||e));
+ }
 }
 function openPayment(sid){
  const s=data.students.find(x=>x.id===sid),c=calcStudent(s),p=getPayment(sid);
@@ -2389,12 +2402,14 @@ async function adcPullAllV2(){
   // assim, mesmo que uma política de acesso seja configurada incorretamente no futuro, este
   // aparelho nunca mistura ou exibe dados de outra conta.
   const ownerId=await adcGetOwnerIdV3();
-  const [al,hr,au,co,pa,fe,ex,cfg]=await Promise.all([
+  const [al,hr,au,co,pa,fe,ex,cfg,goals]=await Promise.all([
    adcSupabase.from('Alunos').select('*').eq('owner_id',ownerId),adcSupabase.from('horarios').select('*').eq('owner_id',ownerId),adcSupabase.from('aulas').select('*').eq('owner_id',ownerId),
    adcSupabase.from('cobrancas').select('*').eq('owner_id',ownerId),adcSupabase.from('pagamentos').select('*').eq('owner_id',ownerId),adcSupabase.from('feriados').select('*').eq('owner_id',ownerId),
-   adcSupabase.from('ganhos_extras').select('*').eq('owner_id',ownerId),adcSupabase.from('configuracoes').select('*').eq('id',1).eq('owner_id',ownerId).maybeSingle()
+   adcSupabase.from('ganhos_extras').select('*').eq('owner_id',ownerId),adcSupabase.from('configuracoes').select('*').eq('id',1).eq('owner_id',ownerId).maybeSingle(),
+   adcSupabase.from('metas_receita').select('ano,meta_anual').eq('owner_id',ownerId)
   ]);
-  for(const r of [al,hr,au,co,pa,fe,ex,cfg])if(r.error)throw r.error;
+  for(const r of [al,hr,au,co,pa,fe,ex,cfg,goals])if(r.error)throw r.error;
+  data.revenueGoals=Object.fromEntries((goals.data||[]).map(x=>[String(x.ano),Number(x.meta_anual||0)]));
   const students=(al.data||[]).filter(r=>r.excluido!==true), byId=new Map();
   const localPendingStudentChanges=data.pendingStudentChanges||{};
   const pendingStudentCloudIds=new Set(Object.values(localPendingStudentChanges).map(x=>Number(x?.cloudId)).filter(Number.isFinite));
@@ -2804,6 +2819,16 @@ async function adcPushAllV2(showMessage=false){
     data.pendingExpenseDeletes=[];
     adcDespesasTableOk=true;
    }catch(e){ adcDespesasTableOk=false; console.warn('Falha ao sincronizar despesas; alterações permanecem pendentes.',e); }
+  // Metas de receita: Supabase é a fonte compartilhada entre computador e celular.
+  // Upsert por owner_id + ano; metas removidas localmente são removidas do banco.
+  const localGoals=data.revenueGoals&&typeof data.revenueGoals==='object'?data.revenueGoals:{};
+  const cloudGoals=await adcSupabase.from('metas_receita').select('ano').eq('owner_id',ownerId);
+  if(cloudGoals.error)throw cloudGoals.error;
+  const wantedYears=new Set(Object.keys(localGoals).filter(y=>Number(localGoals[y])>0).map(Number));
+  const removeYears=(cloudGoals.data||[]).map(x=>Number(x.ano)).filter(y=>!wantedYears.has(y));
+  if(removeYears.length){const gd=await adcSupabase.from('metas_receita').delete().eq('owner_id',ownerId).in('ano',removeYears);if(gd.error)throw gd.error;}
+  const goalRows=Object.entries(localGoals).filter(([,v])=>Number(v)>0).map(([ano,v])=>({owner_id:ownerId,ano:Number(ano),meta_anual:Number(v),updated_at:new Date().toISOString()}));
+  if(goalRows.length){const gu=await adcSupabase.from('metas_receita').upsert(goalRows,{onConflict:'owner_id,ano'});if(gu.error)throw gu.error;}
   const c=data.config||{};const cr=await adcSupabase.from('configuracoes').upsert({owner_id:ownerId,id:1,cancel_rule:c.cancelRule,holiday_rule:c.holidayRule,move_rule:c.moveRule,due_day:Number(c.dueDay||5),pix_key:c.pixKey||null,business_name:c.businessName||'Além das Curvas',owner_name:c.ownerName||null,owner_email:c.ownerEmail||null,updated_at:new Date().toISOString()},{onConflict:'id'});if(cr.error)throw cr.error;
   localStorage.setItem(KEY,JSON.stringify(data));adcSetCloudStatus('Sincronizado ✓','online');if(showMessage)alert('Sincronização completa concluída.');return true;
  }catch(e){console.error('Push V2',e);adcLastSyncError=e.message||String(e);adcSetCloudStatus('Erro na sincronização','error');if(showMessage)alert('Erro na sincronização: '+(e.message||e));return false}finally{adcSyncV2Busy=false}
