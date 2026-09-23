@@ -2034,9 +2034,17 @@ async function gateLogin(){
  const errEl=document.getElementById('gateErr');
  errEl.style.display='none';
  if(!email||!pass) return;
- if(!adcSupabase){ errEl.textContent='Sem conexão com o banco. Verifique sua internet.'; errEl.style.display='block'; return; }
- btn.disabled=true; btn.textContent='Entrando...';
+ btn.disabled=true; btn.textContent='Conectando...';
  try{
+  // No iPhone/PWA o processo pode ser suspenso e o cliente Supabase ficar nulo
+  // mesmo com a chave já salva. Reconstrói o cliente no próprio clique de login
+  // em vez de acusar falsamente falta de internet.
+  if(!adcSupabase){
+   adcSupabaseClientPromise=null;
+   const client=await gateEnsureClient();
+   if(!client) throw new Error('SUPABASE_CLIENT_UNAVAILABLE');
+  }
+  btn.textContent='Entrando...';
   const loginPromise=adcSupabase.auth.signInWithPassword({email,password:pass});
   const timeoutPromise=new Promise(resolve=>setTimeout(
    ()=>resolve({error:{message:'TIMEOUT_LOGIN'}}),15000
@@ -2055,7 +2063,10 @@ async function gateLogin(){
   }
  }catch(e){
   console.error('CoachFlow login:',e);
-  errEl.textContent='Não foi possível entrar. Verifique sua conexão com o banco.';
+  const msg=String(e?.message||e||'');
+  errEl.textContent=msg==='SUPABASE_CLIENT_UNAVAILABLE'
+   ? 'Não foi possível conectar ao banco agora. Feche e abra o CoachFlow e tente novamente.'
+   : 'Não foi possível entrar. Verifique sua conexão com o banco.';
   errEl.style.display='block';
  }finally{
   btn.disabled=false; btn.textContent='Entrar';
