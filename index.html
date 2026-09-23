@@ -257,6 +257,30 @@ table{border-collapse:collapse;width:100%}
    <div class="actions" style="justify-content:flex-start;margin-top:12px"><button onclick="document.querySelector('.tab[onclick*=financeiro]').click()">Ver financeiro completo</button></div>
   </div>
  </div>
+ <div class="card" id="annualGoalCard" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+   <div><h3 style="margin-bottom:4px">Meta de receita</h3><p class="note" id="goalSubtitle" style="margin:0">Defina sua meta anual e acompanhe seu ritmo.</p></div>
+   <button onclick="openAnnualGoal()">Definir meta</button>
+  </div>
+  <div id="goalEmpty" class="note" style="margin-top:14px">Você ainda não definiu uma meta anual.</div>
+  <div id="goalContent" style="display:none;margin-top:14px">
+   <div class="kpis" style="margin-bottom:12px">
+    <div class="dataCard"><div class="kpi-label">Meta anual</div><div class="kpi" id="goalAnnual">R$ 0,00</div></div>
+    <div class="dataCard"><div class="kpi-label">Recebido no ano</div><div class="kpi" id="goalReceived">R$ 0,00</div></div>
+    <div class="dataCard"><div class="kpi-label">Atingimento</div><div class="kpi" id="goalPercent">0%</div></div>
+    <div class="dataCard"><div class="kpi-label">Falta receber</div><div class="kpi" id="goalRemaining">R$ 0,00</div></div>
+   </div>
+   <div style="height:10px;background:var(--line);border-radius:999px;overflow:hidden"><div id="goalProgress" style="height:100%;width:0;background:var(--accent,#111827);border-radius:999px;transition:width .25s ease"></div></div>
+   <p class="note" id="goalInsight" style="margin:10px 0 0"></p>
+   <div class="sbody" style="margin-top:10px">
+    <div class="srow"><span class="slabel">Meta mensal</span><span class="sval" id="goalMonthly">—</span></div>
+    <div class="srow"><span class="slabel">Meta trimestral</span><span class="sval" id="goalQuarter">—</span></div>
+    <div class="srow"><span class="slabel">Meta semestral</span><span class="sval" id="goalSemester">—</span></div>
+    <div class="srow"><span class="slabel">Meta acumulada até este mês</span><span class="sval" id="goalExpected">—</span></div>
+    <div class="srow"><span class="slabel">Projeção no ritmo atual</span><span class="sval" id="goalProjection">—</span></div>
+   </div>
+  </div>
+ </div>
  <div class="card" style="margin-top:14px">
   <h3>🔔 Lembretes de cobrança</h3>
   <p class="note" style="margin-top:0">Alunos que vencem em 3 dias, vencem hoje ou já estão atrasados. O envio é feito por você, com um toque — não é automático.</p>
@@ -555,6 +579,7 @@ if(!data.pendingPaymentChanges || typeof data.pendingPaymentChanges!=='object')d
 if(!data.pendingStudentChanges || typeof data.pendingStudentChanges!=='object')data.pendingStudentChanges={};
 if(!data.pendingExpenseChanges || typeof data.pendingExpenseChanges!=='object')data.pendingExpenseChanges={};
 if(!Array.isArray(data.pendingExpenseDeletes))data.pendingExpenseDeletes=[];
+if(!data.revenueGoals || typeof data.revenueGoals!=='object')data.revenueGoals={};
 /* V12.3 — normalização segura das despesas.
    - Mantém todos os lançamentos históricos.
    - Modelos fixos idênticos são consolidados apenas para evitar novas duplicações.
@@ -1086,6 +1111,7 @@ function renderInicio(){
  document.getElementById('homeReceita').textContent=money(previsto);
  document.getElementById('homeRecebido').textContent=money(cloudReceived);
  document.getElementById('homeInadimplencia').textContent=money(cloudOverdueBalance);
+ renderAnnualGoal();
 
  const reminders=[];
  active.forEach(s=>{
@@ -1106,6 +1132,56 @@ function renderInicio(){
   const label=r.st==='overdue'?`Atrasado desde ${dueTxt}`:r.diffDays===0?`Vence hoje`:`Vence em ${r.diffDays}d (${dueTxt})`;
   return `<div class="srow"><span class="slabel">${esc(r.s.name)} · ${money(r.saldo)}</span><span style="display:flex;gap:6px;align-items:center"><span class="pill ${cls}">${label}</span><button style="background:#25D366;color:#fff;border-color:#25D366" onclick="sendWhatsAppBilling('${r.s.id}')">📲</button></span></div>`;
  }).join('') : '<p class="note">Nenhuma cobrança pendente ou próxima do vencimento. 🎉</p>';
+}
+function annualReceivedForYear(y){
+ let total=0;
+ Object.entries(data.payments||{}).forEach(([k,p])=>{
+  if(!p)return;
+  const m=String(k).match(/(\d{4})-(\d{2})/);
+  if(m&&Number(m[1])===Number(y))total+=Number(p.received||0);
+ });
+ (data.extraIncome||[]).forEach(x=>{
+  if(String(x.date||'').startsWith(String(y)+'-'))total+=Number(x.amount||0);
+ });
+ return total;
+}
+function renderAnnualGoal(){
+ const empty=document.getElementById('goalEmpty'),content=document.getElementById('goalContent');if(!empty||!content)return;
+ const y=year(),annual=Number((data.revenueGoals||{})[y]||0);
+ if(annual<=0){empty.style.display='block';content.style.display='none';document.getElementById('goalSubtitle').textContent='Defina sua meta de '+y+' e acompanhe seu ritmo.';return}
+ empty.style.display='none';content.style.display='block';
+ const received=annualReceivedForYear(y),pct=annual?received/annual*100:0,remaining=Math.max(0,annual-received);
+ const now=new Date(),monthsElapsed=y<now.getFullYear()?12:y>now.getFullYear()?0:Math.min(12,now.getMonth()+1);
+ const expected=annual*(monthsElapsed/12),projection=monthsElapsed?received/monthsElapsed*12:0;
+ const monthsLeft=Math.max(0,12-monthsElapsed),neededMonthly=monthsLeft?remaining/monthsLeft:0;
+ document.getElementById('goalSubtitle').textContent='Acompanhamento da meta de '+y;
+ document.getElementById('goalAnnual').textContent=money(annual);
+ document.getElementById('goalReceived').textContent=money(received);
+ document.getElementById('goalPercent').textContent=pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+ document.getElementById('goalRemaining').textContent=money(remaining);
+ document.getElementById('goalProgress').style.width=Math.min(100,Math.max(0,pct))+'%';
+ document.getElementById('goalMonthly').textContent=money(annual/12);
+ document.getElementById('goalQuarter').textContent=money(annual/4);
+ document.getElementById('goalSemester').textContent=money(annual/2);
+ document.getElementById('goalExpected').textContent=money(expected);
+ document.getElementById('goalProjection').textContent=money(projection);
+ let insight='';
+ if(received>=annual) insight='Meta anual atingida. Você está '+money(received-annual)+' acima do objetivo.';
+ else if(monthsLeft>0) insight='Para atingir a meta, você precisa receber em média '+money(neededMonthly)+' por mês nos '+monthsLeft+' meses restantes.';
+ else insight='O ano fechou com '+money(received)+', '+money(remaining)+' abaixo da meta definida.';
+ if(monthsElapsed>0&&received<annual) insight+=' Projeção no ritmo atual: '+money(projection)+'.';
+ document.getElementById('goalInsight').textContent=insight;
+}
+function openAnnualGoal(){
+ const y=year(),current=Number((data.revenueGoals||{})[y]||0);
+ document.getElementById('modalContent').innerHTML=`<h2>Meta de receita — ${y}</h2><p class="note">Defina quanto você quer efetivamente receber no ano. O CoachFlow calcula automaticamente as referências mensal, trimestral e semestral e compara com os pagamentos registrados.</p><div class="field" style="margin-top:14px"><label>Meta anual de recebimentos</label><input id="annualGoalInput" type="number" min="0" step="100" inputmode="decimal" value="${current||''}" placeholder="Ex.: 240000"></div><div class="actions"><button onclick="closeModal()">Cancelar</button><button class="primary" onclick="saveAnnualGoal()">Salvar meta</button></div>`;
+ document.getElementById('modal').classList.add('show');
+}
+function saveAnnualGoal(){
+ const y=year(),v=Math.max(0,Number(document.getElementById('annualGoalInput').value||0));
+ if(!data.revenueGoals||typeof data.revenueGoals!=='object')data.revenueGoals={};
+ if(v>0)data.revenueGoals[y]=v;else delete data.revenueGoals[y];
+ save();closeModal();renderAnnualGoal();
 }
 function openPayment(sid){
  const s=data.students.find(x=>x.id===sid),c=calcStudent(s),p=getPayment(sid);
