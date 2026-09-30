@@ -475,7 +475,7 @@ table{border-collapse:collapse;width:100%}
 <div class="card" style="margin-top:14px">
  <h3>🔒 Segurança — nível reforçado</h3>
  <div class="sbody">
-  <div class="srow"><span class="slabel">Chaves no código</span><span class="sval">✅ Só a chave publicável (anon) fica no navegador — nunca a chave secreta (service_role)</span></div>
+  <div class="srow"><span class="slabel">Chaves no código</span><span class="sval">✅ Só a chave publicável (anon) fica no navegador — nunca a chave secreta de administrador</span></div>
   <div class="srow"><span class="slabel">Login</span><span class="sval">✅ Autenticação real via Supabase, com recuperação de senha por e-mail</span></div>
   <div class="srow"><span class="slabel">Políticas RLS</span><span class="sval">✅ Ativas no banco: leitura e escrita ficam vinculadas ao <b>owner_id</b> do usuário autenticado</span></div>
   <div class="srow"><span class="slabel">Cadastro público</span><span class="sval">⚠️ Mantenha "Allow new users to sign up" <b>desligado</b> no Supabase quando o sistema for usado somente por profissionais autorizados</span></div>
@@ -966,11 +966,28 @@ function expensesForMonth(y,m){
 }
 function expenseMailto(item){const to=(data.config?.ownerEmail||'').trim();const subject=encodeURIComponent(`Lembrete de pagamento — ${item.description||'Despesa'}`);const body=encodeURIComponent(`Lembrete de pagamento\n\nDespesa: ${item.description||''}\nValor: ${money(item.amount)}\nData de pagamento: ${fmtDate(item.date)}\n\nGerado pelo Além das Curvas.`);window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;}
 // V12.1 — lançamentos mensais de despesas fixas persistidos no Supabase.
+/* V13.2 — retrato do que o banco já confirmou (cobranças, feriados, ganhos extras, despesas,
+   metas e configurações). Antes, TODA sincronização (a cada 30s) regravava tudo isso mesmo sem
+   nenhuma mudança (dezenas de idas ao banco a cada ciclo). Agora só é enviado o que mudou desde
+   o último envio confirmado. O botão "Sincronizar" força um envio completo (adcForceFullPushV2),
+   e o retrato é descartado se outra conta entrar no aparelho. */
+let adcForceFullPushV2=false;
+function adcPushSnap(ownerId){
+  if(!data.pushedSnapshotV2||typeof data.pushedSnapshotV2!=='object'||(ownerId&&data.pushedSnapshotV2.__owner!==ownerId)){
+    data.pushedSnapshotV2={__owner:ownerId||null};
+  }
+  return data.pushedSnapshotV2;
+}
+function adcSnapSame(bucket,key,row){const b=adcPushSnap()[bucket];return !!b&&b[key]===JSON.stringify(row)}
+function adcSnapSet(bucket,key,row){const s=adcPushSnap();(s[bucket]||(s[bucket]={}))[key]=JSON.stringify(row)}
 async function pushFixedExpenseOccurrences(ownerId){
  const list=(data.expenses||[]).filter(x=>x.fixedId&&x.date&&!x.omitida);
  for(const x of list){
-  const r=await adcSupabase.from('despesas_fixas_lancamentos').upsert({owner_id:ownerId,id:String(x.id),despesa_fixa_id:String(x.fixedId),competencia:(x.date||'').slice(0,7)+'-01',nome:x.description||'',valor:Number(x.amount||0),data_vencimento:x.date,status:x.status||'pendente',observacao:x.note||null,updated_at:new Date().toISOString()},{onConflict:'id'});
+  const row={owner_id:ownerId,id:String(x.id),despesa_fixa_id:String(x.fixedId),competencia:(x.date||'').slice(0,7)+'-01',nome:x.description||'',valor:Number(x.amount||0),data_vencimento:x.date,status:x.status||'pendente',observacao:x.note||null};
+  if(adcSnapSame('despesas_fixas_lancamentos',row.id,row))continue;
+  const r=await adcSupabase.from('despesas_fixas_lancamentos').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'id'});
   if(r.error)throw r.error;
+  adcSnapSet('despesas_fixas_lancamentos',row.id,row);
  }
 }
 async function pullFixedExpenseOccurrences(ownerId){
@@ -2576,6 +2593,8 @@ async function adcPushAllV2(showMessage=false){
  adcSyncV2Busy=true;adcSetCloudStatus('Sincronizando...');
  try{
   const ownerId=await adcGetOwnerIdV3();
+  if(adcForceFullPushV2){data.pushedSnapshotV2={__owner:ownerId};adcForceFullPushV2=false}
+  adcPushSnap(ownerId);
   const map=new Map();
   const pendingStudentChangesSnapshot=JSON.parse(JSON.stringify(data.pendingStudentChanges||{}));
   const studentsToPush=data.students.filter(s=>!s.cloudId || Object.prototype.hasOwnProperty.call(pendingStudentChangesSnapshot,s.id));
@@ -2734,9 +2753,11 @@ async function adcPushAllV2(showMessage=false){
       owner_id:ownerId,aluno_id:id,competencia,
       quantidade_aulas:c.chargeCount,valor_total:Number(c.total||0),vencimento
     };
+    const isDirty=pendingPaymentKeys.has(payKey) && !Object.prototype.hasOwnProperty.call(explicitPaymentChanges,payKey);
+    // Nada mudou desde o último envio confirmado e não há baixa pendente: não precisa nem consultar o banco.
+    if(!isDirty && adcSnapSame('cobrancas',payKey,basePayload))continue;
     const q=await adcSupabase.from('cobrancas').select('id,status,valor_recebido,data_pagamento,forma_pagamento,observacao').eq('aluno_id',id).eq('competencia',competencia).maybeSingle();
     if(q.error)throw q.error;
-    const isDirty=pendingPaymentKeys.has(payKey) && !Object.prototype.hasOwnProperty.call(explicitPaymentChanges,payKey);
     let cobrancaId=q.data?.id;
     if(!cobrancaId){
       const payload={
@@ -2754,6 +2775,7 @@ async function adcPushAllV2(showMessage=false){
         if(pr.error)throw pr.error;
       }
       if(isDirty)adcClearPaymentDirty(payKey);
+      adcSnapSet('cobrancas',payKey,basePayload);
       continue;
     }
 
@@ -2762,6 +2784,7 @@ async function adcPushAllV2(showMessage=false){
     if(!isDirty){
       const r=await adcSupabase.from('cobrancas').update(basePayload).eq('id',cobrancaId);
       if(r.error)throw r.error;
+      adcSnapSet('cobrancas',payKey,basePayload);
       continue;
     }
 
@@ -2796,12 +2819,13 @@ async function adcPushAllV2(showMessage=false){
       if(dr.error)throw dr.error;
     }
     adcClearPaymentDirty(payKey);
+    adcSnapSet('cobrancas',payKey,basePayload);
   }
-  const f=data.holidays||[];for(const h of f){const r=await adcSupabase.from('feriados').upsert({owner_id:ownerId,id:String(h.id),data:h.date,nome:h.name,desconto:h.discount!==false},{onConflict:'id'});if(r.error)throw r.error}for(const x of (data.extraIncome||[])){const r=await adcSupabase.from('ganhos_extras').upsert({owner_id:ownerId,id:String(x.id),data:x.date,descricao:x.description,valor:Number(x.amount||0),observacao:x.note||null},{onConflict:'id'});if(r.error)throw r.error}
+  const f=data.holidays||[];for(const h of f){const row={owner_id:ownerId,id:String(h.id),data:h.date,nome:h.name,desconto:h.discount!==false};if(adcSnapSame('feriados',row.id,row))continue;const r=await adcSupabase.from('feriados').upsert(row,{onConflict:'id'});if(r.error)throw r.error;adcSnapSet('feriados',row.id,row)}for(const x of (data.extraIncome||[])){const row={owner_id:ownerId,id:String(x.id),data:x.date,descricao:x.description,valor:Number(x.amount||0),observacao:x.note||null};if(adcSnapSame('ganhos_extras',row.id,row))continue;const r=await adcSupabase.from('ganhos_extras').upsert(row,{onConflict:'id'});if(r.error)throw r.error;adcSnapSet('ganhos_extras',row.id,row)}
   // Despesas fixas — modelos recorrentes mensais.
   try{
     for(const id of (data.pendingFixedExpenseDeletes||[])){const r=await adcSupabase.from('despesas_fixas').delete().eq('id',String(id)).eq('owner_id',ownerId);if(r.error)throw r.error;}
-    for(const x of (data.fixedExpenses||[])){const r=await adcSupabase.from('despesas_fixas').upsert({owner_id:ownerId,id:String(x.id),descricao:x.description,valor:Number(x.amount||0),dia_pagamento:Number(x.day||1),observacao:x.note||null,ativo:x.active!==false,updated_at:new Date().toISOString()},{onConflict:'id'});if(r.error)throw r.error;}
+    for(const x of (data.fixedExpenses||[])){const row={owner_id:ownerId,id:String(x.id),descricao:x.description,valor:Number(x.amount||0),dia_pagamento:Number(x.day||1),observacao:x.note||null,ativo:x.active!==false};if(adcSnapSame('despesas_fixas',row.id,row))continue;const r=await adcSupabase.from('despesas_fixas').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'id'});if(r.error)throw r.error;adcSnapSet('despesas_fixas',row.id,row);}
     await pushFixedExpenseOccurrences(ownerId);
     data.pendingFixedExpenseChanges={};data.pendingFixedExpenseDeletes=[];
   }catch(e){console.warn('Falha ao sincronizar despesas fixas; alterações permanecem pendentes.',e);}
@@ -2812,8 +2836,11 @@ async function adcPushAllV2(showMessage=false){
       if(r.error)throw r.error;
     }
     for(const x of (data.expenses||[])){
-     const r=await adcSupabase.from('despesas').upsert({owner_id:ownerId,id:String(x.id),data:x.date,descricao:x.description,valor:Number(x.amount||0),observacao:x.note||null,fixed_id:x.fixedId||null,omitida:x.omitida===true,updated_at:new Date().toISOString()},{onConflict:'id'});
+     const row={owner_id:ownerId,id:String(x.id),data:x.date,descricao:x.description,valor:Number(x.amount||0),observacao:x.note||null,fixed_id:x.fixedId||null,omitida:x.omitida===true};
+     if(adcSnapSame('despesas',row.id,row))continue;
+     const r=await adcSupabase.from('despesas').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'id'});
      if(r.error)throw r.error;
+     adcSnapSet('despesas',row.id,row);
     }
     data.pendingExpenseChanges={};
     data.pendingExpenseDeletes=[];
@@ -2822,6 +2849,8 @@ async function adcPushAllV2(showMessage=false){
   // Metas de receita: Supabase é a fonte compartilhada entre computador e celular.
   // Upsert por owner_id + ano; metas removidas localmente são removidas do banco.
   const localGoals=data.revenueGoals&&typeof data.revenueGoals==='object'?data.revenueGoals:{};
+  const goalsSnapRow=Object.fromEntries(Object.entries(localGoals).filter(([,v])=>Number(v)>0).map(([a,v])=>[String(a),Number(v)]).sort());
+  if(!adcSnapSame('metas','todas',goalsSnapRow)){
   const cloudGoals=await adcSupabase.from('metas_receita').select('ano').eq('owner_id',ownerId);
   if(cloudGoals.error)throw cloudGoals.error;
   const wantedYears=new Set(Object.keys(localGoals).filter(y=>Number(localGoals[y])>0).map(Number));
@@ -2829,7 +2858,10 @@ async function adcPushAllV2(showMessage=false){
   if(removeYears.length){const gd=await adcSupabase.from('metas_receita').delete().eq('owner_id',ownerId).in('ano',removeYears);if(gd.error)throw gd.error;}
   const goalRows=Object.entries(localGoals).filter(([,v])=>Number(v)>0).map(([ano,v])=>({owner_id:ownerId,ano:Number(ano),meta_anual:Number(v),updated_at:new Date().toISOString()}));
   if(goalRows.length){const gu=await adcSupabase.from('metas_receita').upsert(goalRows,{onConflict:'owner_id,ano'});if(gu.error)throw gu.error;}
-  const c=data.config||{};const cr=await adcSupabase.from('configuracoes').upsert({owner_id:ownerId,id:1,cancel_rule:c.cancelRule,holiday_rule:c.holidayRule,move_rule:c.moveRule,due_day:Number(c.dueDay||5),pix_key:c.pixKey||null,business_name:c.businessName||'Além das Curvas',owner_name:c.ownerName||null,owner_email:c.ownerEmail||null,updated_at:new Date().toISOString()},{onConflict:'id'});if(cr.error)throw cr.error;
+  adcSnapSet('metas','todas',goalsSnapRow);
+  }
+  const c=data.config||{};const cfgRow={owner_id:ownerId,id:1,cancel_rule:c.cancelRule,holiday_rule:c.holidayRule,move_rule:c.moveRule,due_day:Number(c.dueDay||5),pix_key:c.pixKey||null,business_name:c.businessName||'Além das Curvas',owner_name:c.ownerName||null,owner_email:c.ownerEmail||null};
+  if(!adcSnapSame('configuracoes','1',cfgRow)){const cr=await adcSupabase.from('configuracoes').upsert({...cfgRow,updated_at:new Date().toISOString()},{onConflict:'id'});if(cr.error)throw cr.error;adcSnapSet('configuracoes','1',cfgRow);}
   localStorage.setItem(KEY,JSON.stringify(data));adcSetCloudStatus('Sincronizado ✓','online');if(showMessage)alert('Sincronização completa concluída.');return true;
  }catch(e){console.error('Push V2',e);adcLastSyncError=e.message||String(e);adcSetCloudStatus('Erro na sincronização','error');if(showMessage)alert('Erro na sincronização: '+(e.message||e));return false}finally{adcSyncV2Busy=false}
 }
@@ -2874,6 +2906,7 @@ async function adcSyncV2(){
 // sincronização em andamento (adcRunSyncV2) e espera o resultado dela — sem disputa de trava.
 async function adcManualSync(showMessage=true){
  adcLastSyncError='';
+ adcForceFullPushV2=true; // botão "Sincronizar": reenvia tudo uma vez, como antes
  const ok=await adcSyncV2();
  if(showMessage) alert(ok?'Sincronização concluída. Os dados deste dispositivo foram enviados e atualizados a partir do banco (alunos, aulas, cobranças, feriados e ganhos extras).':'Não foi possível sincronizar agora.'+(adcLastSyncError?'\n\nDetalhe: '+adcLastSyncError:' Verifique sua internet e as permissões do banco.'));
  return ok;
@@ -2892,9 +2925,13 @@ const oldSave=save;save=function(){
   if(!adcCloudApplying)adcScheduleAutoSyncV2();
 };
 let adcAutoSyncV2Timer=null;function adcScheduleAutoSyncV2(){clearTimeout(adcAutoSyncV2Timer);adcAutoSyncV2Timer=setTimeout(()=>adcSyncV2(),1200)}
-window.addEventListener('online',()=>setTimeout(()=>adcSyncV2(),500));
-window.addEventListener('focus',()=>setTimeout(()=>adcSyncV2(),500));
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>adcSyncV2(),500)});
+// Voltar o foco, a aba ficar visível e reconectar a internet costumam disparar juntos:
+// agrupa tudo numa única sincronização (com espera curta) em vez de três pedidos separados.
+let adcResumeSyncTimer=null;
+function adcSyncOnResumeV2(){clearTimeout(adcResumeSyncTimer);adcResumeSyncTimer=setTimeout(()=>adcSyncV2(),500)}
+window.addEventListener('online',adcSyncOnResumeV2);
+window.addEventListener('focus',adcSyncOnResumeV2);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')adcSyncOnResumeV2()});
 let adcSyncV2Interval=setInterval(()=>{if(document.visibilityState==='visible'&&adcSupabase&&!adcSyncV2Busy)adcSyncV2()},30000);
 setTimeout(()=>{if(adcSupabase)adcSyncV2()},2500);
 
