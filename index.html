@@ -45,9 +45,11 @@ button:hover{transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(36,28,26
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.03em}.kpi{font-size:25px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
 .tabs{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
 @media(max-width:760px){.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin:0 -16px 14px;padding-left:16px;padding-right:16px}.tabs::-webkit-scrollbar{height:5px}.tabs::-webkit-scrollbar-thumb{background:#E4D5C9;border-radius:99px}.tab{flex:none}}
-.tab{border:1px solid transparent;background:#F1E8E1;color:#5B4B42;border-radius:999px;padding:9px 15px;display:inline-flex;align-items:center;gap:7px;box-shadow:none}
-.tab svg{width:15px;height:15px}
-.tab.active{background:var(--ink);color:#fff}.tab:hover{transform:none;box-shadow:none;background:#EADDD2}.tab.active:hover{background:var(--ink)}
+.tab{border:1px solid transparent;background:#F1E8E1;color:#5B4B42;border-radius:999px;padding:9px 15px;display:inline-flex;align-items:center;gap:8px;box-shadow:none;font-weight:700;transition:background .15s,color .15s,border-color .15s}
+.tab svg{width:16px;height:16px;flex:none}
+.tab.active{background:var(--ink);color:#fff;box-shadow:0 6px 14px -8px rgba(36,28,26,.7)}.tab:hover{transform:none;box-shadow:none;background:#EADDD2;border-color:#dccdc1}.tab.active:hover{background:var(--ink);border-color:transparent}
+.tab:focus-visible{outline:3px solid rgba(244,91,42,.45);outline-offset:2px}
+@media(min-width:761px) and (max-width:1100px){.tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.tabs::-webkit-scrollbar{display:none}.tab{flex:none}}
 .panel{display:none}.panel.active{display:block}.tablebox{overflow:auto;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--card)}
 .tablebox::-webkit-scrollbar{height:9px}.tablebox::-webkit-scrollbar-thumb{background:#E4D5C9;border-radius:99px}
 table{border-collapse:collapse;width:100%}
@@ -106,12 +108,16 @@ table{border-collapse:collapse;width:100%}
 .pager button:disabled:hover{transform:none;box-shadow:none}
 @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.formgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.kpis{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
 @media print{header,.bar,.tabs,button{display:none!important}.card,.tablebox{box-shadow:none}.panel{display:block!important}}
-.bottomNav{display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:9;box-shadow:0 -6px 18px -12px rgba(36,28,26,.28)}
-.bottomNav .bnavRow{display:flex}
-.bnav{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px calc(8px + env(safe-area-inset-bottom));border:none;border-radius:0;background:transparent;box-shadow:none;color:var(--muted);font-size:10px;font-weight:800}
-.bnav svg{width:20px;height:20px}
-.bnav.active{color:var(--brand-dark)}
+.bottomNav{display:none;position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--line);z-index:9;box-shadow:0 -8px 24px -14px rgba(36,28,26,.35)}
+.bottomNav .bnavRow{display:flex;padding:6px 6px 0}
+.bnav{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:56px;padding:4px 2px calc(6px + env(safe-area-inset-bottom));border:none;border-radius:0;background:transparent;box-shadow:none;color:#85766d;font-size:11px;font-weight:700;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;transition:color .15s}
+.bnav svg{box-sizing:content-box;width:21px;height:21px;padding:4px 15px;border-radius:999px;transition:background .18s,color .18s,transform .12s}
+.bnav:active svg{transform:scale(.9)}
+.bnav.active{color:var(--brand-dark);font-weight:800}
+.bnav.active svg{background:rgba(244,91,42,.14);color:var(--brand-dark)}
 .bnav:hover{transform:none;box-shadow:none}
+.bnav:focus-visible{outline:3px solid rgba(244,91,42,.45);outline-offset:-3px;border-radius:14px}
+@media(prefers-reduced-motion:reduce){.bnav,.bnav svg{transition:none}}
 @media(max-width:760px){
  .tabs{display:none}
  .bottomNav{display:block}
@@ -128,6 +134,14 @@ table{border-collapse:collapse;width:100%}
 }
 .moreSheet{display:flex;flex-direction:column;gap:8px}
 .moreSheet button{text-align:left;justify-content:flex-start;display:flex;align-items:center;gap:10px}
+.moreH{margin:0 0 4px;font-size:20px}
+.moreTitle{font-size:10.5px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:#9a8d85;padding:14px 4px 2px}
+.moreSheet button{min-height:50px;border:1px solid var(--line)!important;box-shadow:none!important;background:#fff!important;border-radius:14px!important;padding:8px 12px!important;font-weight:700;color:#3d312a;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s}
+.moreSheet button:active{transform:scale(.985);background:#f6f1ed!important}
+.moreSheet .mi{flex:none;width:34px;height:34px;border-radius:11px;background:#f4efeb;color:#6b5d54;display:grid;place-items:center}
+.moreSheet .mi svg{width:19px;height:19px}
+.moreSheet button.danger{color:#b4281c}.moreSheet button.danger .mi{background:#fdeceb;color:#b4281c}
+@media(max-width:760px){.modal:has(.moreSheet){z-index:10040;align-items:flex-end;padding:0}.modal:has(.moreSheet) .modalbox{border-radius:24px 24px 0 0;max-height:88vh;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}}
 
 #gateScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#241C1A 0%,#3A281F 100%);padding:20px}
 .gateCard{max-width:380px;width:100%;background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:34px 28px;text-align:center}
@@ -503,13 +517,13 @@ table{border-collapse:collapse;width:100%}
 </div>
 <footer style="text-align:center;padding:20px 16px 34px;color:var(--muted);font-size:12px">CoachFlow — Tecnologia desenvolvida por Além das Curvas</footer>
 
-<nav class="bottomNav">
+<nav class="bottomNav" aria-label="Navegação principal">
  <div class="bnavRow">
   <button class="bnav active" data-tab="inicio" onclick="tab('inicio',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l7-6.5L17 10"/><path d="M5 8.5V17h10V8.5"/></svg>Início</button>
   <button class="bnav" data-tab="cobranca" onclick="tab('cobranca',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h10v16l-2.5-1.6L10 18l-2.5-1.6L5 18V2Z"/><path d="M7.3 7h5.4M7.3 10h5.4"/></svg>Cobrança</button>
   <button class="bnav" data-tab="financeiro" onclick="tab('financeiro',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17V11M9.5 17V6M16 17v-8"/></svg>Financeiro</button>
   <button class="bnav" data-tab="alunos" onclick="tab('alunos',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.2" cy="6.5" r="2.6"/><path d="M2.2 17c0-3.3 2.2-5.3 5-5.3s5 2 5 5.3"/><circle cx="14.5" cy="7.3" r="2"/><path d="M12.6 11.8c2.2.2 3.6 1.9 3.6 4.4"/></svg>Alunos</button>
-  <button class="bnav" onclick="openMoreMenu()"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg>Mais</button>
+  <button class="bnav" data-tab="mais" aria-label="Mais opções" onclick="openMoreMenu()"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg>Mais</button>
  </div>
 </nav>
 
@@ -1810,24 +1824,28 @@ function renderBackupStatus(){
  const homeEl=document.getElementById('homeBackupBadge');
  if(homeEl)homeEl.innerHTML=info.days===null||info.days>7?`<span class="pill ${info.cls}" style="cursor:pointer" onclick="exportData()" title="Clique para fazer backup agora">💾 ${info.days===null?'Fazer 1º backup':'Backup desatualizado — clique para atualizar'}</span>`:`<span class="pill pgreen">💾 Backup em dia</span>`;
 }
-function tab(id,el){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(el)el.classList.add('active');document.querySelectorAll('.bnav').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));closeModal()}
+function tab(id,el){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(el)el.classList.add('active');const inMore=!['inicio','cobranca','financeiro','alunos'].includes(id);document.querySelectorAll('.bnav').forEach(x=>{const on=x.dataset.tab===id||(x.dataset.tab==='mais'&&inMore);x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});closeModal()}
 function openMoreMenu(){
  const cloudOk=!!localStorage.getItem(ADC_SUPABASE_KEY_STORAGE);
- document.getElementById('modalContent').innerHTML=`<h2>Mais opções</h2>
- <div class="moreSheet" style="margin-top:14px">
-  <button onclick="tab('cal',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M3 8h14M7 2v4M13 2v4"/></svg> Calendário</button>
-  <button onclick="tab('feriados',this)"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none" width="16" height="16"><path d="M10 1.5l2.47 5.18 5.53.66-4.1 3.84 1.14 5.5L10 13.9l-5.04 2.78 1.14-5.5-4.1-3.84 5.53-.66L10 1.5Z"/></svg> Feriados</button>
-  <button onclick="tab('relatorios',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 3v14h14"/><path d="M6 13l3-4 3 2 4-6"/></svg> Relatórios</button>
-  <button onclick="tab('financeiro',this);setTimeout(()=>document.getElementById('extraIncomeBody')?.closest('.card')?.scrollIntoView({behavior:'smooth'}),80)">💵 Ganhos extras</button>
-  <button onclick="tab('config',this)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" width="16" height="16"><path d="M2 5h11M16 5h2M2 10h6M11 10h7M2 15h11M16 15h2"/><circle cx="13" cy="5" r="2" fill="currentColor" stroke="none"/><circle cx="8" cy="10" r="2" fill="currentColor" stroke="none"/><circle cx="13" cy="15" r="2" fill="currentColor" stroke="none"/></svg> Configurações</button>
-  <button onclick="closeModal();recalc()">🔄 Atualizar</button>
-  <button onclick="closeModal();setTimeout(()=>window.print(),150)">🖨 Imprimir</button>
-  <button onclick="exportData()">💾 Exportar backup</button>
-  <button onclick="document.getElementById('importFile').click()">📥 Importar backup</button>
-  <button onclick="openBillingMessages()">💬 Gerar mensagens de cobrança</button>
-  <button onclick="closeModal();${cloudOk?'adcSyncToCloud()':'adcInitSupabase(true)'}">☁️ ${cloudOk?'Sincronizar com banco':'Conectar banco'}</button>
-   <button onclick="closeModal();adcPullStudentsFromCloud(true)">⬇️ Buscar dados do banco</button>
-  <button onclick="gateLock()">🔒 Sair</button>
+ document.getElementById('modalContent').innerHTML=`<h2 class="moreH">Mais opções</h2>
+ <div class="moreSheet">
+  <div class="moreTitle">Ir para</div>
+  <button onclick="tab('cal',this)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M3 8h14M7 2v4M13 2v4"/></svg></span><span class="ml">Calendário</span></button>
+  <button onclick="tab('feriados',this)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.5l2.3 4.8 5.2.6-3.9 3.6 1.1 5.2L10 14l-4.7 2.7 1.1-5.2L2.5 7.9l5.2-.6L10 2.5Z"/></svg></span><span class="ml">Feriados</span></button>
+  <button onclick="tab('relatorios',this)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v14h14"/><path d="M6 13l3-4 3 2 4-6"/></svg></span><span class="ml">Relatórios</span></button>
+  <button onclick="tab('financeiro',this);setTimeout(()=>document.getElementById('extraIncomeBody')?.closest('.card')?.scrollIntoView({behavior:'smooth'}),80)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10" rx="2"/><circle cx="10" cy="10" r="2.2"/><path d="M5.5 8v.01M14.5 12v.01"/></svg></span><span class="ml">Ganhos extras</span></button>
+  <button onclick="tab('config',this)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5h11M16 5h2M2 10h6M11 10h7M2 15h11M16 15h2"/><circle cx="14.5" cy="5" r="1.6"/><circle cx="9.5" cy="10" r="1.6"/><circle cx="14.5" cy="15" r="1.6"/></svg></span><span class="ml">Configurações</span></button>
+  <div class="moreTitle">Dados e backup</div>
+  <button onclick="closeModal();recalc()"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10a6 6 0 1 1-2-4.5"/><path d="M16 3.5V6h-2.5"/></svg></span><span class="ml">Atualizar</span></button>
+  <button onclick="closeModal();setTimeout(()=>window.print(),150)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7V3h8v4"/><rect x="3" y="7" width="14" height="7" rx="2"/><path d="M6 12h8v5H6z"/></svg></span><span class="ml">Imprimir</span></button>
+  <button onclick="exportData()"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M6.5 9.5L10 13l3.5-3.5"/><path d="M3.5 14v2h13v-2"/></svg></span><span class="ml">Exportar backup</span></button>
+  <button onclick="document.getElementById('importFile').click()"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13V3M6.5 6.5L10 3l3.5 3.5"/><path d="M3.5 14v2h13v-2"/></svg></span><span class="ml">Importar backup</span></button>
+  <button onclick="openBillingMessages()"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h14v9H8l-4 3.5V13H3V4Z"/></svg></span><span class="ml">Gerar mensagens de cobrança</span></button>
+  <div class="moreTitle">Banco de dados</div>
+  <button onclick="closeModal();${cloudOk?'adcSyncToCloud()':'adcInitSupabase(true)'}"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15a3.5 3.5 0 0 1-.4-7A4.5 4.5 0 0 1 14 7.5a3 3 0 0 1 .5 5.9"/><path d="M6 15h8.5"/></svg></span><span class="ml">${cloudOk?'Sincronizar com banco':'Conectar banco'}</span></button>
+  <button onclick="closeModal();adcPullStudentsFromCloud(true)"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v9M6.5 9.5L10 13l3.5-3.5"/><path d="M4 16h12"/></svg></span><span class="ml">Buscar dados do banco</span></button>
+  <div class="moreTitle">Conta</div>
+  <button class="danger" onclick="gateLock()"><span class="mi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg></span><span class="ml">Sair</span></button>
  </div>
  <div class="actions"><button onclick="closeModal()">Fechar</button></div>`;
  document.getElementById('modal').classList.add('show');
