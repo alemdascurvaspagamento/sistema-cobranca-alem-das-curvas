@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><title>CoachFlow — Gestão para quem atende pessoas</title>
+<link rel="stylesheet" href="coachflow-saas.css?v=1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<section id="authView" class="auth-wrap">
+  <div class="brand-card"><div class="logo">CF</div><h1>CoachFlow</h1><p>Gestão simples para quem vive de atender pessoas.</p></div>
+  <form id="authForm" class="panel auth-panel">
+    <h2 id="authTitle">Entrar</h2>
+    <label>E-mail<input id="authEmail" type="email" required autocomplete="email"></label>
+    <label>Senha<input id="authPassword" type="password" minlength="6" required autocomplete="current-password"></label>
+    <button class="btn primary" type="submit" id="authSubmit">Entrar</button>
+    <button class="btn link" type="button" id="authToggle">Criar uma conta</button>
+  </form>
+</section>
+<section id="onboardingView" class="auth-wrap hidden">
+  <form id="onboardingForm" class="panel onboarding">
+    <div class="logo">CF</div><h2>Configure seu espaço</h2><p>Isso leva menos de um minuto.</p>
+    <label>Seu nome<input id="onboardName" required></label>
+    <label>Profissão<select id="onboardProfession"><option>Personal Trainer</option><option>Fisioterapeuta</option><option>Psicólogo</option><option>Médico</option><option>Terapeuta</option><option>Nutricionista</option><option>Outro</option></select></label>
+    <label>Nome do negócio<input id="onboardBusiness" placeholder="Ex.: Clínica Movimento"></label>
+    <button class="btn primary" type="submit">Começar</button>
+  </form>
+</section>
+<div id="appView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo small">CF</div><div><strong>CoachFlow</strong><span id="workspaceName">Meu espaço</span></div></div>
+    <nav id="nav"><button data-page="home" class="active">Início</button><button data-page="agenda">Agenda</button><button data-page="clients">Clientes</button><button data-page="finance">Financeiro</button><button data-page="reports">Relatórios</button></nav>
+    <button id="logoutBtn" class="btn link logout">Sair</button>
+  </aside>
+  <main class="main">
+    <header><button id="menuBtn" class="menu">☰</button><div><h1 id="pageTitle">Início</h1><p id="todayLabel"></p></div><button id="quickAdd" class="btn primary">+ Novo</button></header>
+    <section id="homePage" class="page active">
+      <div class="hero"><div><span>Visão do mês</span><h2 id="helloName">Olá</h2><p>Seu negócio em um só lugar.</p></div><div class="hero-value"><small>Saldo recebido</small><strong id="monthBalance">R$ 0</strong></div></div>
+      <div class="metrics"><article><span>Recebido no mês</span><strong id="mReceived">R$ 0</strong></article><article><span>A receber</span><strong id="mPending">R$ 0</strong></article><article><span>Despesas</span><strong id="mExpenses">R$ 0</strong></article><article><span>Atendimentos</span><strong id="mAppointments">0</strong></article></div>
+      <div class="grid2"><article class="panel"><div class="section-head"><h3>Agenda de hoje</h3><button data-goto="agenda">Ver agenda</button></div><div id="todayAppointments" class="list empty">Nenhum atendimento hoje.</div></article><article class="panel"><div class="section-head"><h3>Financeiro de hoje</h3><button data-goto="finance">Ver financeiro</button></div><div id="todayFinance" class="list empty">Nenhuma movimentação hoje.</div></article></div>
+    </section>
+    <section id="agendaPage" class="page"><div class="section-head"><div><h2>Agenda</h2><p>Atendimentos e compromissos.</p></div><button class="btn primary" data-action="appointment">+ Atendimento</button></div><div class="panel"><div id="appointmentsList" class="list"></div></div></section>
+    <section id="clientsPage" class="page"><div class="section-head"><div><h2 id="clientsTitle">Clientes</h2><p>Cadastros e relacionamento.</p></div><button class="btn primary" data-action="client">+ Cliente</button></div><div class="panel"><div id="clientsList" class="list"></div></div></section>
+    <section id="financePage" class="page"><div class="section-head"><div><h2>Financeiro</h2><p>Entradas, cobranças e despesas.</p></div><div><button class="btn" data-action="expense">+ Despesa</button><button class="btn primary" data-action="charge">+ Cobrança</button></div></div><div class="metrics"><article><span>Recebido</span><strong id="fReceived">R$ 0</strong></article><article><span>A receber</span><strong id="fPending">R$ 0</strong></article><article><span>Despesas</span><strong id="fExpenses">R$ 0</strong></article><article><span>Resultado</span><strong id="fResult">R$ 0</strong></article></div><div class="grid2"><article class="panel"><h3>Cobranças</h3><div id="chargesList" class="list"></div></article><article class="panel"><h3>Despesas</h3><div id="expensesList" class="list"></div></article></div></section>
+    <section id="reportsPage" class="page"><div class="section-head"><div><h2>Relatórios</h2><p>Indicadores essenciais do negócio.</p></div></div><div class="metrics"><article><span>Clientes ativos</span><strong id="rClients">0</strong></article><article><span>Ticket recebido</span><strong id="rTicket">R$ 0</strong></article><article><span>Inadimplência</span><strong id="rOverdue">R$ 0</strong></article><article><span>Atendimentos concluídos</span><strong id="rCompleted">0</strong></article></div></section>
+  </main>
+</div>
+<dialog id="modal"><form method="dialog" id="modalForm" class="modal-card"><div class="section-head"><h2 id="modalTitle">Novo</h2><button value="cancel" class="icon-btn">×</button></div><div id="modalFields"></div><div class="modal-actions"><button value="cancel" class="btn">Cancelar</button><button id="modalSave" value="default" class="btn primary">Salvar</button></div></form></dialog>
+<script src="coachflow-saas.js?v=1"></script>
+</body></html>
