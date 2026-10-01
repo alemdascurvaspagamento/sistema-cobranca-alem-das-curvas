@@ -1,4 +1,4 @@
-/* CoachFlow API client v6 */
+/* CoachFlow API client v7 */
 (function (global) {
   'use strict';
   const SUPABASE_URL = 'https://yjpxjzgvshaabjpdpbsc.supabase.co';
@@ -72,47 +72,92 @@
     return true;
   }
 
-  /* Financeiro v6: o Previsto do mês inclui também os ganhos extras do mesmo mês. */
+  /*
+   * Financeiro v7
+   * O script principal mantém renderFinance/data como bindings lexicais e não como
+   * propriedades de window. A v6 tentou acessá-los por global.renderFinance/global.data,
+   * portanto o patch nunca era instalado. A v7 trabalha diretamente com os KPIs que o
+   * renderFinance já preenche no DOM: finPrevisto (serviços) + finExtraTotal (extras).
+   */
+  function parseBRL(text) {
+    const raw = String(text || '').replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.');
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : 0;
+  }
+  function formatBRL(value) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0);
+  }
+  let financePatchBusy = false;
+  function applyFinanceForecastPatch() {
+    if (financePatchBusy) return false;
+    const previstoEl = document.getElementById('finPrevisto');
+    const extraEl = document.getElementById('finExtraTotal');
+    if (!previstoEl || !extraEl) return false;
+
+    const extra = parseBRL(extraEl.textContent);
+    const current = parseBRL(previstoEl.textContent);
+    const lastApplied = Number(previstoEl.dataset.coachflowAppliedTotal || NaN);
+    const lastExtra = Number(previstoEl.dataset.coachflowExtra || NaN);
+    let servicesForecast;
+
+    // Se o valor atual é exatamente o que nós aplicamos, não soma de novo.
+    // Se renderFinance acabou de rodar, ele terá restaurado finPrevisto para o valor-base
+    // dos atendimentos; nesse caso current passa a ser a nova base.
+    if (Number.isFinite(lastApplied) && Math.abs(current - lastApplied) < 0.005) {
+      servicesForecast = Number(previstoEl.dataset.coachflowServices || 0);
+      if (Number.isFinite(lastExtra) && Math.abs(extra - lastExtra) < 0.005) return true;
+    } else {
+      servicesForecast = current;
+    }
+
+    const total = servicesForecast + extra;
+    financePatchBusy = true;
+    previstoEl.dataset.coachflowServices = String(servicesForecast);
+    previstoEl.dataset.coachflowExtra = String(extra);
+    previstoEl.dataset.coachflowAppliedTotal = String(total);
+    previstoEl.textContent = formatBRL(total);
+
+    const card = previstoEl.closest('.dataCard,.kpiCard,.card') || previstoEl.parentElement;
+    if (card) {
+      let detail = card.querySelector('[data-coachflow-forecast-detail]');
+      if (!detail) {
+        detail = document.createElement('div');
+        detail.setAttribute('data-coachflow-forecast-detail', '1');
+        detail.style.cssText = 'margin-top:7px;padding-top:7px;border-top:1px solid rgba(15,23,42,.10);font-size:12px;line-height:1.35;color:#667085;font-weight:600';
+        card.appendChild(detail);
+      }
+      detail.innerHTML = '<span style="color:#18212B">' + formatBRL(servicesForecast) + '</span> atendimentos + <span style="color:#2F766D">' + formatBRL(extra) + '</span> ganhos extras';
+    }
+    financePatchBusy = false;
+    return true;
+  }
   function installFinanceForecastPatch() {
-    if (global.__coachflowFinanceForecastPatched) return true;
-    if (typeof global.renderFinance !== 'function' || typeof global.calcStudent !== 'function' || typeof global.extraIncomeForMonth !== 'function') return false;
-    const originalRenderFinance = global.renderFinance;
-    global.renderFinance = function () {
-      const result = originalRenderFinance.apply(this, arguments);
-      try {
-        const y = typeof global.year === 'function' ? global.year() : new Date().getFullYear();
-        const m = typeof global.month === 'function' ? global.month() : new Date().getMonth();
-        const active = (global.data && Array.isArray(global.data.students)) ? global.data.students.filter(s => s.active) : [];
-        const servicesForecast = active.reduce((sum, s) => sum + Number(global.calcStudent(s).total || 0), 0);
-        const extraTotal = global.extraIncomeForMonth(y, m).reduce((sum, x) => sum + Number(x.amount || 0), 0);
-        const totalForecast = servicesForecast + extraTotal;
-        const previstoEl = document.getElementById('finPrevisto');
-        if (previstoEl) {
-          previstoEl.textContent = typeof global.money === 'function' ? global.money(totalForecast) : totalForecast.toLocaleString('pt-BR', {style:'currency',currency:'BRL'});
-          const card = previstoEl.closest('.dataCard,.kpiCard,.card') || previstoEl.parentElement;
-          if (card) {
-            let detail = card.querySelector('[data-coachflow-forecast-detail]');
-            if (!detail) {
-              detail = document.createElement('div');
-              detail.setAttribute('data-coachflow-forecast-detail','1');
-              detail.style.cssText = 'margin-top:7px;padding-top:7px;border-top:1px solid rgba(15,23,42,.10);font-size:12px;line-height:1.35;color:#667085;font-weight:600';
-              card.appendChild(detail);
-            }
-            const fmt = typeof global.money === 'function' ? global.money : v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-            detail.innerHTML = '<span style="color:#18212B">'+fmt(servicesForecast)+'</span> previstos + <span style="color:#2F766D">'+fmt(extraTotal)+'</span> ganhos extras';
-          }
-        }
-      } catch (e) { console.error('CoachFlow previsto + ganhos extras:', e); }
-      return result;
+    if (global.__coachflowFinanceForecastObserver) return true;
+    const root = document.body;
+    if (!root) return false;
+    let scheduled = false;
+    const schedule = function () {
+      if (financePatchBusy || scheduled) return;
+      scheduled = true;
+      setTimeout(function () { scheduled = false; applyFinanceForecastPatch(); }, 0);
     };
-    global.__coachflowFinanceForecastPatched = true;
-    try { global.renderFinance(); } catch (_) {}
+    const observer = new MutationObserver(function (mutations) {
+      for (const mutation of mutations) {
+        const target = mutation.target.nodeType === 3 ? mutation.target.parentElement : mutation.target;
+        if (target && (target.id === 'finPrevisto' || target.id === 'finExtraTotal' || target.closest?.('#finPrevisto,#finExtraTotal'))) {
+          schedule();
+          break;
+        }
+      }
+    });
+    observer.observe(root, { subtree: true, childList: true, characterData: true });
+    global.__coachflowFinanceForecastObserver = observer;
+    schedule();
     return true;
   }
 
   let attempts = 0;
-  let timer;
-  timer = setInterval(() => {
+  const timer = setInterval(() => {
     attempts += 1;
     const proxyReady = installProxy();
     const financeReady = installFinanceForecastPatch();
