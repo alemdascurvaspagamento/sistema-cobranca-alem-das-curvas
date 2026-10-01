@@ -2393,6 +2393,17 @@ function mergeLocalDuplicateStudents(preferCanonical){
  }
  return mergedAny;
 }
+// O banco devolve no máximo 1000 linhas por consulta; busca em páginas para não cortar tabelas grandes (ex.: horarios).
+async function adcFetchAllV2(table,ownerId){
+ const size=1000;let all=[];
+ for(let from=0;;from+=size){
+  const r=await adcSupabase.from(table).select('*').eq('owner_id',ownerId).order('id',{ascending:true}).range(from,from+size-1);
+  if(r.error)return {data:null,error:r.error};
+  const rows=r.data||[];all=all.concat(rows);
+  if(rows.length<size)break;
+ }
+ return {data:all,error:null};
+}
 async function adcPullAllV2(){
  if(adcCloudApplying||adcSyncV2Busy){adcLastSyncError='Já havia uma sincronização automática em andamento neste momento.';return false;}
  if(!(await adcEnsureSessionV2())){adcLastSyncError='Sessão expirada ou sem conexão com o banco. Toque em "Sair" e entre novamente no sistema.';adcSetCloudStatus('Login necessário','error');window.dispatchEvent(new CustomEvent('coachflow:data-error',{detail:{message:adcLastSyncError}}));return false;}
@@ -2403,7 +2414,7 @@ async function adcPullAllV2(){
   // aparelho nunca mistura ou exibe dados de outra conta.
   const ownerId=await adcGetOwnerIdV3();
   const [al,hr,au,co,pa,fe,ex,cfg,goals]=await Promise.all([
-   adcSupabase.from('Alunos').select('*').eq('owner_id',ownerId),adcSupabase.from('horarios').select('*').eq('owner_id',ownerId),adcSupabase.from('aulas').select('*').eq('owner_id',ownerId),
+   adcSupabase.from('Alunos').select('*').eq('owner_id',ownerId),adcFetchAllV2('horarios',ownerId),adcSupabase.from('aulas').select('*').eq('owner_id',ownerId),
    adcSupabase.from('cobrancas').select('*').eq('owner_id',ownerId),adcSupabase.from('pagamentos').select('*').eq('owner_id',ownerId),adcSupabase.from('feriados').select('*').eq('owner_id',ownerId),
    adcSupabase.from('ganhos_extras').select('*').eq('owner_id',ownerId),adcSupabase.from('configuracoes').select('*').eq('id',1).eq('owner_id',ownerId).maybeSingle(),
    adcSupabase.from('metas_receita').select('ano,meta_anual').eq('owner_id',ownerId)
