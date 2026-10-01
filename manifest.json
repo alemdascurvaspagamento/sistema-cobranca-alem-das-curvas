@@ -1,0 +1,14 @@
+{
+  "name": "CoachFlow",
+  "short_name": "CoachFlow",
+  "description": "Gestão financeira e de atendimentos para profissionais.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f4f1",
+  "theme_color": "#201712",
+  "icons": [
+    {"src":"icons/coachflow-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/coachflow-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
