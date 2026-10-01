@@ -19,13 +19,11 @@
   </form>
 </section>
 <section id="onboardingView" class="auth-wrap hidden">
-  <form id="onboardingForm" class="panel onboarding">
-    <div class="logo">CF</div><h2>Configure seu espaço</h2><p>Isso leva menos de um minuto.</p>
-    <label>Seu nome<input id="onboardName" required></label>
-    <label>Profissão<select id="onboardProfession"><option>Personal Trainer</option><option>Fisioterapeuta</option><option>Psicólogo</option><option>Médico</option><option>Terapeuta</option><option>Nutricionista</option><option>Outro</option></select></label>
-    <label>Nome do negócio<input id="onboardBusiness" placeholder="Ex.: Clínica Movimento"></label>
-    <button class="btn primary" type="submit">Começar</button>
-  </form>
+  <div class="panel onboarding" style="max-width:620px;text-align:center">
+    <div class="logo">CF</div><h2>Vamos configurar seu CoachFlow</h2>
+    <p>Em seis passos rápidos vamos adaptar clientes, atendimentos, cobrança, primeiro serviço e meta financeira à sua profissão.</p>
+    <button class="btn primary" type="button" id="startOnboarding">Começar configuração</button>
+  </div>
 </section>
 <div id="appView" class="app hidden">
   <aside class="sidebar">
@@ -47,5 +45,6 @@
   </main>
 </div>
 <dialog id="modal"><form method="dialog" id="modalForm" class="modal-card"><div class="section-head"><h2 id="modalTitle">Novo</h2><button value="cancel" class="icon-btn">×</button></div><div id="modalFields"></div><div class="modal-actions"><button value="cancel" class="btn">Cancelar</button><button id="modalSave" value="default" class="btn primary">Salvar</button></div></form></dialog>
-<script src="coachflow-saas.js?v=1"></script>
+<script src="coachflow-saas.js?v=2"></script>
+<script>document.getElementById('startOnboarding').addEventListener('click',()=>location.href='saas/onboarding/');</script>
 </body></html>
