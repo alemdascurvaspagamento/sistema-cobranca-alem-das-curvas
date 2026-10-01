@@ -2395,7 +2395,7 @@ function mergeLocalDuplicateStudents(preferCanonical){
 }
 async function adcPullAllV2(){
  if(adcCloudApplying||adcSyncV2Busy){adcLastSyncError='Já havia uma sincronização automática em andamento neste momento.';return false;}
- if(!(await adcEnsureSessionV2())){adcLastSyncError='Sessão expirada ou sem conexão com o banco. Toque em "Sair" e entre novamente no sistema.';adcSetCloudStatus('Login necessário','error');return false;}
+ if(!(await adcEnsureSessionV2())){adcLastSyncError='Sessão expirada ou sem conexão com o banco. Toque em "Sair" e entre novamente no sistema.';adcSetCloudStatus('Login necessário','error');window.dispatchEvent(new CustomEvent('coachflow:data-error',{detail:{message:adcLastSyncError}}));return false;}
  adcCloudApplying=true;
  try{
   // Filtra explicitamente por owner_id em toda leitura, além da política RLS do banco —
@@ -2565,8 +2565,8 @@ async function adcPullAllV2(){
   }catch(e){ adcDespesasTableOk=false; console.warn('Falha ao ler tabela despesas; mantendo pendências locais.',e); }
   if(cfg.data){const x=cfg.data;data.config={...data.config,cancelRule:x.cancel_rule||data.config.cancelRule,holidayRule:x.holiday_rule||data.config.holidayRule,moveRule:x.move_rule||data.config.moveRule,dueDay:Number(x.due_day||5),pixKey:x.pix_key||'',businessName:x.business_name||'Além das Curvas',ownerName:x.owner_name||'',ownerEmail:x.owner_email||data.config.ownerEmail||''};}
   saveLocalOnlyV2(); recalc(); renderHolidays?.(); renderExtraIncome?.(); renderExpenses?.();
-  adcSetCloudStatus('Sincronizado ✓','online'); return true;
- }catch(e){console.error('Pull V2',e);adcLastSyncError=e.message||String(e);adcSetCloudStatus('Erro ao baixar dados','error');return false}
+  adcSetCloudStatus('Sincronizado ✓','online'); window.dispatchEvent(new CustomEvent('coachflow:data-ready')); return true;
+ }catch(e){console.error('Pull V2',e);adcLastSyncError=e.message||String(e);adcSetCloudStatus('Erro ao baixar dados','error');window.dispatchEvent(new CustomEvent('coachflow:data-error',{detail:{message:adcLastSyncError}}));return false}
  finally{adcCloudApplying=false}
 }
 function saveLocalOnlyV2(){localStorage.setItem(KEY,JSON.stringify(data));document.getElementById('saveStatus').textContent='Dados sincronizados ✓'}
