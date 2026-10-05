@@ -1,0 +1,61 @@
+/* CoachFlow Professional — Card Finish Pass v1
+   SAFETY: coachflow-2-saas only. Do not merge/promote to personal CoachFlow main/production. */
+:root{--card-bg:rgba(255,255,255,.88);--card-border:rgba(20,20,24,.065);--card-shadow:0 8px 30px rgba(18,18,22,.045);--card-shadow-hover:0 14px 40px rgba(18,18,22,.075);--card-gold:#c79a2b;--card-green:#18764c;--card-red:#a73838;--card-amber:#9b6b12}
+/* shared card discipline */
+#homePage .panel,#agendaPage .panel,#clientsPage .panel,#financePage .panel,#reportsPage .panel,.metrics article,.today-stats article,.client-summary article,.report-kpis article,.client-card,.profile-kpis article{background:var(--card-bg);border:1px solid var(--card-border);box-shadow:var(--card-shadow)}
+.metrics article,.today-stats article,.client-summary article,.report-kpis article{position:relative;isolation:isolate;overflow:hidden}
+.metrics article:before,.today-stats article:before,.client-summary article:before,.report-kpis article:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:transparent;border-radius:20px 0 0 20px}
+.metrics article:hover,.today-stats article:hover,.client-summary article:hover,.report-kpis article:hover,.client-card:hover{box-shadow:var(--card-shadow-hover);border-color:rgba(199,154,43,.13)}
+.metrics strong,.today-stats strong,.client-summary strong,.report-kpis strong{font-variant-numeric:tabular-nums;line-height:1.05}
+.metrics span,.today-stats span,.client-summary span,.report-kpis span{line-height:1.25}
+/* home: financial hierarchy without visual noise */
+#homePage .metrics article:nth-child(1):before{background:var(--card-gold)}
+#homePage .metrics article:nth-child(2):before{background:#d8b45c}
+#homePage .metrics article:nth-child(3):before{background:#b8b8bd}
+#homePage .metrics article:nth-child(4):before{background:#d7d7dc}
+#homePage .grid2>.panel{min-height:280px}
+#homePage .section-head{min-height:46px;align-items:center}
+#homePage .section-head button{font-size:12px;font-weight:650;color:#80631c;background:transparent;border:0;padding:7px 0;cursor:pointer}
+#homePage .list.empty{min-height:150px;display:grid;place-items:center;text-align:center;color:#85858a;font-size:13px}
+/* agenda: time first, person second, actions quiet */
+#agendaPage>.section-head{margin-bottom:18px}
+#agendaPage>.panel{padding:10px 22px}
+#appointmentsList .item,#appointmentsList .day-item{padding:16px 4px;border-bottom:1px solid rgba(0,0,0,.065)}
+#appointmentsList .item:last-child,#appointmentsList .day-item:last-child{border-bottom:0}
+#appointmentsList strong,#appointmentsList .day-time{font-variant-numeric:tabular-nums}
+#appointmentsList .day-time{font-weight:750;color:#1d1d1f}
+.appt-actions{opacity:.72;transition:opacity .16s ease}.item:hover .appt-actions,.day-item:hover .appt-actions{opacity:1}
+.appt-actions button{border:1px solid rgba(0,0,0,.055)!important;box-shadow:none!important}
+/* clients: identity first, operational information second */
+#clientsPage>.section-head{margin-bottom:18px}
+#clientsPage>.panel{padding:18px}
+#clientsList .client-card{border-radius:18px;margin-bottom:9px}
+.client-card-main{min-width:0}.client-card-main strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.client-card-main small{display:block;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-card-stat{text-align:right}.client-card-stat b{font-variant-numeric:tabular-nums}
+.client-chevron{opacity:.55;transition:transform .16s ease,opacity .16s ease}.client-card:hover .client-chevron{opacity:.9;transform:translateX(2px)}
+.profile-kpis article:first-child{border-color:rgba(199,154,43,.16)}
+/* finance: semantic accents are restrained and readable */
+#financePage>.section-head{margin-bottom:18px}
+#financePage .metrics article:nth-child(1):before{background:var(--card-green)}
+#financePage .metrics article:nth-child(2):before{background:var(--card-gold)}
+#financePage .metrics article:nth-child(3):before{background:#a9a9af}
+#financePage .metrics article:nth-child(4):before{background:#1d1d1f}
+#financePage .grid2>.panel{min-height:300px}
+#financePage .grid2>.panel>h3{font-size:16px;letter-spacing:-.02em;padding-bottom:14px;margin-bottom:4px;border-bottom:1px solid rgba(0,0,0,.065)}
+#chargesList .item,#expensesList .item{padding:14px 4px;border-bottom:1px solid rgba(0,0,0,.06)}
+#chargesList .item:last-child,#expensesList .item:last-child{border-bottom:0}
+#chargesList strong,#expensesList strong{font-variant-numeric:tabular-nums}
+/* reports: executive summary, not a wall of identical boxes */
+#reportsPage>.section-head{margin-bottom:18px}
+#reportsPage .metrics article:nth-child(1):before{background:#1d1d1f}
+#reportsPage .metrics article:nth-child(2):before{background:var(--card-gold)}
+#reportsPage .metrics article:nth-child(3):before{background:var(--card-amber)}
+#reportsPage .metrics article:nth-child(4):before{background:#b8b8bd}
+#reportsPage .metrics article:nth-child(3) strong{color:#7b5714}
+.report-lines>div,.report-clients>div{min-height:48px}.report-lines b,.report-clients b{font-variant-numeric:tabular-nums}
+/* status and accessibility */
+.pill{font-weight:700;letter-spacing:.025em}.pill.ok{border:1px solid rgba(24,118,76,.08)}.pill.danger{border:1px solid rgba(167,56,56,.08)}
+.panel:focus-within,.client-card:focus-visible{outline:2px solid rgba(199,154,43,.38);outline-offset:2px}
+@media (hover:none){.metrics article:hover,.today-stats article:hover,.client-summary article:hover,.report-kpis article:hover,.client-card:hover{transform:none;box-shadow:var(--card-shadow)}.appt-actions{opacity:1}}
+@media(max-width:700px){#homePage .grid2>.panel,#financePage .grid2>.panel{min-height:0}.metrics article,.today-stats article,.client-summary article,.report-kpis article{padding:17px}.metrics strong,.today-stats strong,.client-summary strong,.report-kpis strong{font-size:22px}#agendaPage>.panel,#clientsPage>.panel{padding:12px}.client-card{min-height:78px}.client-chevron{display:none}}
+@media(max-width:420px){.metrics,.today-stats,.client-summary,.report-kpis{gap:9px}.metrics article,.today-stats article,.client-summary article,.report-kpis article{border-radius:17px;min-height:96px}.metrics span,.today-stats span,.client-summary span,.report-kpis span{font-size:9px;letter-spacing:.045em}.metrics strong,.today-stats strong,.client-summary strong,.report-kpis strong{font-size:20px}.client-avatar{width:44px;height:44px;border-radius:14px}}
