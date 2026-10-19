@@ -1,0 +1,29 @@
+/* Accessibility contrast pass v4 — scoped to the SaaS, no layout changes */
+#appView{--cf-text-primary:#f8fafc;--cf-text-secondary:#cbd0d8;--cf-surface-dark:#191c21;color:var(--cf-text-primary)!important}
+#appView .main,#appView .page{color:var(--cf-text-primary)!important}
+#appView .main header h1,#appView .page h1,#appView .page h2,#appView .page h3,#appView .page h4,#appView .agenda-toolbar h2,#appView .clients-toolbar h2,#appView .reports-head h2,#appView .finance-v2-head h3,#appView .section-head h2,#appView .section-head h3{color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1!important}
+#appView .main header p,#appView .page .section-head p,#appView .page .agenda-toolbar p,#appView .page .clients-toolbar p,#appView .page .reports-head p,#appView .page .finance-v2-head p{color:#cbd0d8!important;-webkit-text-fill-color:#cbd0d8!important;opacity:1!important}
+#appView .page .panel,#appView .page .agenda-today,#appView .page .annual-mini,#appView .page .finance-goal,#appView .page .client-card,#appView .page .client-summary article,#appView .page .profile-kpis article,#appView .page .report-kpis article,#appView .page .metrics article,#appView .page .today-stats article{background:#191c21!important;color:#f8fafc!important;border-color:#41454d!important}
+#appView .page .panel h1,#appView .page .panel h2,#appView .page .panel h3,#appView .page .panel h4,#appView .page .panel strong,#appView .page .panel b,#appView .page .panel .report-big,#appView .page .panel .day-time,#appView .page .annual-mini strong,#appView .page .annual-mini b,#appView .page .client-card strong,#appView .page .client-card b,#appView .page .client-summary strong,#appView .page .profile-kpis strong,#appView .page .report-kpis strong,#appView .page .metrics strong,#appView .page .today-stats strong{color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1!important}
+#appView .page .panel p,#appView .page .panel small,#appView .page .panel .day-main small,#appView .page .panel .report-lines span,#appView .page .panel .report-clients span,#appView .page .annual-mini span,#appView .page .annual-mini small,#appView .page .client-card small,#appView .page .client-card-stat span,#appView .page .client-summary span,#appView .page .profile-kpis span,#appView .page .report-kpis span,#appView .page .metrics span,#appView .page .today-stats span{color:#cbd0d8!important;-webkit-text-fill-color:#cbd0d8!important;opacity:1!important}
+#appView .page .panel .daily-empty strong,#appView .page .panel .daily-empty span{opacity:1!important}
+#appView .page .eyebrow{color:#e8c77b!important;-webkit-text-fill-color:#e8c77b!important}
+#appView .page .agenda-date strong{color:#fff!important;-webkit-text-fill-color:#fff!important}
+#appView .page .agenda-date span,#appView .page .agenda-date small,#appView .page .agenda-day-head{color:#cbd0d8!important;-webkit-text-fill-color:#cbd0d8!important}
+#appView .page .day-item,#appView .page .finance-row{color:#f8fafc!important}
+#appView .page .day-item strong,#appView .page .finance-row strong{color:#fff!important;-webkit-text-fill-color:#fff!important}
+#appView .page .day-item small,#appView .page .finance-row small{color:#cbd0d8!important;-webkit-text-fill-color:#cbd0d8!important}
+#appView .page .pill.ok{background:#173e30!important;color:#a7f0c8!important;-webkit-text-fill-color:#a7f0c8!important}
+#appView .page .pill.danger{background:#4d2528!important;color:#ffb6bc!important;-webkit-text-fill-color:#ffb6bc!important}
+#appView .page .pill:not(.ok):not(.danger){background:#343841!important;color:#e6e9ee!important;-webkit-text-fill-color:#e6e9ee!important}
+#appView .page input,#appView .page select,#appView .page textarea{background:#24282e!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border-color:#60656d!important}
+#appView .page input::placeholder,#appView .page textarea::placeholder{color:#b7bec8!important;-webkit-text-fill-color:#b7bec8!important;opacity:1!important}
+#appView .page .btn:not(.primary),#appView .page .mini-action{color:#f5f5f6!important;-webkit-text-fill-color:#f5f5f6!important;background:#292d34!important;border-color:#545861!important}
+#appView .page .btn.primary{color:#111318!important;-webkit-text-fill-color:#111318!important}
+#appView .page .finance-goal strong,#appView .page .finance-goal h2{color:#fff!important;-webkit-text-fill-color:#fff!important}
+#appView .page .finance-goal p,#appView .page .finance-goal small{color:#d1d3d8!important;-webkit-text-fill-color:#d1d3d8!important}
+/* Legacy finance lists were hard-coded to #fafafa; keep them light with dark text */
+#appView #financePage #chargesList .row,#appView #financePage #expensesList .row,#appView #financePage #openChargesV2 .row,#appView #financePage #paymentsV2 .row{background:#252930!important;border-color:#474c55!important;color:#f8fafc!important}
+#appView #financePage #chargesList .row strong,#appView #financePage #expensesList .row strong,#appView #financePage #openChargesV2 .row strong,#appView #financePage #paymentsV2 .row strong,#appView #financePage #chargesList .time,#appView #financePage #expensesList .time,#appView #financePage #openChargesV2 .time,#appView #financePage #paymentsV2 .time{color:#fff!important;-webkit-text-fill-color:#fff!important}
+#appView #financePage #openChargesV2 small,#appView #financePage #paymentsV2 small{color:#cbd0d8!important;-webkit-text-fill-color:#cbd0d8!important}
+#appView .page .panel .warning-text{color:#f0c879!important;-webkit-text-fill-color:#f0c879!important}
