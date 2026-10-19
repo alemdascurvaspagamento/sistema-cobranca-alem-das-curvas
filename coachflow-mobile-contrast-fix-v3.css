@@ -1,0 +1,25 @@
+/* Coach Flow premium mobile corrections */
+#appView .main{background:#0b0d10!important;color:#fff!important}
+#appView .main header h1,#appView .section-head h2,#appView .section-head h3,#appView .agenda-toolbar h2,#appView .clients-toolbar h2,#appView .reports-head h2,#appView .annual-mini strong,#appView .annual-mini b{color:#fff!important;opacity:1!important}
+#appView .panel,#appView .agenda-today,#appView .agenda-day .panel,#appView .annual-mini{background:#191c21!important;color:#f8f8f8!important;border:1px solid #3c3d41!important}
+#appView .panel h2,#appView .panel h3,#appView .panel strong,#appView .panel b,#appView .day-main strong,#appView .day-time,#appView .agenda-today strong{color:#fff!important;opacity:1!important}
+#appView .panel p,#appView .panel small,#appView .panel span,#appView .day-main small,#appView .agenda-toolbar p,#appView .clients-toolbar p{color:#c8cbd0!important}
+#appView .today-stats article,#appView .metrics article,#appView .report-kpis article{background:linear-gradient(145deg,#1e2126,#111317)!important;color:#fff!important;border:1px solid #444047!important}
+#appView .today-stats article strong,#appView .metrics article strong,#appView .report-kpis article strong{color:#fff!important}
+#appView .today-stats article span,#appView .metrics article span,#appView .report-kpis article span{color:#cbd0d6!important}
+#appView .today-hero{background:radial-gradient(circle at 95% 0%,#67502c,transparent 46%),#17191e!important;color:#fff!important}
+#appView .today-hero h2{color:#fff!important}
+#appView .today-hero p{color:#d4d5d8!important}
+#appView .daily-empty{background:#14171b;border:1px dashed #45484d;border-radius:18px;padding:28px 16px}
+#appView .daily-empty strong{color:#fff!important}
+#appView .daily-empty span{color:#c6c9d0!important}
+#appView .cf-bottom-nav{display:none}
+#appView .cf-bottom-nav button{background:none;border:0;color:#aeb1b8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;min-width:0}
+#appView .cf-bottom-nav button.active{color:#e6bc67}
+#appView .cf-bottom-nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#appView .cf-card-icon{display:block;width:30px;height:30px;margin-bottom:9px;fill:none;stroke:#e6bc67;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#appView .today-stats article{min-width:0;overflow:hidden}
+#appView .today-stats article strong{overflow-wrap:anywhere}
+#appView .annual-mini span,#appView .annual-mini small{color:#cbd0d6!important}
+@media(max-width:900px){#appView .cf-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;z-index:35;left:0;right:0;bottom:0;padding:11px 8px calc(11px + env(safe-area-inset-bottom));background:#0b0d10;border-top:1px solid #4a3b26}#appView .main{padding-bottom:112px!important}}
+@media(max-width:600px){#appView .today-stats,#appView .metrics,#appView .report-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}#appView .today-stats article{padding:16px 13px!important}#appView .today-stats article strong{font-size:clamp(18px,5vw,25px)!important}#appView .panel{padding:18px!important}#appView .today-hero{padding:22px!important}}
