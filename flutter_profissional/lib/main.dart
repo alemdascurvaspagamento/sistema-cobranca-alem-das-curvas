@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() => runApp(const CoachFlowApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const url = String.fromEnvironment('SUPABASE_URL');
+  const key = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  if (url.isNotEmpty && key.isNotEmpty) {
+    await Supabase.initialize(url: url, anonKey: key);
+  }
+  runApp(const CoachFlowApp());
+}
 
 class CoachFlowApp extends StatelessWidget {
   const CoachFlowApp({super.key});
@@ -31,8 +40,68 @@ class CoachFlowApp extends StatelessWidget {
             .followedBy(GlobalCupertinoLocalizations.delegates)
             .followedBy(GlobalWidgetsLocalizations.delegates)
             .toList(),
-        home: const CoachFlowShell(),
+        home: const CoachFlowEntry(),
       );
+}
+
+class CoachFlowEntry extends StatefulWidget {
+  const CoachFlowEntry({super.key});
+  @override
+  State<CoachFlowEntry> createState() => _CoachFlowEntryState();
+}
+
+class _CoachFlowEntryState extends State<CoachFlowEntry> {
+  final email = TextEditingController();
+  final password = TextEditingController();
+  bool busy = false;
+  String? error;
+  @override
+  void dispose() { email.dispose(); password.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    if (const String.fromEnvironment('SUPABASE_URL').isEmpty ||
+        const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY').isEmpty) {
+      return const Scaffold(body: Center(child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text('Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY para conectar a agenda.'),
+      )));
+    }
+    final auth = Supabase.instance.client.auth;
+    return StreamBuilder<AuthState>(
+      stream: auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (auth.currentSession != null) return const CoachFlowShell();
+        return Scaffold(body: Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(padding: const EdgeInsets.all(24), child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Coach Flow Profissional', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              TextField(controller: email, keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'E-mail')),
+              const SizedBox(height: 12),
+              TextField(controller: password, obscureText: true,
+                decoration: const InputDecoration(labelText: 'Senha')),
+              if (error != null) Padding(padding: const EdgeInsets.only(top: 12),
+                child: Text(error!, style: const TextStyle(color: Colors.redAccent))),
+              const SizedBox(height: 20),
+              FilledButton(onPressed: busy ? null : () async {
+                setState(() { busy = true; error = null; });
+                try {
+                  await auth.signInWithPassword(email: email.text.trim(), password: password.text);
+                } catch (_) {
+                  if (mounted) setState(() => error = 'Não foi possível entrar. Confira suas credenciais.');
+                } finally {
+                  if (mounted) setState(() => busy = false);
+                }
+              }, child: Text(busy ? 'Entrando...' : 'Entrar')),
+            ],
+          )),
+        )));
+      },
+    );
+  }
 }
 
 enum Section { inicio, agenda, clientes, financeiro, mais }
