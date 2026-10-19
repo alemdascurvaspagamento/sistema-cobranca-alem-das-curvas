@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'professional_agenda.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() => runApp(const CoachFlowApp());
@@ -126,7 +127,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           const SizedBox(height: 16),
                           _panel('Central de cobranças', 'Os dados reais serão conectados após validação do backend.'),
                         ] else if (selected == Section.agenda)
-                          _panel('Agenda profissional', 'Agendamentos e histórico de atendimentos.'),
+                          const ProfessionalAgenda(),
                         if (selected == Section.clientes)
                           _panel('Clientes', 'Cadastro, contatos e situação financeira.'),
                         if (selected == Section.mais)
