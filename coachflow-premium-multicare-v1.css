@@ -1,0 +1,57 @@
+/* Coach Flow Profissional — premium multi-profession responsive layer */
+:root{--bg:#080a0d;--card:#15181d;--ink:#f5f5f5;--muted:#a0a5ae;--line:#30343b;--accent:#dbb766;--dark:#0c0e11;--radius:20px}
+html{background:#080a0d;color-scheme:dark}
+body{background:radial-gradient(ellipse at 95% 0%,#242015 0,transparent 34%),#080a0d;color:#f5f5f5}
+.main{max-width:1440px;margin:0 auto;width:100%}
+.main header{border-bottom:1px solid #292b30;padding-bottom:18px}
+.main header h1{font-size:clamp(25px,3vw,38px);letter-spacing:-.045em}
+.main header p,.section-head p,.agenda-toolbar p,.clients-toolbar p,.reports-head p{color:#a6a9b1}
+.panel,.metrics article,.today-stats article,.client-summary article,.report-kpis article,.client-card,.profile-kpis article{background:linear-gradient(145deg,#1b1e23,#121418);color:#f7f7f8;border:1px solid #36383d;box-shadow:0 12px 34px #0003}
+.metrics,.today-stats,.report-kpis{gap:12px}
+.metrics article,.today-stats article,.report-kpis article{min-width:0;overflow:hidden;position:relative}
+.metrics article:before,.today-stats article:before,.report-kpis article:before{content:"";display:block;width:26px;height:3px;background:linear-gradient(90deg,#fff2c9,#b68b3e);border-radius:5px;margin-bottom:14px}
+.metrics span,.today-stats span,.client-summary span,.report-kpis span{color:#afb3ba;line-height:1.35;overflow-wrap:anywhere}
+.metrics strong,.today-stats strong,.report-kpis strong{font-size:clamp(18px,2vw,26px);letter-spacing:-.04em;overflow-wrap:anywhere}
+.btn,.appt-actions button,.icon-btn{background:linear-gradient(160deg,#2d3036,#191b20);border:1px solid #41434a;color:#f7f7f7}
+.btn.primary,.main header .btn.primary{background:linear-gradient(125deg,#f3d990,#bc9144);border-color:#c9a258;color:#111317}
+.btn:focus-visible,button:focus-visible{outline:2px solid #f1cf7e;outline-offset:3px}
+.btn:hover{filter:brightness(1.12)}
+.logo{background:linear-gradient(135deg,#f6df9e,#aa7b2d);color:#111}
+.sidebar{background:#0b0d10;border-right:1px solid #323238}
+nav button.active,nav button:hover{background:#2b251b;color:#f0d48f}
+.today-hero,.hero{background:radial-gradient(circle at 92% 10%,#59482a 0,transparent 42%),linear-gradient(120deg,#111318,#23252b);border:1px solid #4a4130;color:#fff;border-radius:24px}
+.today-hero h2{font-size:clamp(23px,3vw,36px)}
+.eyebrow{color:#e2bb6a}
+input,select,textarea{background:#17191e;border-color:#41444b;color:#fff}
+input::placeholder{color:#898d95}
+.pill{background:#30333a;color:#ddd}
+.pill.ok{background:#173e30;color:#a1e6c5}
+.pill.danger{background:#4d2328;color:#ffb2b8}
+dialog{background:#17191e;color:#fff;border:1px solid #555}
+.modal-card label,.ops-card label{color:#ddd}
+.ops-status{background:#25272d}
+.client-avatar{background:#443721;color:#ffe1a0}
+.day-item,.agenda-day-head,.report-lines>div,.report-clients>div{border-color:#383a40}
+.mini-track{background:#353535}
+.section-head h2,.agenda-toolbar h2,.clients-toolbar h2,.reports-head h2{letter-spacing:-.04em}
+#homePage .panel,#financePage .panel{min-width:0}
+@media(max-width:900px){.main{padding:20px 16px 100px}}
+@media(max-width:600px){
+.main{padding:16px 14px 108px}
+.main header{gap:12px;margin-bottom:20px}
+.main header h1{font-size:29px}
+.main header .btn{padding:11px 14px}
+.metrics,.today-stats,.report-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metrics article,.today-stats article,.report-kpis article{padding:15px 12px;border-radius:18px}
+.metrics span,.today-stats span,.report-kpis span{font-size:11px;letter-spacing:.025em}
+.metrics strong,.today-stats strong,.report-kpis strong{font-size:clamp(17px,5vw,23px);line-height:1.15}
+.grid2{grid-template-columns:minmax(0,1fr)}
+.panel{padding:17px}
+.today-hero{padding:23px}
+.agenda-day{grid-template-columns:43px minmax(0,1fr);gap:8px}
+.day-item{grid-template-columns:50px minmax(0,1fr) auto;gap:8px}
+.client-card{grid-template-columns:42px minmax(0,1fr) 16px;gap:9px;padding:12px}
+.section-head{flex-wrap:wrap}
+.section-head>div{min-width:0}
+}
+@media(max-width:390px){.metrics,.today-stats,.report-kpis{grid-template-columns:1fr 1fr}.metrics strong,.today-stats strong,.report-kpis strong{font-size:18px}}
