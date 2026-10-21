@@ -21,6 +21,15 @@ class BillingAccount {
   String get status => paid?'Recebido':'Pendente';
 }
 
+class _BillingVisit {
+  _BillingVisit(this.date, this.hour, this.state);
+  final DateTime date;
+  final String hour;
+  String state;
+  String note = '';
+  bool charge = true;
+}
+
 class DemoBilling extends StatefulWidget {
   const DemoBilling({super.key});
   @override State<DemoBilling> createState()=>_DemoBillingState();
@@ -42,30 +51,130 @@ class _DemoBillingState extends State<DemoBilling> {
     (filter=='Todos'||a.status==filter) &&
     (a.name.toLowerCase().contains(search.toLowerCase())||
      a.service.toLowerCase().contains(search.toLowerCase()))).toList();
+  // Registros sintéticos apenas para demonstrar a consulta detalhada.
+  // Não representam a agenda real nem alteram o cálculo da cobrança.
+  final Map<String, List<_BillingVisit>> _visits = {};
+  List<_BillingVisit> visitsFor(BillingAccount a) => _visits.putIfAbsent(a.name, () {
+    final now = DateTime.now();
+    final days = <DateTime>[];
+    for (var d = 1; d <= DateUtils.getDaysInMonth(now.year, now.month); d++) {
+      final date = DateTime(now.year, now.month, d);
+      if (date.weekday <= 5) days.add(date);
+    }
+    final result = <_BillingVisit>[];
+    for (var i = 0; i < a.scheduled && i < days.length; i++) {
+      final state = i < a.completed ? 'Realizada'
+        : i < a.completed + a.cancelled ? 'Cancelada'
+        : i < a.completed + a.cancelled + a.rescheduled ? 'Remarcada'
+        : 'Agendada';
+      result.add(_BillingVisit(days[i], '09:00', state));
+    }
+    return result;
+  });
+  Color visitColor(String state) => switch(state) {
+    'Realizada' => const Color(0xFF42BA83),
+    'Cancelada' => const Color(0xFFE96767),
+    'Remarcada' => const Color(0xFFF4A15A),
+    'Crédito' => const Color(0xFFA47DE1),
+    _ => const Color(0xFF4B91F1),
+  };
+  Future<void> editVisit(_BillingVisit visit, StateSetter refresh) async {
+    var state = visit.state;
+    var charge = visit.charge;
+    final notes = TextEditingController(text: visit.note);
+    final ok = await showDialog<bool>(context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, update) => AlertDialog(
+          title: const Text('Detalhes do atendimento'),
+          content: SizedBox(width: 360, child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('${visit.date.day.toString().padLeft(2, '0')}/'
+                '${visit.date.month.toString().padLeft(2, '0')} • ${visit.hour}'),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: state,
+                decoration: const InputDecoration(labelText: 'Situação'),
+                items: ['Agendada', 'Realizada', 'Cancelada', 'Remarcada', 'Crédito', 'Feriado']
+                  .map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                onChanged: (v) { if (v != null) update(() => state = v); },
+              ),
+              SwitchListTile(
+                title: const Text('Cobrar atendimento'),
+                subtitle: const Text('Apenas anotação demonstrativa'),
+                value: charge, onChanged: (v) => update(() => charge = v)),
+              TextField(controller: notes, maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Motivo / observações')),
+            ],
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Salvar')),
+          ],
+        )));
+    if (ok == true && mounted) {
+      refresh(() { visit.state = state; visit.charge = charge; visit.note = notes.text.trim(); });
+    }
+    notes.dispose();
+  }
   Future<void> details(BillingAccount a) async {
-    await showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
-      title:Text('Memória de cálculo — ${a.name}'),
-      content:SizedBox(width:430,child:Column(mainAxisSize:MainAxisSize.min,
-        crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-        Text(a.service),
-        const SizedBox(height:12),
-        _line('Atendimentos previstos','${a.scheduled}'),
-        _line('Atendimentos realizados','${a.completed}'),
-        _line('Cancelamentos','${a.cancelled} (não faturados)'),
-        _line('Remarcações','${a.rescheduled} (não duplicadas)'),
-        _line('Valor por atendimento',DemoData.currency(a.unitPrice)),
-        _line('Subtotal realizado',DemoData.currency(a.gross)),
-        _line('Créditos (${a.credits})','− ${DemoData.currency(a.creditValue)}'),
-        _line('Descontos','− ${DemoData.currency(a.discount)}'),
-        const Divider(),
-        _line('Total a cobrar',DemoData.currency(a.total)),
-        const SizedBox(height:12),
-        const Text('Regra ilustrativa: somente sessões realizadas entram no subtotal. '
-          'Contratos por mensalidade, pacote ou projeto exigirão regras próprias.',
-          style:TextStyle(fontSize:12,color:Colors.white70)),
-      ])),
-      actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Fechar'))],
-    ));
+    final visits = visitsFor(a);
+    final today = DateTime.now();
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    await showDialog<void>(context: context, builder: (ctx) =>
+      StatefulBuilder(builder: (ctx, refresh) => AlertDialog(
+        title: Text('Atendimentos de ${a.name} — ${months[today.month - 1]}/${today.year}'),
+        content: SizedBox(width: 620, child: SingleChildScrollView(child:
+          Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text('Datas demonstrativas: toque em um atendimento para '
+                'consultar ou alterar situação, cobrança e observações.',
+                style: TextStyle(fontSize: 12, color: Colors.white70)),
+              const SizedBox(height: 12),
+              Wrap(spacing: 7, runSpacing: 8, children: [
+                for (final visit in visits)
+                  ActionChip(
+                    avatar: Icon(Icons.circle, size: 9, color: visitColor(visit.state)),
+                    label: Text('${visit.date.day.toString().padLeft(2, '0')}/'
+                      '${visit.date.month.toString().padLeft(2, '0')} '
+                      '· ${visit.hour} · ${visit.state}'),
+                    onPressed: () => editVisit(visit, refresh)),
+              ]),
+              const SizedBox(height: 16),
+              Wrap(spacing: 12, runSpacing: 7, children: [
+                for (final state in ['Agendada','Realizada','Cancelada','Remarcada','Crédito','Feriado'])
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.circle, size: 10, color: visitColor(state)),
+                    const SizedBox(width: 4),
+                    Text(state, style: const TextStyle(fontSize: 11)),
+                  ]),
+              ]),
+              const Divider(height: 30),
+              const Text('Memória de cálculo da cobrança',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              _line('Atendimentos previstos', '${a.scheduled}'),
+              _line('Realizados considerados na cobrança', '${a.completed}'),
+              _line('Cancelamentos', '${a.cancelled} (não faturados)'),
+              _line('Remarcações', '${a.rescheduled} (não duplicadas)'),
+              _line('Valor por atendimento', DemoData.currency(a.unitPrice)),
+              _line('Subtotal', DemoData.currency(a.gross)),
+              _line('Créditos (${a.credits})', '− ${DemoData.currency(a.creditValue)}'),
+              _line('Descontos', '− ${DemoData.currency(a.discount)}'),
+              const Divider(),
+              _line('Total a cobrar', DemoData.currency(a.total)),
+              const SizedBox(height: 12),
+              const Text('Os registros acima são fictícios e independentes '
+                'do cálculo demonstrativo. Alterações não recalculam cobranças, '
+                'não são persistidas e não modificam a agenda.',
+                style: TextStyle(fontSize: 12, color: Colors.white70)),
+            ]))),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx),
+          child: const Text('Fechar'))],
+      )));
   }
   Widget _line(String label,String value)=>Padding(
     padding:const EdgeInsets.symmetric(vertical:4),
@@ -100,7 +209,7 @@ class _DemoBillingState extends State<DemoBilling> {
     if(confirmed==true&&mounted)setState(()=>a.paid=!a.paid);
   }
   Widget actions(BillingAccount a)=>Wrap(spacing:2,children:[
-    IconButton(tooltip:'Memória de cálculo',icon:const Icon(Icons.receipt_long_outlined),
+    IconButton(tooltip:'Ver atendimentos e memória de cálculo',icon:const Icon(Icons.receipt_long_outlined),
       onPressed:()=>details(a)),
     IconButton(tooltip:'Preparar WhatsApp',icon:const Icon(Icons.chat_outlined,
       color:Color(0xFF25D366)),onPressed:()=>whatsapp(a)),
