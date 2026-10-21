@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
+import 'demo_billing.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -122,13 +123,14 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   }
 }
 
-enum Section { inicio, agenda, clientes, financeiro, mais }
+enum Section { inicio, agenda, clientes, cobrancas, financeiro, mais }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
         Section.inicio => 'Início',
         Section.agenda => 'Agenda',
         Section.clientes => 'Clientes',
+        Section.cobrancas => 'Cobranças',
         Section.financeiro => 'Financeiro',
         Section.mais => 'Mais',
       };
@@ -136,6 +138,7 @@ extension SectionDetails on Section {
         Section.inicio => Icons.home_outlined,
         Section.agenda => Icons.calendar_month_outlined,
         Section.clientes => Icons.groups_outlined,
+        Section.cobrancas => Icons.receipt_long_outlined,
         Section.financeiro => Icons.account_balance_wallet_outlined,
         Section.mais => Icons.more_horiz,
       };
@@ -232,7 +235,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                               label: const Text('Ver agenda')),
                             OutlinedButton.icon(onPressed: () => setState(() => selected = Section.financeiro),
                               icon: const Icon(Icons.payments_outlined),
-                              label: const Text('Financeiro e cobranças')),
+                              label: const Text('Financeiro')),
+                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.cobrancas),
+                              icon: const Icon(Icons.receipt_long_outlined),
+                              label: const Text('Cobranças')),
                             OutlinedButton.icon(onPressed: () => setState(() => selected = Section.clientes),
                               icon: const Icon(Icons.groups_outlined),
                               label: const Text('Clientes')),
@@ -242,7 +248,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           const SizedBox(height: 18),
                           if (widget.demo) _demoToday() else
                             _panel('Agenda de hoje', 'Nenhum atendimento cadastrado.'),
-                        ] else if (selected == Section.financeiro)
+                        ] else if (selected == Section.cobrancas)
+                          widget.demo ? const DemoBilling() :
+                            _panel('Cobranças', 'Cobranças reais disponíveis após integração segura com o banco.'),
+                        if (selected == Section.financeiro)
                           widget.demo ? const DemoFinance() :
                             _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),
                         if (selected == Section.agenda)
