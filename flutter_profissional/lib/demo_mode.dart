@@ -38,6 +38,71 @@ class _DemoAgendaState extends State<DemoAgenda> {
   late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? selectedDay;
 
+  final Map<String, bool> chargeOverrides = {};
+  final Map<String, String> appointmentNotes = {};
+  String appointmentKey(DateTime date, String client) =>
+      '${date.year}-${date.month}-${date.day}-$client';
+  String appointmentState(DateTime date, String client) =>
+      appointmentStates[appointmentKey(date, client)] ?? 'Agendada';
+  Color appointmentColor(String state) {
+    switch (state) {
+      case 'Realizada': return const Color(0xFF42BA83);
+      case 'Cancelada': return const Color(0xFFE96767);
+      case 'Remarcada': return const Color(0xFFF4A15A);
+      case 'Crédito': return const Color(0xFFA47DE1);
+      default: return const Color(0xFF4B91F1);
+    }
+  }
+  Future<void> editAppointment(DateTime date, DemoAppointment appointment) async {
+    final key = appointmentKey(date, appointment.client);
+    String state = appointmentState(date, appointment.client);
+    bool charge = chargeOverrides[key] ?? state != 'Cancelada';
+    final note = TextEditingController(text: appointmentNotes[key] ?? '');
+    final confirmed = await showDialog<bool>(context: context,
+      builder: (dialogContext) => StatefulBuilder(builder: (dialogContext, refresh) =>
+        AlertDialog(
+          title: Text('${appointment.client} • ${appointment.hour}'),
+          content: SizedBox(width: 400, child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('${appointment.service} • ${DemoData.currency(appointment.amount)}'),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: state,
+                decoration: const InputDecoration(labelText: 'Situação'),
+                items: ['Agendada', 'Realizada', 'Cancelada', 'Remarcada', 'Crédito']
+                  .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
+                onChanged: (value) {
+                  if (value != null) refresh(() {
+                    state = value;
+                    if (value == 'Cancelada' || value == 'Crédito') charge = false;
+                  });
+                },
+              ),
+              SwitchListTile(
+                title: const Text('Cobrar atendimento'),
+                subtitle: const Text('Conforme a política contratual'),
+                value: charge,
+                onChanged: (value) => refresh(() => charge = value),
+              ),
+              TextField(controller: note, maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Motivo ou observações')),
+            ]),
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Salvar')),
+          ],
+        )));
+    if (confirmed == true && mounted) setState(() {
+      appointmentStates[key] = state;
+      chargeOverrides[key] = charge;
+      appointmentNotes[key] = note.text.trim();
+    });
+    note.dispose();
+  }
+
   String monthName(DateTime date) {
     const names = ['janeiro','fevereiro','março','abril','maio','junho',
       'julho','agosto','setembro','outubro','novembro','dezembro'];
