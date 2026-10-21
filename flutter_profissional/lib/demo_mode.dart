@@ -136,12 +136,15 @@ class _DemoAgendaState extends State<DemoAgenda> {
               final offset = DateTime(month.year, month.month).weekday - 1;
               final days = DateTime(month.year, month.month + 1, 0).day;
               final count = ((offset + days + 6) ~/ 7) * 7;
-              return GridView.builder(
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: count,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7, mainAxisSpacing: 4, crossAxisSpacing: 4),
+                  crossAxisCount: 7, mainAxisSpacing: 5, crossAxisSpacing: 5,
+                  mainAxisExtent: 42),
                 itemBuilder: (context, index) {
                   final number = index - offset + 1;
                   if (number < 1 || number > days) return const SizedBox.shrink();
@@ -163,7 +166,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
                     ),
                   );
                 },
-              );
+              ));
             }),
             const SizedBox(height: 12),
             if (selectedDay != null) appointmentList(selectedDay!)
