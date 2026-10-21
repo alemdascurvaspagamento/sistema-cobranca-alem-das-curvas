@@ -106,7 +106,7 @@ class _DemoFinanceState extends State<DemoFinance> {
       content:SizedBox(width:400,child:Column(mainAxisSize:MainAxisSize.min,children:[
         TextField(controller:name,decoration:const InputDecoration(labelText:'Descrição')),
         TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),
-          decoration:const InputDecoration(labelText:'Valor em R\)),
+          decoration:const InputDecoration(labelText:'Valor em reais')),
         DropdownButtonFormField<String>(value:type,items:['Receita','Despesa']
           .map((e)=>DropdownMenuItem(value:e,child:Text(e))).toList(),
           onChanged:(v)=>refresh(()=>type=v??type)),
