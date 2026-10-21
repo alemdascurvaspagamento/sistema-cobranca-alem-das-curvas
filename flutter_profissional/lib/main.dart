@@ -36,10 +36,7 @@ class CoachFlowApp extends StatelessWidget {
         ),
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
-        localizationsDelegates: GlobalMaterialLocalizations.delegates
-            .followedBy(GlobalCupertinoLocalizations.delegates)
-            .followedBy(GlobalWidgetsLocalizations.delegates)
-            .toList(),
+        localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, GlobalWidgetsLocalizations.delegate],
         home: const CoachFlowEntry(),
       );
 }
