@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
 
 const demoGold = Color(0xFFD8B56A);
@@ -23,6 +24,19 @@ class _DemoClientsState extends State<DemoClients> {
   ];
   String search = '';
   String clientFilter = 'Todos';
+  Future<void> openWhatsApp(DemoClient client) async {
+    var digits=client.phone.replaceAll(RegExp(r'[^0-9]'),'');
+    if(digits.length==10 || digits.length==11) digits='55$digits';
+    if(digits.length<12 || digits.length>13){
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Informe um WhatsApp válido com DDD.')));
+      return;
+    }
+    final message=Uri.encodeComponent('Olá, ${client.name}! Aqui é da equipe Coach Flow. Podemos conversar sobre ${client.service}?');
+    final uri=Uri.parse('https://wa.me/$digits?text=$message');
+    if(!await launchUrl(uri,mode:LaunchMode.externalApplication) && mounted){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));
+    }
+  }
   Future<void> deleteClient(DemoClient client) async {
     final confirmed = await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
       title:const Text('Excluir cliente fictício?'),
@@ -95,6 +109,7 @@ class _DemoClientsState extends State<DemoClients> {
         title:Text(c.name),subtitle:Text('${c.service} • ${c.phone}'),
         trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,spacing:4,children:[
           Text(c.status,style:const TextStyle(color:demoGold,fontSize:12)),
+          IconButton(tooltip:'Abrir WhatsApp',onPressed:()=>openWhatsApp(c),icon:const Icon(Icons.chat_outlined,color:Color(0xFF25D366))),
           IconButton(tooltip:'Editar cliente',onPressed:()=>edit(c),icon:const Icon(Icons.edit_outlined)),
           IconButton(tooltip:'Excluir cliente fictício',onPressed:()=>deleteClient(c),icon:const Icon(Icons.delete_outline)),
         ]),
@@ -111,6 +126,22 @@ class DemoFinance extends StatefulWidget {
 }
 class _DemoFinanceState extends State<DemoFinance> {
   String filter = 'Todos';
+  double annualGoal = 0;
+  Future<void> editAnnualGoal() async {
+    final controller=TextEditingController(text:annualGoal>0?annualGoal.toStringAsFixed(0):'');
+    final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:Text('Meta de receita — ${DateTime.now().year}'),
+      content:SizedBox(width:380,child:TextField(controller:controller,keyboardType:const TextInputType.numberWithOptions(decimal:true),
+        decoration:const InputDecoration(labelText:'Meta anual em reais',helperText:'Valor demonstrativo; não será salvo.'))),
+      actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Salvar'))],
+    ));
+    if(confirmed==true && mounted){
+      final value=double.tryParse(controller.text.replaceAll(',','.'));
+      if(value!=null && value>=0) setState(()=>annualGoal=value);
+    }
+    controller.dispose();
+  }
   final items=<({String name,String type,double value,bool paid})>[
     (name:'Mariana Costa',type:'Receita',value:180,paid:true),
     (name:'Ricardo Almeida',type:'Receita',value:220,paid:false),
@@ -157,6 +188,24 @@ class _DemoFinanceState extends State<DemoFinance> {
         _metric('A pagar',expenses,Icons.south_east),
         _metric('Saldo realizado',received-paidExpenses,Icons.account_balance_wallet_outlined),
       ]),
+      const SizedBox(height:16),
+      Card(color:demoSurface,child:Padding(padding:const EdgeInsets.all(18),child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[const Expanded(child:Text('Meta anual de recebimentos',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),
+          TextButton.icon(onPressed:editAnnualGoal,icon:const Icon(Icons.edit_outlined),label:const Text('Definir meta'))]),
+        if(annualGoal>0) ...[
+          Text('${DemoData.currency(received)} de ${DemoData.currency(annualGoal)}',style:const TextStyle(color:demoGold)),
+          const SizedBox(height:10),
+          LinearProgressIndicator(value:(received/annualGoal).clamp(0.0,1.0),minHeight:9),
+          const SizedBox(height:10),
+          Wrap(spacing:16,runSpacing:8,children:[
+            Text('Realizado: ${(received/annualGoal*100).toStringAsFixed(1)}%'),
+            Text('Faltam: ${DemoData.currency((annualGoal-received).clamp(0.0,double.infinity))}'),
+            Text('Referência mensal: ${DemoData.currency(annualGoal/12)}'),
+            Text('Referência trimestral: ${DemoData.currency(annualGoal/4)}'),
+          ]),
+        ] else const Text('Defina uma meta anual para acompanhar o progresso da demonstração.'),
+      ]))),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
         FilledButton.icon(onPressed:add,icon:const Icon(Icons.add),label:const Text('Adicionar'))]),
