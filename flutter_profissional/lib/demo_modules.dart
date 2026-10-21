@@ -22,6 +22,16 @@ class _DemoClientsState extends State<DemoClients> {
     DemoClient('Paulo Martins','Retorno','Em dia','(11) 99999-0004'),
   ];
   String search = '';
+  String clientFilter = 'Todos';
+  Future<void> deleteClient(DemoClient client) async {
+    final confirmed = await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:const Text('Excluir cliente fictício?'),
+      content:Text('Remover ${client.name} desta demonstração?'),
+      actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Excluir'))],
+    ));
+    if(confirmed==true && mounted) setState(()=>clients.remove(client));
+  }
   Future<void> edit([DemoClient? current]) async {
     final name = TextEditingController(text: current?.name ?? '');
     final service = TextEditingController(text: current?.service ?? '');
@@ -59,7 +69,11 @@ class _DemoClientsState extends State<DemoClients> {
     name.dispose();service.dispose();phone.dispose();
   }
   @override Widget build(BuildContext context) {
-    final shown=clients.where((c)=>c.name.toLowerCase().contains(search.toLowerCase())).toList();
+    final term=search.trim().toLowerCase();
+    final shown=clients.where((c) =>
+      (clientFilter=='Todos' || c.status==clientFilter) &&
+      (c.name.toLowerCase().contains(term) || c.service.toLowerCase().contains(term) ||
+        c.phone.toLowerCase().contains(term))).toList();
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       Wrap(alignment:WrapAlignment.spaceBetween,runSpacing:12,children:[
         Text('${clients.length} clientes fictícios',style:const TextStyle(color:demoGold,fontSize:16)),
@@ -67,7 +81,13 @@ class _DemoClientsState extends State<DemoClients> {
       ]),
       const SizedBox(height:14),
       TextField(onChanged:(v)=>setState(()=>search=v),decoration:const InputDecoration(
-        prefixIcon:Icon(Icons.search),labelText:'Pesquisar clientes',border:OutlineInputBorder())),
+        prefixIcon:Icon(Icons.search),labelText:'Pesquisar nome, serviço ou telefone',border:OutlineInputBorder())),
+      const SizedBox(height:12),
+      Wrap(spacing:8,runSpacing:8,children:[
+        for(final option in ['Todos','Em dia','Pendente'])
+          ChoiceChip(label:Text(option),selected:clientFilter==option,
+            onSelected:(_)=>setState(()=>clientFilter=option)),
+      ]),
       const SizedBox(height:14),
       if(shown.isEmpty) const Padding(padding:EdgeInsets.all(24),child:Text('Nenhum cliente encontrado.')),
       for(final c in shown) Card(color:demoSurface,child:ListTile(
@@ -76,7 +96,7 @@ class _DemoClientsState extends State<DemoClients> {
         trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,spacing:4,children:[
           Text(c.status,style:const TextStyle(color:demoGold,fontSize:12)),
           IconButton(tooltip:'Editar cliente',onPressed:()=>edit(c),icon:const Icon(Icons.edit_outlined)),
-          IconButton(tooltip:'Excluir cliente fictício',onPressed:()=>setState(()=>clients.remove(c)),icon:const Icon(Icons.delete_outline)),
+          IconButton(tooltip:'Excluir cliente fictício',onPressed:()=>deleteClient(c),icon:const Icon(Icons.delete_outline)),
         ]),
       )),
       const SizedBox(height:12),
