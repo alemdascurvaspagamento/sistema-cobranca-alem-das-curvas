@@ -163,6 +163,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
         segments: const [
           ButtonSegment(value: 0, icon: Icon(Icons.today), label: Text('Hoje')),
           ButtonSegment(value: 1, icon: Icon(Icons.calendar_month), label: Text('Mês')),
+          ButtonSegment(value: 2, icon: Icon(Icons.view_week), label: Text('Semana')),
         ],
         selected: {tab},
         onSelectionChanged: (value) => setState(() => tab = value.first),
@@ -173,11 +174,41 @@ class _DemoAgendaState extends State<DemoAgenda> {
             s.contains(WidgetState.selected) ? gold : surface),
         ),
       ),
+      const SizedBox(height: 12),
+      Wrap(spacing: 10, runSpacing: 8, children: [
+        for (final status in ['Agendada', 'Realizada', 'Cancelada', 'Remarcada', 'Crédito'])
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.circle, size: 10, color: appointmentColor(status)),
+            const SizedBox(width: 4), Text(status, style: const TextStyle(fontSize: 11)),
+          ]),
+      ]),
+      const SizedBox(height: 8),
+      DropdownButton<String>(value: statusFilter,
+        items: ['Todos', 'Agendada', 'Realizada', 'Cancelada', 'Remarcada', 'Crédito']
+          .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
+        onChanged: (value) => setState(() => statusFilter = value ?? 'Todos')),
       const SizedBox(height: 18),
       if (tab == 0) ...[
         Text('Atendimentos de hoje', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         appointmentList(today),
+      ] else if (tab == 2) ...[
+        Row(children: [
+          IconButton(onPressed: () => setState(() => selectedDay =
+            (selectedDay ?? today).subtract(const Duration(days: 7))),
+            icon: const Icon(Icons.chevron_left)),
+          Expanded(child: Text('Semana de ${(selectedDay ?? today).day}/${(selectedDay ?? today).month}',
+            textAlign: TextAlign.center, style: const TextStyle(color: gold))),
+          IconButton(onPressed: () => setState(() => selectedDay =
+            (selectedDay ?? today).add(const Duration(days: 7))),
+            icon: const Icon(Icons.chevron_right)),
+        ]),
+        for (var i = 0; i < 7; i++) ...[
+          Text('${(selectedDay ?? today).subtract(Duration(days: (selectedDay ?? today).weekday - 1)).add(Duration(days: i)).day}/${(selectedDay ?? today).subtract(Duration(days: (selectedDay ?? today).weekday - 1)).add(Duration(days: i)).month}',
+            style: const TextStyle(color: gold)),
+          appointmentList((selectedDay ?? today).subtract(
+            Duration(days: (selectedDay ?? today).weekday - 1)).add(Duration(days: i))),
+        ],
       ] else ...[
         Card(color: surface, child: Padding(
           padding: const EdgeInsets.all(14),
