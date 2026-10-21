@@ -159,6 +159,21 @@ class _DemoFinanceState extends State<DemoFinance> {
     }
     controller.dispose();
   }
+  Future<void> deleteEntry(int index) async {
+    if(index<0 || index>=items.length) return;
+    final entry=items[index];
+    final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:const Text('Excluir lançamento fictício?'),
+      content:Text('Remover ${entry.name} (${DemoData.currency(entry.value)})?'),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Excluir')),
+      ],
+    ));
+    if(confirmed==true && mounted && items.contains(entry)) {
+      setState(()=>items.remove(entry));
+    }
+  }
   final items=<({String name,String type,double value,bool paid})>[
     (name:'Mariana Costa',type:'Receita',value:180,paid:true),
     (name:'Ricardo Almeida',type:'Receita',value:220,paid:false),
@@ -222,6 +237,8 @@ class _DemoFinanceState extends State<DemoFinance> {
             Text('Referência trimestral: ${DemoData.currency(annualGoal/4)}'),
           ]),
         ] else const Text('Defina uma meta anual para acompanhar o progresso da demonstração.'),
+        const SizedBox(height:8),
+        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:Colors.white60,fontSize:12)),
       ]))),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
@@ -246,7 +263,7 @@ class _DemoFinanceState extends State<DemoFinance> {
               final e=items[i];items[i]=(name:e.name,type:e.type,value:e.value,paid:!e.paid);
             });}),
           IconButton(tooltip:'Excluir lançamento fictício',icon:const Icon(Icons.delete_outline),
-            onPressed:()=>setState(()=>items.removeAt(i))),
+            onPressed:()=>deleteEntry(i)),
         ]),
       );
       })),
