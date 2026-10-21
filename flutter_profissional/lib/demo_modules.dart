@@ -35,7 +35,7 @@ class _DemoClientsState extends State<DemoClients> {
             TextField(controller: name, decoration: const InputDecoration(labelText: 'Nome *')),
             TextField(controller: service, decoration: const InputDecoration(labelText: 'Serviço')),
             TextField(controller: phone, decoration: const InputDecoration(labelText: 'Telefone')),
-            DropdownButtonFormField<String>(initialValue: status,
+            DropdownButtonFormField<String>(value: status,
               decoration: const InputDecoration(labelText: 'Situação'),
               items: ['Em dia','Pendente'].map((s) => DropdownMenuItem(value:s,child:Text(s))).toList(),
               onChanged: (v) => refresh(() => status = v ?? status)),
@@ -98,7 +98,8 @@ class _DemoFinanceState extends State<DemoFinance> {
     (name:'Material de escritório',type:'Despesa',value:120,paid:false),
   ];
   Future<void> add() async {
-    final name=TextEditingController(),amount=TextEditingController();
+    final name=TextEditingController();
+    final amount=TextEditingController();
     String type='Receita';
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(
       builder:(ctx,refresh)=>AlertDialog(title:const Text('Novo lançamento fictício'),
@@ -106,7 +107,7 @@ class _DemoFinanceState extends State<DemoFinance> {
         TextField(controller:name,decoration:const InputDecoration(labelText:'Descrição')),
         TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),
           decoration:const InputDecoration(labelText:'Valor em R$')),
-        DropdownButtonFormField<String>(initialValue:type,items:['Receita','Despesa']
+        DropdownButtonFormField<String>(value:type,items:['Receita','Despesa']
           .map((e)=>DropdownMenuItem(value:e,child:Text(e))).toList(),
           onChanged:(v)=>refresh(()=>type=v??type)),
       ])),actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
@@ -133,7 +134,7 @@ class _DemoFinanceState extends State<DemoFinance> {
       const SizedBox(height:12),
       for(var i=0;i<items.length;i++) Card(color:demoSurface,child:ListTile(
         leading:Icon(items[i].type=='Receita'?Icons.arrow_downward:Icons.arrow_upward,color:demoGold),
-        title:Text(items[i].name),subtitle:Text('${items[i].type} • ${items[i].paid?'Pago':'Pendente'}'),
+        title:Text(items[i].name),subtitle:Text('${items[i].type} • ${items[i].paid ? "Pago" : "Pendente"}'),
         trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,children:[
           Text(DemoData.currency(items[i].value),style:const TextStyle(color:demoGold)),
           IconButton(tooltip:'Alternar situação de pagamento',icon:Icon(items[i].paid?Icons.check_circle:Icons.radio_button_unchecked),
