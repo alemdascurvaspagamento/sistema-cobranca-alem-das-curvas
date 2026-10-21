@@ -24,6 +24,22 @@ class _DemoClientsState extends State<DemoClients> {
   ];
   String search = '';
   String clientFilter = 'Todos';
+  Future<void> openBillingWhatsApp(DemoClient client) async {
+    var digits=client.phone.replaceAll(RegExp(r'[^0-9]'),'');
+    if(digits.length==10 || digits.length==11) digits='55$digits';
+    if(digits.length<12 || digits.length>13){
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Cadastre um WhatsApp válido com DDD.')));
+      return;
+    }
+    final message='Olá, ${client.name}! Tudo bem? Aqui é da equipe Coach Flow. '
+      'Estamos entrando em contato sobre ${client.service}. '
+      'Podemos confirmar a situação do seu pagamento? '
+      'Caso já tenha efetuado, desconsidere esta mensagem. Obrigado!';
+    final uri=Uri.parse('https://wa.me/$digits?text=${Uri.encodeComponent(message)}');
+    if(!await launchUrl(uri,mode:LaunchMode.externalApplication) && mounted){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));
+    }
+  }
   Future<void> openWhatsApp(DemoClient client) async {
     var digits=client.phone.replaceAll(RegExp(r'[^0-9]'),'');
     if(digits.length==10 || digits.length==11) digits='55$digits';
@@ -110,6 +126,7 @@ class _DemoClientsState extends State<DemoClients> {
         trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,spacing:4,children:[
           Text(c.status,style:const TextStyle(color:demoGold,fontSize:12)),
           IconButton(tooltip:'Abrir WhatsApp',onPressed:()=>openWhatsApp(c),icon:const Icon(Icons.chat_outlined,color:Color(0xFF25D366))),
+          if(c.status=='Pendente') IconButton(tooltip:'Preparar cobrança pelo WhatsApp',onPressed:()=>openBillingWhatsApp(c),icon:const Icon(Icons.request_quote_outlined,color:demoGold)),
           IconButton(tooltip:'Editar cliente',onPressed:()=>edit(c),icon:const Icon(Icons.edit_outlined)),
           IconButton(tooltip:'Excluir cliente fictício',onPressed:()=>deleteClient(c),icon:const Icon(Icons.delete_outline)),
         ]),
