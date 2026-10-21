@@ -90,6 +90,7 @@ class DemoFinance extends StatefulWidget {
   @override State<DemoFinance> createState()=>_DemoFinanceState();
 }
 class _DemoFinanceState extends State<DemoFinance> {
+  String filter = 'Todos';
   final items=<({String name,String type,double value,bool paid})>[
     (name:'Mariana Costa',type:'Receita',value:180,paid:true),
     (name:'Ricardo Almeida',type:'Receita',value:220,paid:false),
@@ -122,17 +123,34 @@ class _DemoFinanceState extends State<DemoFinance> {
     final received=items.where((e)=>e.type=='Receita'&&e.paid).fold<double>(0,(s,e)=>s+e.value);
     final pending=items.where((e)=>e.type=='Receita'&&!e.paid).fold<double>(0,(s,e)=>s+e.value);
     final expenses=items.where((e)=>e.type=='Despesa'&&!e.paid).fold<double>(0,(s,e)=>s+e.value);
+    final paidExpenses=items.where((e)=>e.type=='Despesa'&&e.paid).fold<double>(0,(s,e)=>s+e.value);
+    final visible=items.asMap().entries.where((entry) {
+      final e=entry.value;
+      return filter=='Todos' || (filter=='Receitas' && e.type=='Receita') ||
+        (filter=='Despesas' && e.type=='Despesa') ||
+        (filter=='Pendentes' && !e.paid);
+    }).toList();
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       Wrap(spacing:12,runSpacing:12,children:[
         _metric('Recebido',received,Icons.check_circle_outline),
         _metric('A receber',pending,Icons.trending_up),
         _metric('A pagar',expenses,Icons.south_east),
+        _metric('Saldo realizado',received-paidExpenses,Icons.account_balance_wallet_outlined),
       ]),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
         FilledButton.icon(onPressed:add,icon:const Icon(Icons.add),label:const Text('Adicionar'))]),
       const SizedBox(height:12),
-      for(var i=0;i<items.length;i++) Card(color:demoSurface,child:ListTile(
+      Wrap(spacing:8,runSpacing:8,children:[
+        for(final option in ['Todos','Receitas','Despesas','Pendentes'])
+          ChoiceChip(label:Text(option),selected:filter==option,
+            onSelected:(_)=>setState(()=>filter=option)),
+      ]),
+      const SizedBox(height:12),
+      if(visible.isEmpty) const Padding(padding:EdgeInsets.all(20),child:Text('Nenhum lançamento neste filtro.')),
+      for(final entry in visible) Card(color:demoSurface,child:Builder(builder:(context) {
+        final i=entry.key;
+        return ListTile(
         leading:Icon(items[i].type=='Receita'?Icons.arrow_downward:Icons.arrow_upward,color:demoGold),
         title:Text(items[i].name),subtitle:Text('${items[i].type} • ${items[i].paid ? "Pago" : "Pendente"}'),
         trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,children:[
@@ -144,7 +162,8 @@ class _DemoFinanceState extends State<DemoFinance> {
           IconButton(tooltip:'Excluir lançamento fictício',icon:const Icon(Icons.delete_outline),
             onPressed:()=>setState(()=>items.removeAt(i))),
         ]),
-      )),
+      );
+      })),
       const SizedBox(height:10),
       const Text('Demonstração: lançamentos não são cobrados nem salvos em banco.',style:TextStyle(color:Colors.white60,fontSize:12)),
     ]);
