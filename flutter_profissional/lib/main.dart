@@ -213,42 +213,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         vertical: 24,
                       ),
                       children: [
-                        if (selected == Section.inicio)
-                          Wrap(alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 12, runSpacing: 10, children: [
-                              Text('Visão geral', style: Theme.of(context).textTheme.headlineMedium),
-                              FilledButton.icon(onPressed: newClient,
-                                icon: const Icon(Icons.person_add_alt_1_outlined),
-                                label: const Text('Novo cliente')),
-                            ])
-                        else Text(selected.label, style: Theme.of(context).textTheme.headlineMedium),
-                        const SizedBox(height: 6),
-                        const Text('Gestão inteligente para profissionais autônomos.',
-                            style: TextStyle(color: silver)),
-                        const SizedBox(height: 24),
                         if (selected == Section.inicio) ...[
                           ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro)),
-                          const SizedBox(height: 18),
-                          Wrap(spacing: 10, runSpacing: 10, children: [
-                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.agenda),
-                              icon: const Icon(Icons.event_available_outlined),
-                              label: const Text('Ver agenda')),
-                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.financeiro),
-                              icon: const Icon(Icons.payments_outlined),
-                              label: const Text('Financeiro')),
-                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.cobrancas),
-                              icon: const Icon(Icons.receipt_long_outlined),
-                              label: const Text('Cobranças')),
-                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.clientes),
-                              icon: const Icon(Icons.groups_outlined),
-                              label: const Text('Clientes')),
-                          ]),
-                          const SizedBox(height: 18),
-                          _metricGrid(constraints.maxWidth),
-                          const SizedBox(height: 18),
-                          if (widget.demo) _demoToday() else
-                            _panel('Agenda de hoje', 'Nenhum atendimento cadastrado.'),
                         ] else if (selected == Section.cobrancas)
                           widget.demo ? const DemoBilling() :
                             _panel('Cobranças', 'Cobranças reais disponíveis após integração segura com o banco.'),
