@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
+import 'client_editor.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -154,6 +155,22 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   static const gold = Color(0xFFD8B56A);
   static const silver = Color(0xFFCBD0D8);
 
+  Future<void> newClient() async {
+    if (!widget.demo) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Cadastro real disponível após configurar a base de dados.')));
+      return;
+    }
+    final result = await showDialog<ClientProfile>(context: context,
+      builder: (context) => const ClientEditor());
+    if (result != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Cadastro demonstrativo preenchido. Para manter o registro, utilize Clientes.')));
+      setState(() => selected = Section.clientes);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
@@ -203,13 +220,34 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         vertical: 24,
                       ),
                       children: [
-                        Text(selected.label, style: Theme.of(context).textTheme.headlineMedium),
+                        if (selected == Section.inicio)
+                          Wrap(alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12, runSpacing: 10, children: [
+                              Text('Visão geral', style: Theme.of(context).textTheme.headlineMedium),
+                              FilledButton.icon(onPressed: newClient,
+                                icon: const Icon(Icons.person_add_alt_1_outlined),
+                                label: const Text('Novo cliente')),
+                            ])
+                        else Text(selected.label, style: Theme.of(context).textTheme.headlineMedium),
                         const SizedBox(height: 6),
                         const Text('Gestão inteligente para profissionais autônomos.',
                             style: TextStyle(color: silver)),
                         const SizedBox(height: 24),
                         if (selected == Section.inicio) ...[
                           _hero(),
+                          const SizedBox(height: 18),
+                          Wrap(spacing: 10, runSpacing: 10, children: [
+                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.agenda),
+                              icon: const Icon(Icons.event_available_outlined),
+                              label: const Text('Ver agenda')),
+                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.financeiro),
+                              icon: const Icon(Icons.payments_outlined),
+                              label: const Text('Financeiro e cobranças')),
+                            OutlinedButton.icon(onPressed: () => setState(() => selected = Section.clientes),
+                              icon: const Icon(Icons.groups_outlined),
+                              label: const Text('Clientes')),
+                          ]),
                           const SizedBox(height: 18),
                           _metricGrid(constraints.maxWidth),
                           const SizedBox(height: 18),
