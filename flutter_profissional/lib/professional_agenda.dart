@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'agenda_repository.dart';
 
@@ -190,9 +189,9 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
     final cells = ((offset + count + 6) ~/ 7) * 7;
     return Column(
       children: [
-        const Row(
+        Row(
           children: [
-            for (final day in ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'])
+            for (final day in const ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'])
               Expanded(
                 child: Center(child: Text(day, style: TextStyle(color: silver))),
               ),
