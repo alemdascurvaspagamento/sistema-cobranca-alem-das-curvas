@@ -9,17 +9,17 @@ class ProfessionalDashboard extends StatelessWidget {
   final bool demo;
   final VoidCallback onClients, onAgenda, onBilling, onFinance;
 
-  static const ink = Color(0xFF24201E);
-  static const muted = Color(0xFF826F63);
-  static const border = Color(0xFFEADFD6);
-  static const background = Color(0xFFFAF6F2);
-  static const green = Color(0xFF2B866E);
-  static const amber = Color(0xFFD99A21);
-  static const red = Color(0xFFD86A4D);
+  static const ink = Color(0xFFF5F2EA);
+  static const muted = Color(0xFFADB0B8);
+  static const border = Color(0xFF383A40);
+  static const background = Color(0xFF111317);
+  static const green = Color(0xFFD6B46B);
+  static const amber = Color(0xFFE0BA62);
+  static const red = Color(0xFFBD8E62);
 
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(color: Colors.white,
+    decoration: BoxDecoration(color: const Color(0xFF1E2127),
       border: Border.all(color: border),
       borderRadius: BorderRadius.circular(17)),
     child: child);
@@ -45,7 +45,7 @@ class ProfessionalDashboard extends StatelessWidget {
     OutlinedButton.icon(onPressed: onTap, icon: Icon(icon, size: 18),
       label: Text(label), style: OutlinedButton.styleFrom(
         foregroundColor: ink, side: const BorderSide(color: border),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF1E2127),
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 14)));
 
   @override Widget build(BuildContext context) {
@@ -54,8 +54,8 @@ class ProfessionalDashboard extends StatelessWidget {
       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     final appointments = demo ? DemoData.appointments : <DemoAppointment>[];
     final planned = appointments.fold<double>(0, (sum, a) => sum + a.amount);
-    return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light),
+    return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.dark),
       scaffoldBackgroundColor: background), child: Container(
       decoration: BoxDecoration(color: background,
         borderRadius: BorderRadius.circular(20)),
@@ -72,8 +72,8 @@ class ProfessionalDashboard extends StatelessWidget {
             ]),
             FilledButton.icon(onPressed: onClients, icon: const Icon(Icons.person_add_alt_1),
               label: const Text('Novo cliente'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA633A),
-                foregroundColor: Colors.white)),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD6B46B),
+                foregroundColor: const Color(0xFF111317))),
           ]),
           const SizedBox(height: 16),
           Wrap(spacing: 8, runSpacing: 8, children: [
