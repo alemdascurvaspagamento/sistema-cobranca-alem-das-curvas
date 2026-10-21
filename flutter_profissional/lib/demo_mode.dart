@@ -33,6 +33,9 @@ class _DemoAgendaState extends State<DemoAgenda> {
   static const gold = Color(0xFFD8B56A);
   static const surface = Color(0xFF1A1D22);
   int tab = 0;
+  String statusFilter = 'Todos';
+  DateTime? selectedWeek;
+
   final Map<String, String> appointmentStates = {};
 
   late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
@@ -111,28 +114,28 @@ class _DemoAgendaState extends State<DemoAgenda> {
 
   Widget appointmentList(DateTime day) {
     final today = DateUtils.dateOnly(DateTime.now());
-    if (!DateUtils.isSameDay(day, today)) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('Nenhum atendimento fictício para este dia.',
-          style: TextStyle(color: Color(0xFFCBD0D8))),
-      );
+    if (!DateUtils.isSameDay(day, today) && day.month != today.month) {
+      return const Padding(padding: EdgeInsets.all(12),
+        child: Text('Nenhum atendimento fictício neste período.'));
+    }
+    final appointments = DemoData.appointments.where((appointment) =>
+      statusFilter == 'Todos' ||
+      appointmentState(day, appointment.client) == statusFilter).toList();
+    if (appointments.isEmpty) {
+      return const Padding(padding: EdgeInsets.all(12),
+        child: Text('Nenhum atendimento neste filtro.'));
     }
     return Column(children: [
-      for (final a in DemoData.appointments)
-        Card(
-          color: const Color(0xFF24282F),
-          margin: const EdgeInsets.only(bottom: 9),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: gold.withValues(alpha: .15),
-              child: const Icon(Icons.event_available, color: gold),
-            ),
-            title: Text(a.client, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(a.service),
-            trailing: Text(a.hour, style: const TextStyle(color: gold, fontWeight: FontWeight.bold)),
-          ),
-        ),
+      for (final appointment in appointments)
+        Card(color: const Color(0xFF24282F), child: ListTile(
+          onTap: () => editAppointment(day, appointment),
+          leading: Icon(Icons.circle,
+            color: appointmentColor(appointmentState(day, appointment.client))),
+          title: Text(appointment.client),
+          subtitle: Text('${appointment.service} • ${appointmentState(day, appointment.client)}'),
+          trailing: Text(appointment.hour,
+            style: const TextStyle(color: gold)),
+        )),
     ]);
   }
 
