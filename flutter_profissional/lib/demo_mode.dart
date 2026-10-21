@@ -126,6 +126,9 @@ class _DemoAgendaState extends State<DemoAgenda> {
                 selectedDay = null;
               }), icon: const Icon(Icons.chevron_right)),
             ]),
+            Center(child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(children: [
             Row(children: [
               for (final label in const ['S','T','Q','Q','S','S','D'])
                 Expanded(child: Center(child: Text(label,
@@ -136,9 +139,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
               final offset = DateTime(month.year, month.month).weekday - 1;
               final days = DateTime(month.year, month.month + 1, 0).day;
               final count = ((offset + days + 6) ~/ 7) * 7;
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: GridView.builder(
+              return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: count,
@@ -166,8 +167,10 @@ class _DemoAgendaState extends State<DemoAgenda> {
                     ),
                   );
                 },
-              ));
+              );
             }),
+              ]),
+            )),
             const SizedBox(height: 12),
             if (selectedDay != null) appointmentList(selectedDay!)
             else const Text('Selecione um dia para ver os atendimentos.',
