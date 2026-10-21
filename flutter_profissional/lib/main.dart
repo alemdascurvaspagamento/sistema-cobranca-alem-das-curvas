@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
+import 'demo_mode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -48,6 +49,7 @@ class CoachFlowEntry extends StatefulWidget {
 }
 
 class _CoachFlowEntryState extends State<CoachFlowEntry> {
+  bool demo = false;
   final email = TextEditingController();
   final password = TextEditingController();
   bool busy = false;
@@ -56,11 +58,29 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   void dispose() { email.dispose(); password.dispose(); super.dispose(); }
   @override
   Widget build(BuildContext context) {
+    if (demo) return const CoachFlowShell(demo: true);
     if (const String.fromEnvironment('SUPABASE_URL').isEmpty ||
         const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY').isEmpty) {
-      return const Scaffold(body: Center(child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Text('Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY para conectar a agenda.'),
+      return Scaffold(body: Center(child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 450),
+        child: Padding(padding: const EdgeInsets.all(24), child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.workspace_premium_outlined, size: 64, color: Color(0xFFD8B56A)),
+            const SizedBox(height: 18),
+            const Text('Coach Flow Profissional', textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text('Explore o dashboard e a agenda com dados fictícios, sem conectar nenhum banco.',
+              textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            FilledButton.icon(onPressed: () => setState(() => demo = true),
+              icon: const Icon(Icons.play_arrow), label: const Text('Entrar na demonstração')),
+            const SizedBox(height: 16),
+            const Text('MODO DEMONSTRAÇÃO • Nenhum dado real será alterado',
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Color(0xFFD8B56A))),
+          ],
+        )),
       )));
     }
     final auth = Supabase.instance.client.auth;
@@ -121,7 +141,8 @@ extension SectionDetails on Section {
 }
 
 class CoachFlowShell extends StatefulWidget {
-  const CoachFlowShell({super.key});
+  const CoachFlowShell({super.key, this.demo = false});
+  final bool demo;
 
   @override
   State<CoachFlowShell> createState() => _CoachFlowShellState();
@@ -140,6 +161,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             appBar: AppBar(
               backgroundColor: const Color(0xFF101216),
               title: Text('Coach Flow  •  ${selected.label}'),
+              bottom: widget.demo ? const PreferredSize(
+                preferredSize: Size.fromHeight(28),
+                child: Padding(padding: EdgeInsets.only(bottom: 7),
+                  child: Text('DEMONSTRAÇÃO • DADOS FICTÍCIOS',
+                    style: TextStyle(color: Color(0xFFD8B56A), fontSize: 11, letterSpacing: 1))),
+              ) : null,
               actions: [
                 IconButton(
                   tooltip: 'Notificações (em desenvolvimento)',
@@ -185,17 +212,21 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           const SizedBox(height: 18),
                           _metricGrid(constraints.maxWidth),
                           const SizedBox(height: 18),
-                          _panel('Agenda de hoje', 'Nenhum atendimento para exibir nesta demonstração.'),
+                          if (widget.demo) _demoToday() else
+                            _panel('Agenda de hoje', 'Nenhum atendimento cadastrado.'),
                         ] else if (selected == Section.financeiro) ...[
                           _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),
                           const SizedBox(height: 16),
                           _metricGrid(constraints.maxWidth),
                           const SizedBox(height: 16),
-                          _panel('Central de cobranças', 'Os dados reais serão conectados após validação do backend.'),
+                          _panel('Central de cobranças', widget.demo
+                            ? 'Exemplo: 2 cobranças pendentes • R\$ 370,00 (dados fictícios)'
+                            : 'Os dados reais serão conectados após validação do backend.'),
                         ] else if (selected == Section.agenda)
-                          const ProfessionalAgenda(),
+                          widget.demo ? const DemoAgenda() : const ProfessionalAgenda(),
                         if (selected == Section.clientes)
-                          _panel('Clientes', 'Cadastro, contatos e situação financeira.'),
+                          widget.demo ? _demoClients() :
+                            _panel('Clientes', 'Cadastro, contatos e situação financeira.'),
                         if (selected == Section.mais)
                           _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
                       ],
@@ -251,10 +282,13 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   Widget _metricGrid(double width) {
     final columns = width >= 1050 ? 4 : 2;
     const metrics = [
-      ('Atendimentos', '—', Icons.calendar_month_outlined),
-      ('Recebido hoje', '—', Icons.account_balance_wallet_outlined),
-      ('A receber', '—', Icons.trending_up),
-      ('A pagar', '—', Icons.south_east),
+      ('Atendimentos', '4', Icons.calendar_month_outlined),
+      ('Recebido hoje', 'R\$ 510', Icons.account_balance_wallet_outlined),
+      ('A receber', 'R\$ 370', Icons.trending_up),
+      ('A pagar', 'R\$ 120', Icons.south_east),
+    ];
+    final shownMetrics = widget.demo ? metrics : [
+      for (final (label, _, icon) in metrics) (label, '—', icon),
     ];
     return GridView.count(
       crossAxisCount: columns,
@@ -264,7 +298,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        for (final (label, value, icon) in metrics)
+        for (final (label, value, icon) in shownMetrics)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -288,6 +322,26 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       ],
     );
   }
+
+  Widget _demoToday() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    const Text('Agenda de hoje', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+    const SizedBox(height: 12),
+    for (final a in DemoData.appointments)
+      Card(color: const Color(0xFF1A1D22), child: ListTile(
+        leading: const Icon(Icons.event, color: gold),
+        title: Text(a.client), subtitle: Text(a.service),
+        trailing: Text(a.hour, style: const TextStyle(color: gold)),
+      )),
+  ]);
+
+  Widget _demoClients() => Column(children: [
+    for (final (name, service, status) in DemoData.clients)
+      Card(color: const Color(0xFF1A1D22), child: ListTile(
+        leading: const Icon(Icons.person_outline, color: gold),
+        title: Text(name), subtitle: Text(service),
+        trailing: Text(status, style: const TextStyle(color: silver, fontSize: 11)),
+      )),
+  ]);
 
   Widget _panel(String title, String description) => Container(
         padding: const EdgeInsets.all(22),
