@@ -215,7 +215,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                       children: [
                         if (selected == Section.inicio) ...[
                           ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro)),
-                        ] else if (selected == Section.cobrancas)
+                        ],
+                        if (selected == Section.cobrancas)
                           widget.demo ? const DemoBilling() :
                             _panel('Cobranças', 'Cobranças reais disponíveis após integração segura com o banco.'),
                         if (selected == Section.financeiro)
