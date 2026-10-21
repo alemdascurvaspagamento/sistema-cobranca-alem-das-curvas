@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
+import 'client_editor.dart';
 
 const demoGold = Color(0xFFD8B56A);
 const demoSurface = Color(0xFF1A1D22);
@@ -8,6 +9,7 @@ const demoSurface = Color(0xFF1A1D22);
 class DemoClient {
   DemoClient(this.name, this.service, this.status, this.phone);
   String name, service, status, phone;
+  ClientProfile? profile;
 }
 
 class DemoClients extends StatefulWidget {
@@ -63,40 +65,24 @@ class _DemoClientsState extends State<DemoClients> {
     if(confirmed==true && mounted) setState(()=>clients.remove(client));
   }
   Future<void> edit([DemoClient? current]) async {
-    final name = TextEditingController(text: current?.name ?? '');
-    final service = TextEditingController(text: current?.service ?? '');
-    final phone = TextEditingController(text: current?.phone ?? '');
-    String status = current?.status ?? 'Em dia';
-    final result = await showDialog<bool>(context: context, builder: (context) =>
-      StatefulBuilder(builder: (context, refresh) => AlertDialog(
-        title: Text(current == null ? 'Novo cliente fictício' : 'Editar cliente'),
-        content: SizedBox(width: 420, child: SingleChildScrollView(child: Column(
-          mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: name, decoration: const InputDecoration(labelText: 'Nome *')),
-            TextField(controller: service, decoration: const InputDecoration(labelText: 'Serviço')),
-            TextField(controller: phone, decoration: const InputDecoration(labelText: 'Telefone')),
-            DropdownButtonFormField<String>(value: status,
-              decoration: const InputDecoration(labelText: 'Situação'),
-              items: ['Em dia','Pendente'].map((s) => DropdownMenuItem(value:s,child:Text(s))).toList(),
-              onChanged: (v) => refresh(() => status = v ?? status)),
-          ]))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () {
-            if (name.text.trim().isEmpty) return;
-            Navigator.pop(context, true);
-          }, child: const Text('Salvar')),
-        ],
-      )));
-    if (result == true && mounted) setState(() {
-      if (current == null) {
-        clients.add(DemoClient(name.text.trim(),service.text.trim(),status,phone.text.trim()));
-      } else {
-        current.name=name.text.trim();current.service=service.text.trim();
-        current.status=status;current.phone=phone.text.trim();
+    final initial=current?.profile ?? (current==null?null:ClientProfile(
+      name:current.name,service:current.service,phone:current.phone,status:current.status));
+    final result=await showDialog<ClientProfile>(context:context,
+      builder:(ctx)=>ClientEditor(initial:initial));
+    if(result==null || !mounted)return;
+    setState((){
+      if(current==null){
+        final client=DemoClient(result.name,result.service,result.status,result.phone);
+        client.profile=result;
+        clients.add(client);
+      }else{
+        current.name=result.name;
+        current.service=result.service;
+        current.status=result.status;
+        current.phone=result.phone;
+        current.profile=result;
       }
     });
-    name.dispose();service.dispose();phone.dispose();
   }
   @override Widget build(BuildContext context) {
     final term=search.trim().toLowerCase();
