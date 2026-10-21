@@ -4,6 +4,7 @@ import 'professional_agenda.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
 import 'demo_billing.dart';
+import 'professional_dashboard.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -227,7 +228,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                             style: TextStyle(color: silver)),
                         const SizedBox(height: 24),
                         if (selected == Section.inicio) ...[
-                          _hero(),
+                          ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro)),
                           const SizedBox(height: 18),
                           Wrap(spacing: 10, runSpacing: 10, children: [
                             OutlinedButton.icon(onPressed: () => setState(() => selected = Section.agenda),
