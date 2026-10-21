@@ -33,6 +33,8 @@ class _DemoAgendaState extends State<DemoAgenda> {
   static const gold = Color(0xFFD8B56A);
   static const surface = Color(0xFF1A1D22);
   int tab = 0;
+  final Map<String, String> appointmentStates = {};
+
   late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? selectedDay;
 
