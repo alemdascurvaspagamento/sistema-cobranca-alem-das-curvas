@@ -17,7 +17,7 @@ class BillingAccount {
   // remarcações como novas sessões. Desconto e créditos são abatidos uma vez.
   double get gross => completed * unitPrice;
   double get creditValue => credits * unitPrice;
-  double get total => (gross - creditValue - discount).clamp(0.0,double.infinity);
+  double get total => (gross - creditValue - discount).clamp(0.0,double.infinity).toDouble();
   String get status => paid?'Recebido':'Pendente';
 }
 
