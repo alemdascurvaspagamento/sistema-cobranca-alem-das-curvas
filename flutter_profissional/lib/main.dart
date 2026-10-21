@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
 import 'demo_mode.dart';
+import 'demo_modules.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -214,21 +215,17 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           const SizedBox(height: 18),
                           if (widget.demo) _demoToday() else
                             _panel('Agenda de hoje', 'Nenhum atendimento cadastrado.'),
-                        ] else if (selected == Section.financeiro) ...[
-                          _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),
-                          const SizedBox(height: 16),
-                          _metricGrid(constraints.maxWidth),
-                          const SizedBox(height: 16),
-                          _panel('Central de cobranças', widget.demo
-                            ? 'Exemplo: 2 cobranças pendentes • R\$ 370,00 (dados fictícios)'
-                            : 'Os dados reais serão conectados após validação do backend.'),
-                        ] else if (selected == Section.agenda)
+                        ] else if (selected == Section.financeiro)
+                          widget.demo ? const DemoFinance() :
+                            _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),
+                        if (selected == Section.agenda)
                           widget.demo ? const DemoAgenda() : const ProfessionalAgenda(),
                         if (selected == Section.clientes)
-                          widget.demo ? _demoClients() :
+                          widget.demo ? const DemoClients() :
                             _panel('Clientes', 'Cadastro, contatos e situação financeira.'),
                         if (selected == Section.mais)
-                          _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
+                          widget.demo ? const DemoMore() :
+                            _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
                       ],
                     ),
                   ),
