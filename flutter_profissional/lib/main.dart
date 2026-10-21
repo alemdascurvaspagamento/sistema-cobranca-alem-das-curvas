@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
-import 'client_editor.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -155,21 +154,11 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   static const gold = Color(0xFFD8B56A);
   static const silver = Color(0xFFCBD0D8);
 
-  Future<void> newClient() async {
-    if (!widget.demo) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Cadastro real disponível após configurar a base de dados.')));
-      return;
-    }
-    final result = await showDialog<ClientProfile>(context: context,
-      builder: (context) => const ClientEditor());
-    if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Cadastro demonstrativo preenchido. Para manter o registro, utilize Clientes.')));
-      setState(() => selected = Section.clientes);
-    }
+  void newClient() {
+    setState(() => selected = Section.clientes);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Em Clientes, selecione Novo cliente para abrir o cadastro.')));
   }
-
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
