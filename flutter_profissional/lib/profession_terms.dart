@@ -11,7 +11,8 @@ class ProfessionTerms {
   static String appointment(String profession) {
     if(profession=='Personal trainer')return 'Treino / Aula';
     if(profession=='Professor(a) particular')return 'Aula';
-    if(profession=='Médico(a)'||profession=='Dentista'||
+    if(profession=='Dentista')return 'Consulta / Procedimento';
+    if(profession=='Médico(a)'||
        profession=='Nutricionista'||profession=='Enfermeiro(a)'||
        profession=='Fonoaudiólogo(a)')return 'Consulta';
     if(profession=='Consultor(a)'||profession=='Coach / Mentor(a)')
@@ -21,7 +22,6 @@ class ProfessionTerms {
        profession=='Terapeuta integrativo(a)'||
        profession=='Massoterapeuta'||profession=='Instrutor(a) de Pilates'||
        profession=='Instrutor(a) de Yoga')return 'Sessão';
-    if(profession=='Dentista')return 'Consulta / Procedimento';
     return 'Atendimento';
   }
   static String client(String profession) =>
