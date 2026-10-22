@@ -205,7 +205,15 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           return Scaffold(
             appBar: AppBar(
               backgroundColor: const Color(0xFF101216),
-              title: Text('Coach Flow  •  ${selected.label}'),
+              centerTitle: !desktop,
+              leading: desktop ? null : IconButton(
+                tooltip:'Abrir opções',icon:const Icon(Icons.menu_rounded),onPressed:openMore),
+              title: desktop ? Text('Coach Flow  •  ${selected.label}') :
+                const Column(mainAxisSize:MainAxisSize.min,children:[
+                  Text('Coach Flow',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),
+                  Text('PROFISSIONAL',style:TextStyle(fontSize:9,letterSpacing:1.6,
+                    color:gold)),
+                ]),
               bottom: widget.demo ? const PreferredSize(
                 preferredSize: Size.fromHeight(28),
                 child: Padding(padding: EdgeInsets.only(bottom: 7),
@@ -243,8 +251,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   child: SafeArea(
                     child: ListView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: desktop ? 32 : 18,
-                        vertical: 24,
+                        horizontal: desktop ? 32 : 12,
+                        vertical: desktop ? 24 : 12,
                       ),
                       children: [
                         if (selected == Section.inicio) ...[
