@@ -398,7 +398,8 @@ class _DemoBillingState extends State<DemoBilling> {
   ]);
   Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
     scrollDirection:Axis.horizontal,child:DataTable(
-      columnSpacing:26,headingRowHeight:54,dataRowMinHeight:76,dataRowMaxHeight:88,\n      horizontalMargin:22,headingRowColor:WidgetStateProperty.all(_surface),
+      columnSpacing:26,headingRowHeight:54,dataRowMinHeight:76,dataRowMaxHeight:88,
+      horizontalMargin:22,headingRowColor:WidgetStateProperty.all(_surface),
       columns:const [
         DataColumn(label:Text('Cliente / serviço')),
         DataColumn(label:Text('Valor / sessão')),
