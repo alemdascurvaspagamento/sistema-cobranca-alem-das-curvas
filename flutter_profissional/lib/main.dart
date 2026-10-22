@@ -5,6 +5,7 @@ import 'demo_mode.dart';
 import 'demo_modules.dart';
 import 'demo_billing.dart';
 import 'professional_dashboard.dart';
+import 'professional_secretary.dart';
 import 'professional_clients.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -125,12 +126,13 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   }
 }
 
-enum Section { inicio, clientes, cobrancas, financeiro, agenda, mais }
+enum Section { inicio, clientes, cobrancas, financeiro, agenda, secretaria, mais }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
         Section.inicio => 'Início',
         Section.agenda => 'Agenda',
+        Section.secretaria => 'Secretária',
         Section.clientes => 'Clientes',
         Section.cobrancas => 'Cobranças',
         Section.financeiro => 'Financeiro',
@@ -139,6 +141,7 @@ extension SectionDetails on Section {
   IconData get icon => switch (this) {
         Section.inicio => Icons.home_outlined,
         Section.agenda => Icons.calendar_month_outlined,
+        Section.secretaria => Icons.support_agent_outlined,
         Section.clientes => Icons.groups_outlined,
         Section.cobrancas => Icons.receipt_long_outlined,
         Section.financeiro => Icons.account_balance_wallet_outlined,
@@ -182,6 +185,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             const SizedBox(height: 14),
             for (final entry in <(Section, String, IconData)>[
               (Section.agenda, 'Calendário e atendimentos', Icons.calendar_month_outlined),
+              (Section.secretaria, 'Secretária inteligente', Icons.support_agent_outlined),
               (Section.mais, 'Configurações e relatórios', Icons.tune_outlined),
             ])
               ListTile(
@@ -269,6 +273,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           widget.demo ? const DemoAgenda() : const ProfessionalAgenda(),
                         if (selected == Section.clientes)
                           widget.demo ? const DemoClients() : const ProfessionalClients(),
+                        if (selected == Section.secretaria)
+                          ProfessionalSecretary(demo:widget.demo,
+                            onAgenda:()=>setState(()=>selected=Section.agenda),
+                            onBilling:()=>setState(()=>selected=Section.cobrancas),
+                            onClients:()=>setState(()=>selected=Section.clientes),
+                            onFinance:()=>setState(()=>selected=Section.financeiro)),
                         if (selected == Section.mais)
                           widget.demo ? const DemoMore() :
                             _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
