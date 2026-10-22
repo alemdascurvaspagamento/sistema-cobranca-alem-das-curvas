@@ -376,25 +376,20 @@ class _DemoBillingState extends State<DemoBilling> {
     input.dispose();
     if(day!=null)ledger.setDueDay(a.name,day);
   }
-  Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:6,children:[
+  Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:4,children:[
     IconButton.outlined(onPressed:()=>details(a),tooltip:'Ver atendimentos',
       icon:const Icon(Icons.event_note_outlined,size:19)),
-    IconButton.filled(onPressed:()=>whatsapp(a),tooltip:'Mensagem WhatsApp',
+    IconButton.filled(onPressed:()=>whatsapp(a),tooltip:'Enviar mensagem pelo WhatsApp',
+      style:IconButton.styleFrom(backgroundColor:const Color(0xFF25D366),
+        foregroundColor:Colors.white),
       icon:const Icon(Icons.chat_outlined,size:19)),
-    PopupMenuButton<String>(
-      tooltip:'Outras ações',
-      onSelected:(choice){
-        if(choice=='payment')changePaid(a);
-        if(choice=='absence')absencePeriod(a);
-        if(choice=='due')changeDueDay(a);
-      },
-      itemBuilder:(_)=>[
-        PopupMenuItem(value:'payment',child:Text(paidFor(a)?
-          'Reabrir cobrança':'Registrar pagamento')),
-        const PopupMenuItem(value:'absence',child:Text('Férias / ausência')),
-        const PopupMenuItem(value:'due',child:Text('Alterar vencimento')),
-      ],
-      icon:const Icon(Icons.more_horiz,color:_gold)),
+    IconButton.outlined(onPressed:()=>changePaid(a),
+      tooltip:paidFor(a)?'Reabrir cobrança':'Registrar pagamento',
+      icon:Icon(paidFor(a)?Icons.lock_open_outlined:Icons.payments_outlined,size:19)),
+    IconButton.outlined(onPressed:()=>absencePeriod(a),
+      tooltip:'Férias / ausência',icon:const Icon(Icons.event_busy_outlined,size:19)),
+    IconButton.outlined(onPressed:()=>changeDueDay(a),
+      tooltip:'Alterar vencimento',icon:const Icon(Icons.edit_calendar_outlined,size:19)),
   ]);
   Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
     scrollDirection:Axis.horizontal,child:DataTable(
@@ -502,7 +497,7 @@ class _DemoBillingState extends State<DemoBilling> {
             style:OutlinedButton.styleFrom(
               padding:const EdgeInsets.symmetric(horizontal:3,vertical:11),
               foregroundColor:Colors.white,
-              backgroundColor:const Color(0xFF0C213A),
+              backgroundColor:const Color(0xFF25D366),
               side:const BorderSide(color:Color(0xFF0C213A))))),
           const SizedBox(width:3),
           PopupMenuButton<String>(
