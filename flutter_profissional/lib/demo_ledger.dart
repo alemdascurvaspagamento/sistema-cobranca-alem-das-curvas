@@ -7,6 +7,29 @@ class DemoLedger extends ChangeNotifier {
   static final DemoLedger instance = DemoLedger._();
   String professionalPixKey='';
   void setProfessionalPixKey(String value){professionalPixKey=value.trim();notifyListeners();}
+  // Confirmações independentes da execução e do pagamento.
+  // Apenas memória da demonstração: não representa envio ou resposta real.
+  String confirmationTemplate =
+    'Olá, {nome}! 😊\\n\\nPodemos confirmar seu atendimento de hoje?'
+    '\\n📅 {data} às {hora}\\n📋 {servico}'
+    '\\n\\nPor favor, confirme sua presença. Obrigado!';
+  final Map<String,String> clientPhones={
+    'Mariana Costa':'11999990001',
+    'Ricardo Almeida':'11999990002',
+    'Fernanda Lima':'11999990003',
+    'Paulo Martins':'11999990004',
+  };
+  final Map<String,String> confirmations={};
+  String confirmationStatus(String name,DateTime day)=>
+    confirmations['${dateKey(day)}|$name']??'Aguardando';
+  void setConfirmationStatus(String name,DateTime day,String status){
+    confirmations['${dateKey(day)}|$name']=status;
+    notifyListeners();
+  }
+  void setConfirmationTemplate(String template){
+    confirmationTemplate=template;
+    notifyListeners();
+  }
   final Map<String, bool> payments = {'Mariana Costa': true};
   final Map<String,int> dueDays={'Mariana Costa':5,'Ricardo Almeida':28,'Fernanda Lima':15,'Paulo Martins':28};
   final Map<String,DateTime> paymentDates={};
