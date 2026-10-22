@@ -46,9 +46,10 @@ class _DemoBillingState extends State<DemoBilling> {
   bool paidFor(BillingAccount a)=>ledger.isPaid(a.name);
   String statusFor(BillingAccount a)=>paidFor(a)?'Recebido':'Pendente';
   void recalculate(BillingAccount a){
-    final visits=visitsFor(a);
-    final gross=visits.where((v)=>v.state=='Realizada'&&v.charge).length*a.unitPrice;
-    ledger.setAmount(a.name,(gross-a.creditValue-a.discount).clamp(0.0,double.infinity).toDouble());
+    final current=ledger.visits[a.name]?.values.toList()??[];
+    final completed=current.where((v)=>v.state=='Realizada'&&v.charge).length;
+    ledger.updateBilling(a.name,(completed*a.unitPrice-a.creditValue-a.discount)
+      .clamp(0.0,double.infinity).toDouble());
   }
   final accounts=<BillingAccount>[
     BillingAccount('Mariana Costa','Consultoria individual','(11) 99999-0001',
@@ -82,6 +83,10 @@ class _DemoBillingState extends State<DemoBilling> {
         : 'Agendada';
       result.add(_BillingVisit(days[i], '09:00', state));
     }
+    for(final visit in result){
+      final saved=ledger.visit(a.name,visit.date);
+      if(saved!=null){visit.state=saved.state;visit.charge=saved.charge;visit.note=saved.note;}
+    }
     return result;
   });
   Color visitColor(String state) => switch(state) {
@@ -99,7 +104,7 @@ class _DemoBillingState extends State<DemoBilling> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, update) => AlertDialog(
           title: const Text('Detalhes do atendimento'),
-          content: SizedBox(width: 360, child: Column(
+          content: SizedBox(width: MediaQuery.sizeOf(dialogContext).width < 450 ? MediaQuery.sizeOf(dialogContext).width * .72 : 360, child: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text('${visit.date.day.toString().padLeft(2, '0')}/'
@@ -119,7 +124,7 @@ class _DemoBillingState extends State<DemoBilling> {
               TextField(controller: notes, maxLines: 2,
                 decoration: const InputDecoration(labelText: 'Motivo / observações')),
             ],
-          )),
+          ))),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancelar')),
@@ -129,7 +134,9 @@ class _DemoBillingState extends State<DemoBilling> {
         )));
     if (ok == true && mounted) {
       refresh(() { visit.state = state; visit.charge = charge; visit.note = notes.text.trim(); });
-      for(final account in accounts){if(visitsFor(account).contains(visit)){recalculate(account);break;}}
+      for(final account in accounts){if(visitsFor(account).contains(visit)){
+        ledger.updateVisit(account.name,visit.date,state,charge,visit.note);break;
+      }}
     }
     notes.dispose();
   }
@@ -141,7 +148,7 @@ class _DemoBillingState extends State<DemoBilling> {
     await showDialog<void>(context: context, builder: (ctx) =>
       StatefulBuilder(builder: (ctx, refresh) => AlertDialog(
         title: Text('Atendimentos de ${a.name} — ${months[today.month - 1]}/${today.year}'),
-        content: SizedBox(width: 620, child: SingleChildScrollView(child:
+        content: SizedBox(width: MediaQuery.sizeOf(ctx).width < 680 ? MediaQuery.sizeOf(ctx).width * .75 : 620, child: SingleChildScrollView(child:
           Column(mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               const Text('Datas demonstrativas: toque em um atendimento para '
@@ -171,11 +178,11 @@ class _DemoBillingState extends State<DemoBilling> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               _line('Atendimentos previstos', '${a.scheduled}'),
-              _line('Realizados considerados na cobrança', '${a.completed}'),
+              _line('Realizados considerados na cobrança', '${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??0}'),
               _line('Cancelamentos', '${a.cancelled} (não faturados)'),
               _line('Remarcações', '${a.rescheduled} (não duplicadas)'),
               _line('Valor por atendimento', DemoData.currency(a.unitPrice)),
-              _line('Subtotal', DemoData.currency(a.gross)),
+              _line('Subtotal', DemoData.currency((ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??0)*a.unitPrice)),
               _line('Créditos (${a.credits})', '− ${DemoData.currency(a.creditValue)}'),
               _line('Descontos', '− ${DemoData.currency(a.discount)}'),
               const Divider(),
@@ -226,7 +233,7 @@ class _DemoBillingState extends State<DemoBilling> {
     final approved=await showDialog<bool>(context:context,
       builder:(dialogContext)=>StatefulBuilder(builder:(ctx,refresh)=>AlertDialog(
         title:Text('Ausência • ${account.name}'),
-        content:SizedBox(width:420,child:Column(mainAxisSize:MainAxisSize.min,
+        content:SizedBox(width:MediaQuery.sizeOf(ctx).width<500?MediaQuery.sizeOf(ctx).width*.72:420,child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,
           crossAxisAlignment:CrossAxisAlignment.stretch,children:[
           const Text('Selecione o período e confira quantos atendimentos serão alterados. '
             'Na demonstração, apenas as sessões deste cliente serão afetadas.'),
@@ -253,7 +260,7 @@ class _DemoBillingState extends State<DemoBilling> {
               'atendimentos. Sessões realizadas também serão modificadas; '
               'revise antes de confirmar.',
               style:const TextStyle(color:_gold))),
-        ])),
+        ]))),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
           FilledButton(onPressed:range==null?null:()=>Navigator.pop(ctx,true),
@@ -267,6 +274,7 @@ class _DemoBillingState extends State<DemoBilling> {
     for(final visit in affected){
       visit.state='Cancelada';visit.charge=false;visit.note=reason;
       ledger.setAbsence(account.name,visit.date,reason);
+      ledger.updateVisit(account.name,visit.date,'Cancelada',false,reason);
     }
     recalculate(account);
     if(!mounted)return;
@@ -278,6 +286,7 @@ class _DemoBillingState extends State<DemoBilling> {
           final old=before[visit]!;
           visit.state=old.$1;visit.charge=old.$2;visit.note=old.$3;
           ledger.setAbsence(account.name,visit.date,null);
+          ledger.updateVisit(account.name,visit.date,old.$1,old.$2,old.$3);
         }
         recalculate(account);
       })));
