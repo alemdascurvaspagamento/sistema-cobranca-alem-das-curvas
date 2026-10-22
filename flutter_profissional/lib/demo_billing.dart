@@ -536,38 +536,40 @@ class _DemoBillingState extends State<DemoBilling> {
           ]):Row(children:[Expanded(child:visits),const SizedBox(width:8),amount]);
         }),
         const SizedBox(height:12),
-        const Text('Ações',style:TextStyle(
-          fontSize:12,fontWeight:FontWeight.w800,color:Color(0xFF64748B))),
-        const SizedBox(height:8),
-        LayoutBuilder(builder:(context,c){
-          final w=(c.maxWidth-16)/3;
-          Widget item(String label,IconData icon,VoidCallback action,
-              {bool whatsappColor=false})=>SizedBox(width:w,
-            child:OutlinedButton(
-              onPressed:action,
-              style:OutlinedButton.styleFrom(
-                minimumSize:const Size(0,66),
-                padding:const EdgeInsets.symmetric(horizontal:3,vertical:6),
-                backgroundColor:whatsappColor?const Color(0xFFE2F8EB):Colors.white,
-                foregroundColor:whatsappColor?const Color(0xFF128C4B):const Color(0xFF0C213A),
-                side:BorderSide(color:whatsappColor?
-                  const Color(0xFF25D366):const Color(0xFFB5D5F4)),
-              child:Column(mainAxisSize:MainAxisSize.min,children:[
-                Icon(icon,size:21),const SizedBox(height:5),
-                Text(label,maxLines:1,overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:10,fontWeight:FontWeight.w700)),
-              ])));
-          return Wrap(spacing:8,runSpacing:8,children:[
-            item('Atendimentos',Icons.event_note_outlined,()=>details(a)),
-            item('WhatsApp',Icons.chat_outlined,()=>whatsapp(a),whatsappColor:true),
-            item('E-mail',Icons.email_outlined,()=>emailBilling(a)),
-            item(paidFor(a)?'Reabrir':'Pagamento',
-              paidFor(a)?Icons.lock_open_outlined:Icons.payments_outlined,
-              ()=>changePaid(a)),
-            item('Ausência',Icons.event_busy_outlined,()=>absencePeriod(a)),
-            item('Vencimento',Icons.edit_calendar_outlined,()=>changeDueDay(a)),
-          ]);
-        }),
+        Row(children:[
+          Expanded(flex:5,child:OutlinedButton.icon(
+            onPressed:()=>details(a),
+            icon:const Icon(Icons.event_note_outlined,size:16),
+            label:const Text('Ver atendimentos',maxLines:1,
+              overflow:TextOverflow.ellipsis),
+            style:OutlinedButton.styleFrom(foregroundColor:const Color(0xFF0C213A),
+              backgroundColor:const Color(0xFFE5EFFA),
+              padding:const EdgeInsets.symmetric(horizontal:4,vertical:11),
+              side:const BorderSide(color:Color(0xFF245A98))))),
+          const SizedBox(width:7),
+          Expanded(flex:4,child:OutlinedButton.icon(
+            onPressed:()=>whatsapp(a),
+            icon:const Icon(Icons.chat_outlined,size:16),
+            label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
+            style:OutlinedButton.styleFrom(
+              padding:const EdgeInsets.symmetric(horizontal:3,vertical:11),
+              foregroundColor:Colors.white,
+              backgroundColor:const Color(0xFF25D366),
+              side:const BorderSide(color:Color(0xFF0C213A))))),
+          const SizedBox(width:3),
+          PopupMenuButton<String>(
+            tooltip:'Mais ações',
+            onSelected:(choice){
+              if(choice=='payment')changePaid(a);
+              if(choice=='absence')absencePeriod(a);
+            },
+            itemBuilder:(_)=>[
+              PopupMenuItem(value:'payment',child:Text(paidFor(a)?
+                'Reabrir cobrança':'Registrar pagamento')),
+              const PopupMenuItem(value:'absence',child:Text('Férias / ausência')),
+            ],
+            icon:const Icon(Icons.more_horiz,color:_gold)),
+        ]),
       ])));
 
 
