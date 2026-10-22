@@ -220,14 +220,87 @@ class _DemoBillingState extends State<DemoBilling> {
     ));
     if(confirmed==true&&mounted)ledger.setPaid(a.name,!paidFor(a));
   }
-  Widget actions(BillingAccount a)=>Wrap(spacing:2,children:[
-    IconButton(tooltip:'Ver atendimentos e memória de cálculo',icon:const Icon(Icons.receipt_long_outlined),
-      onPressed:()=>details(a)),
-    IconButton(tooltip:'Preparar WhatsApp',icon:const Icon(Icons.chat_outlined,
-      color:Color(0xFF25D366)),onPressed:()=>whatsapp(a)),
-    IconButton(tooltip:paidFor(a)?'Reabrir cobrança':'Marcar recebida',
-      icon:Icon(paidFor(a)?Icons.undo:Icons.check_circle_outline,color:_gold),
-      onPressed:()=>changePaid(a)),
+  Future<void> absencePeriod(BillingAccount account) async {
+    DateTimeRange? range;
+    String reason='Férias';
+    final approved=await showDialog<bool>(context:context,
+      builder:(dialogContext)=>StatefulBuilder(builder:(ctx,refresh)=>AlertDialog(
+        title:Text('Ausência • ${account.name}'),
+        content:SizedBox(width:420,child:Column(mainAxisSize:MainAxisSize.min,
+          crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          const Text('Selecione o período e confira quantos atendimentos serão alterados. '
+            'Na demonstração, apenas as sessões deste cliente serão afetadas.'),
+          const SizedBox(height:14),
+          OutlinedButton.icon(
+            icon:const Icon(Icons.date_range_outlined),
+            label:Text(range==null?'Escolher período':
+              '${range!.start.day}/${range!.start.month} até ${range!.end.day}/${range!.end.month}'),
+            onPressed:() async {
+              final selected=await showDateRangePicker(context:ctx,
+                firstDate:DateTime(2020),lastDate:DateTime(2035),
+                initialDateRange:range);
+              if(selected!=null)refresh(()=>range=selected);
+            }),
+          const SizedBox(height:12),
+          DropdownButtonFormField<String>(value:reason,
+            decoration:const InputDecoration(labelText:'Motivo'),
+            items:['Férias','Viagem','Ausência justificada','Outro']
+              .map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),
+            onChanged:(v)=>refresh(()=>reason=v??reason)),
+          if(range!=null)Padding(padding:const EdgeInsets.only(top:14),
+            child:Text('Serão afetados ${visitsFor(account).where((v)=>
+              !v.date.isBefore(range!.start)&&!v.date.isAfter(range!.end)).length} '
+              'atendimentos. Sessões realizadas também serão modificadas; '
+              'revise antes de confirmar.',
+              style:const TextStyle(color:_gold))),
+        ])),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
+          FilledButton(onPressed:range==null?null:()=>Navigator.pop(ctx,true),
+            child:const Text('Aplicar ausência')),
+        ],
+      )));
+    if(approved!=true||range==null||!mounted)return;
+    final affected=visitsFor(account).where((v)=>
+      !v.date.isBefore(range!.start)&&!v.date.isAfter(range!.end)).toList();
+    final before={for(final v in affected)v:(v.state,v.charge,v.note)};
+    for(final visit in affected){
+      visit.state='Cancelada';visit.charge=false;visit.note=reason;
+      ledger.setAbsence(account.name,visit.date,reason);
+    }
+    recalculate(account);
+    if(!mounted)return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content:Text('${affected.length} atendimentos ajustados na demonstração.'),
+      duration:const Duration(seconds:8),
+      action:SnackBarAction(label:'DESFAZER',onPressed:(){
+        for(final visit in affected){
+          final old=before[visit]!;
+          visit.state=old.$1;visit.charge=old.$2;visit.note=old.$3;
+          ledger.setAbsence(account.name,visit.date,null);
+        }
+        recalculate(account);
+      })));
+  }
+  Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:6,children:[
+    OutlinedButton.icon(onPressed:()=>details(a),
+      icon:const Icon(Icons.event_note_outlined,size:17),
+      label:const Text('Ver atendimentos')),
+    if(!paidFor(a)) OutlinedButton.icon(onPressed:()=>whatsapp(a),
+      icon:const Icon(Icons.chat_outlined,size:17,color:Color(0xFF42BA83)),
+      label:const Text('WhatsApp')),
+    PopupMenuButton<String>(
+      tooltip:'Outras ações',
+      onSelected:(choice){
+        if(choice=='payment')changePaid(a);
+        if(choice=='absence')absencePeriod(a);
+      },
+      itemBuilder:(_)=>[
+        PopupMenuItem(value:'payment',child:Text(paidFor(a)?
+          'Reabrir cobrança':'Registrar pagamento')),
+        const PopupMenuItem(value:'absence',child:Text('Férias / ausência')),
+      ],
+      icon:const Icon(Icons.more_horiz,color:_gold)),
   ]);
   Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
     scrollDirection:Axis.horizontal,child:DataTable(
