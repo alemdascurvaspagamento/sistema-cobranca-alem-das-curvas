@@ -6,6 +6,15 @@ class DemoLedger extends ChangeNotifier {
   static final DemoLedger instance = DemoLedger._();
   final Map<String, bool> payments = {'Mariana Costa': true};
   final Map<String, Map<int, String>> absences = {};
+  final Map<String, Map<int, ({String state, bool charge, String note})>> visits = {};
+  int dateKey(DateTime date)=>DateTime(date.year,date.month,date.day).millisecondsSinceEpoch;
+  ({String state, bool charge, String note})? visit(String name,DateTime date)=>visits[name]?[dateKey(date)];
+  void setVisit(String name,DateTime date,String state,bool charge,String note){
+    visits.putIfAbsent(name,()=>{})[dateKey(date)]=(state:state,charge:charge,note:note);
+    notifyListeners();
+  }
+  void removeVisit(String name,DateTime date){visits[name]?.remove(dateKey(date));notifyListeners();}
+  void updateBilling(String name,double amount){amounts[name]=amount;notifyListeners();}
   double annualGoal = 12000;
   final Map<String, double> amounts = {
     'Mariana Costa': 1260, 'Ricardo Almeida': 660,
