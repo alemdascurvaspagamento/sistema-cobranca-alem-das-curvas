@@ -20,9 +20,9 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   static const muted = Color(0xFF64748B);
   static const border = Color(0xFFE2E8F0);
   static const background = Color(0xFFEDF2F8);
-  static const green = Color(0xFF52D69A);
-  static const amber = Color(0xFFE0BA62);
-  static const red = Color(0xFFF1767B);
+  static const green = Color(0xFF20835D);
+  static const amber = Color(0xFFB98522);
+  static const red = Color(0xFFC34B50);
 
   Future<void> _notDone(BuildContext context,DemoAppointment a,DateTime day) async {
     final reason=await showModalBottomSheet<String>(context:context,
@@ -109,7 +109,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
     List<String> months, List<DemoAppointment> appointments, double planned) {
     final ledger=DemoLedger.instance;
     return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light),
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF245A98), brightness: Brightness.light),
       scaffoldBackgroundColor: background), child: Container(
       decoration: BoxDecoration(color: background,
         borderRadius: BorderRadius.circular(20)),
