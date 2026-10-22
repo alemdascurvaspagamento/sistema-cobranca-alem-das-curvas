@@ -348,12 +348,12 @@ class _DemoBillingState extends State<DemoBilling> {
     color:_surface,margin:const EdgeInsets.only(bottom:12),
     shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
       side:const BorderSide(color:Color(0xFF36383E))),
-    child:Padding(padding:const EdgeInsets.all(16),child:Column(
+    child:Padding(padding:const EdgeInsets.all(14),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          CircleAvatar(radius:21,backgroundColor:_gold.withValues(alpha:.15),
+          CircleAvatar(radius:23,backgroundColor:_gold.withValues(alpha:.14),
             child:Text(a.name.split(' ').map((w)=>w.isNotEmpty?w[0]:'').take(2).join(),
-              style:const TextStyle(color:_gold,fontWeight:FontWeight.w800,fontSize:14))),
+              style:const TextStyle(color:_gold,fontWeight:FontWeight.w800,fontSize:15))),
           const SizedBox(width:10),
           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Text(a.name,maxLines:2,overflow:TextOverflow.ellipsis,
@@ -361,9 +361,12 @@ class _DemoBillingState extends State<DemoBilling> {
             const SizedBox(height:3),
             Text(a.service,maxLines:2,overflow:TextOverflow.ellipsis,
               style:const TextStyle(fontSize:12,color:Colors.white70)),
+            const SizedBox(height:3),
+            Text(a.phone,maxLines:1,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(fontSize:11,color:Colors.white54)),
           ])),
           const SizedBox(width:6),
-          Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:6),
+          Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
             decoration:BoxDecoration(
               color:paidFor(a)?const Color(0xFF103C30):const Color(0xFF352C19),
               borderRadius:BorderRadius.circular(9),
@@ -374,38 +377,41 @@ class _DemoBillingState extends State<DemoBilling> {
         ]),
         const SizedBox(height:13),
         const Divider(height:1,color:Color(0xFF383A40)),
-        const SizedBox(height:12),
-        Text('${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
-          '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
-          maxLines:2,style:const TextStyle(fontSize:12,color:Colors.white70)),
-        const SizedBox(height:8),
-        const Text('TOTAL DO MÊS',style:TextStyle(
-          fontSize:10,letterSpacing:.8,color:Colors.white60)),
-        const SizedBox(height:2),
-        Text(DemoData.currency(totalFor(a)),maxLines:1,
-          overflow:TextOverflow.ellipsis,
-          style:const TextStyle(color:_gold,fontSize:23,fontWeight:FontWeight.w800)),
+        const SizedBox(height:10),
+        LayoutBuilder(builder:(context,box){
+          final compact=box.maxWidth<340;
+          final amount=Text(DemoData.currency(totalFor(a)),maxLines:1,
+            overflow:TextOverflow.ellipsis,
+            style:const TextStyle(color:_gold,fontSize:17,fontWeight:FontWeight.w800));
+          final visits=Text(
+            '${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
+            '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
+            maxLines:2,overflow:TextOverflow.ellipsis,
+            style:const TextStyle(fontSize:11,color:Colors.white70));
+          return compact?Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            visits,const SizedBox(height:6),amount,
+          ]):Row(children:[Expanded(child:visits),const SizedBox(width:8),amount]);
+        }),
         const SizedBox(height:12),
         Row(children:[
-          Expanded(child:OutlinedButton.icon(
+          Expanded(flex:5,child:OutlinedButton.icon(
             onPressed:()=>details(a),
             icon:const Icon(Icons.event_note_outlined,size:16),
-            label:const Text('Atendimentos',maxLines:1,overflow:TextOverflow.ellipsis),
+            label:const Text('Ver atendimentos',maxLines:1,
+              overflow:TextOverflow.ellipsis),
             style:OutlinedButton.styleFrom(foregroundColor:_gold,
-              padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
+              padding:const EdgeInsets.symmetric(horizontal:4,vertical:11),
               side:const BorderSide(color:_gold)))),
-          const SizedBox(width:8),
-          if(!paidFor(a)) ...[
-            Expanded(child:OutlinedButton.icon(
-              onPressed:()=>whatsapp(a),
-              icon:const Icon(Icons.chat_outlined,size:16,color:Color(0xFF6EE2B0)),
-              label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
-              style:OutlinedButton.styleFrom(
-                padding:const EdgeInsets.symmetric(horizontal:4,vertical:12),
-                foregroundColor:const Color(0xFF6EE2B0),
-                side:const BorderSide(color:Color(0xFF287E61))))),
-            const SizedBox(width:6),
-          ],
+          const SizedBox(width:7),
+          Expanded(flex:4,child:OutlinedButton.icon(
+            onPressed:paidFor(a)?null:()=>whatsapp(a),
+            icon:const Icon(Icons.chat_outlined,size:16),
+            label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
+            style:OutlinedButton.styleFrom(
+              padding:const EdgeInsets.symmetric(horizontal:3,vertical:11),
+              foregroundColor:const Color(0xFF6EE2B0),
+              side:const BorderSide(color:Color(0xFF287E61))))),
+          const SizedBox(width:3),
           PopupMenuButton<String>(
             tooltip:'Mais ações',
             onSelected:(choice){
@@ -420,6 +426,7 @@ class _DemoBillingState extends State<DemoBilling> {
             icon:const Icon(Icons.more_horiz,color:_gold)),
         ]),
       ])));
+
 
   Widget metric(String label,double value,IconData icon)=>Container(
     padding:const EdgeInsets.all(14),
@@ -442,27 +449,29 @@ class _DemoBillingState extends State<DemoBilling> {
     final received=accounts.where((a)=>paidFor(a)).fold<double>(0,(sum,a)=>sum+totalFor(a));
     final data=shown;
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-      Text('Central de cobranças',style:Theme.of(context).textTheme.titleLarge),
+      const Text('Cobranças',style:TextStyle(fontSize:23,fontWeight:FontWeight.w800)),
       const SizedBox(height:6),
-      const Text('Demonstrativo por atendimento, com cálculo auditável e revisão humana.',
+      const Text('Clientes, valores e situação dos pagamentos.',
         style:TextStyle(color:Colors.white70)),
       const SizedBox(height:14),
       LayoutBuilder(builder:(context,box){
-        final wide=box.maxWidth>=670;
-        return Wrap(spacing:10,runSpacing:10,children:[
+        final columns=box.maxWidth>=900?4:2;
+        const gap=10.0;
+        final cardWidth=(box.maxWidth-(columns-1)*gap)/columns;
+        return Wrap(spacing:gap,runSpacing:gap,children:[
           for(final entry in <(String,double,IconData)>[
             ('Total calculado',total,Icons.receipt_long_outlined),
             ('Recebido',received,Icons.check_circle_outline),
             ('A receber',total-received,Icons.schedule_outlined),
+            ('A pagar',120,Icons.south_east_outlined),
           ])
-            SizedBox(width:wide?(box.maxWidth-20)/3:box.maxWidth,
-              child:metric(entry.$1,entry.$2,entry.$3)),
+            SizedBox(width:cardWidth,child:metric(entry.$1,entry.$2,entry.$3)),
         ]);
       }),
       const SizedBox(height:12),
       Wrap(spacing:12,runSpacing:8,crossAxisAlignment:WrapCrossAlignment.center,
         children:[
-          SizedBox(width:280,child:TextField(
+          SizedBox(width:MediaQuery.sizeOf(context).width<600?MediaQuery.sizeOf(context).width*.61:340,child:TextField(
             onChanged:(value)=>setState(()=>search=value),
             decoration:const InputDecoration(prefixIcon:Icon(Icons.search),
               hintText:'Buscar cliente ou serviço',border:OutlineInputBorder()))),
