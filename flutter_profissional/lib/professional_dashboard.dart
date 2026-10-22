@@ -143,7 +143,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           ])),
           const SizedBox(width:12),
           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text('Conquistado: ${DemoData.currency(achieved)}',
+            Text('${title.toLowerCase().contains('projeção') ? 'Projetado' : 'Recebido'}: ${DemoData.currency(achieved)}',
               style:const TextStyle(fontSize:12,color:ink,fontWeight:FontWeight.w700)),
             const SizedBox(height:5),
             Text('Faltam: ${DemoData.currency(remaining)}',
@@ -307,7 +307,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           }),
           const SizedBox(height: 14),
           LayoutBuilder(builder:(context, constraints) {
-            final wide=constraints.maxWidth>=780;
             final monthlyGoal=ledger.annualGoal/12;
             final progress=monthlyGoal>0 ? (ledger.received/monthlyGoal).clamp(0.0,1.0) : 0.0;
             final target=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -320,9 +319,9 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 LayoutBuilder(builder:(context,box){
                   final monthly=_goalChart('Meta mensal',ledger.received,monthlyGoal,
                     'Receita recebida na demonstração');
-                  final annual=_goalChart('Cenário anual',ledger.received*12,ledger.annualGoal,
-                    'Simulação: mês atual × 12');
-                  return box.maxWidth>=620?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  final annual=_goalChart('Projeção anual',ledger.received*12,ledger.annualGoal,
+                    'Estimativa: mês atual × 12 (não recebido)');
+                  return box.maxWidth>=680?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
                     Expanded(child:monthly),const SizedBox(width:12),Expanded(child:annual),
                   ]):Column(children:[monthly,const SizedBox(height:12),annual]);
                 }),
@@ -379,9 +378,9 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   style:const TextStyle(color:muted,fontSize:12)),
               ]),
             ]));
-            return wide?IntrinsicHeight(child:Row(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Expanded(child:target),const SizedBox(width:16),Expanded(child:financial),
-            ])):Column(children:[target,const SizedBox(height:16),financial]);
+            return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              target,const SizedBox(height:16),financial,
+            ]);
           }),
           const SizedBox(height: 16),
           LayoutBuilder(builder:(context,size) {
