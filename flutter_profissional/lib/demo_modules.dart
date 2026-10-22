@@ -153,12 +153,13 @@ class _DemoClientsState extends State<DemoClients> {
               return Wrap(spacing:8,runSpacing:8,children:[
                 SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
                   child:OutlinedButton.icon(onPressed:()=>openWhatsApp(c),
-                    icon:const Icon(Icons.chat_outlined,size:17,color:Color(0xFF6EE2B0)),
+                    icon:const Icon(Icons.chat_outlined,size:17),
                     label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
                     style:OutlinedButton.styleFrom(
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
-                      foregroundColor:const Color(0xFF6EE2B0),
-                      side:const BorderSide(color:Color(0xFF287E61))))),
+                      foregroundColor:Colors.white,
+                      backgroundColor:const Color(0xFF0C213A),
+                      side:const BorderSide(color:Color(0xFF0C213A))))),
                 if(financialStatus(c)=='Pendente'||financialStatus(c)=='Em atraso')
                   SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
                     child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
@@ -166,8 +167,9 @@ class _DemoClientsState extends State<DemoClients> {
                       label:const Text('Cobrar',maxLines:1,overflow:TextOverflow.ellipsis),
                       style:OutlinedButton.styleFrom(
                         padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
-                        foregroundColor:demoGold,
-                        side:const BorderSide(color:demoGold)))),
+                        foregroundColor:Colors.white,
+                        backgroundColor:const Color(0xFF0C213A),
+                        side:const BorderSide(color:Color(0xFF0C213A))))),
                 SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
                   child:OutlinedButton.icon(onPressed:()=>edit(c),
                     icon:const Icon(Icons.edit_outlined,size:17),
