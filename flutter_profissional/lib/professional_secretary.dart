@@ -15,10 +15,28 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
   final hidden=<String>{};
   static const gold=Color(0xFFD8B56A);
   static const surface=Color(0xFF202329);
-  Widget tile(IconData icon,String title,String subtitle,VoidCallback action)=>Card(
-    color:surface,child:ListTile(leading:Icon(icon,color:gold),
-      title:Text(title),subtitle:Text(subtitle),
-      trailing:const Icon(Icons.chevron_right,color:gold),onTap:action));
+  Widget suggestion(String id,IconData icon,String title,String detail,
+      String priority,Color color,VoidCallback action){
+    if(hidden.contains(id))return const SizedBox.shrink();
+    return Card(color:surface,child:Padding(
+      padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        Row(children:[
+          Icon(icon,color:color),const SizedBox(width:10),
+          Expanded(child:Text(title,style:const TextStyle(fontWeight:FontWeight.bold))),
+          IconButton(tooltip:'Dispensar sugestão',icon:const Icon(Icons.close,size:18),
+            onPressed:()=>setState(()=>hidden.add(id))),
+        ]),
+        Padding(padding:const EdgeInsets.only(left:34,right:8),
+          child:Text(detail,style:const TextStyle(color:Colors.white70,fontSize:12))),
+        Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
+          Padding(padding:const EdgeInsets.only(left:34),
+            child:Text(priority,style:TextStyle(color:color,fontSize:11))),
+          TextButton.icon(onPressed:action,icon:const Icon(Icons.arrow_forward,size:16),
+            label:const Text('Resolver')),
+        ]),
+      ])));
+  }
   @override Widget build(BuildContext context)=>AnimatedBuilder(
     animation:DemoLedger.instance,builder:(context,_) {
       final ledger=DemoLedger.instance;
