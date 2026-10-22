@@ -24,6 +24,26 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   static const amber = Color(0xFFE0BA62);
   static const red = Color(0xFFF1767B);
 
+  Future<void> _notDone(BuildContext context,DemoAppointment a,DateTime day) async {
+    final reason=await showModalBottomSheet<String>(context:context,
+      builder:(ctx)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:[
+        const ListTile(title:Text('Atendimento não realizado'),
+          subtitle:Text('Selecione o motivo e a regra de cobrança')),
+        for(final choice in const [
+          ('Cliente cancelou • sem cobrança','cliente-sem'),
+          ('Cliente cancelou • com cobrança','cliente-com'),
+          ('Profissional cancelou • sem cobrança','profissional'),
+          ('Falta do cliente • com cobrança','falta'),
+          ('Remarcar atendimento','remarcar'),
+        ])ListTile(title:Text(choice.$1),
+          onTap:()=>Navigator.pop(ctx,choice.$2)),
+      ])));
+    if(reason==null)return;
+    final charge=reason=='cliente-com'||reason=='falta';
+    DemoLedger.instance.updateVisit(a.client,day,
+      reason=='remarcar'?'Remarcada':'Cancelada',charge,reason);
+    if(reason=='remarcar')widget.onAgenda();
+  }
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: const Color(0xFF1E2127),
