@@ -424,7 +424,9 @@ class _DemoBillingState extends State<DemoBilling> {
     email.dispose();message.dispose();
   }
 
-  Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:4,children:[
+  Widget actions(BillingAccount a)=>SizedBox(width:166,child:Column(
+    mainAxisSize:MainAxisSize.min,children:[
+      Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
     IconButton.outlined(onPressed:()=>details(a),tooltip:'Ver atendimentos',
       icon:const Icon(Icons.event_note_outlined,size:19)),
     IconButton.filled(onPressed:()=>whatsapp(a),tooltip:'Enviar mensagem pelo WhatsApp',
@@ -434,6 +436,9 @@ class _DemoBillingState extends State<DemoBilling> {
     IconButton.outlined(onPressed:()=>emailBilling(a),
       tooltip:'Preparar cobrança por e-mail',
       icon:const Icon(Icons.email_outlined,size:19)),
+      ]),
+      const SizedBox(height:5),
+      Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
     IconButton.outlined(onPressed:()=>changePaid(a),
       tooltip:paidFor(a)?'Reabrir cobrança':'Registrar pagamento',
       icon:Icon(paidFor(a)?Icons.lock_open_outlined:Icons.payments_outlined,size:19)),
@@ -441,10 +446,11 @@ class _DemoBillingState extends State<DemoBilling> {
       tooltip:'Férias / ausência',icon:const Icon(Icons.event_busy_outlined,size:19)),
     IconButton.outlined(onPressed:()=>changeDueDay(a),
       tooltip:'Alterar vencimento',icon:const Icon(Icons.edit_calendar_outlined,size:19)),
-  ]);
-  Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
+      ]),
+    ]));
+    Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
     scrollDirection:Axis.horizontal,child:DataTable(
-      columnSpacing:26,headingRowHeight:54,dataRowMinHeight:76,dataRowMaxHeight:88,
+      columnSpacing:26,headingRowHeight:54,dataRowMinHeight:112,dataRowMaxHeight:124,
       horizontalMargin:22,headingRowColor:WidgetStateProperty.all(_surface),
       columns:const [
         DataColumn(label:Text('Cliente / serviço')),
