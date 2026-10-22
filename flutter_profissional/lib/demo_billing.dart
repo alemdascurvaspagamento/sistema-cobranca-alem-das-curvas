@@ -293,6 +293,24 @@ class _DemoBillingState extends State<DemoBilling> {
         recalculate(account);
       })));
   }
+  Future<void> changeDueDay(BillingAccount a) async {
+    final input=TextEditingController(text:'${ledger.dueDays[a.name]??5}');
+    final day=await showDialog<int>(context:context,builder:(ctx)=>AlertDialog(
+      title:Text('Vencimento de ${a.name}'),
+      content:TextField(controller:input,keyboardType:TextInputType.number,
+        decoration:const InputDecoration(labelText:'Dia do vencimento (1 a 31)',
+          helperText:'Meses curtos usam o último dia.')),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
+        FilledButton(onPressed:(){
+          final n=int.tryParse(input.text);
+          if(n!=null&&n>=1&&n<=31)Navigator.pop(ctx,n);
+        },child:const Text('Salvar')),
+      ],
+    ));
+    input.dispose();
+    if(day!=null)ledger.setDueDay(a.name,day);
+  }
   Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:6,children:[
     OutlinedButton.icon(onPressed:()=>details(a),
       icon:const Icon(Icons.event_note_outlined,size:17),
@@ -305,11 +323,13 @@ class _DemoBillingState extends State<DemoBilling> {
       onSelected:(choice){
         if(choice=='payment')changePaid(a);
         if(choice=='absence')absencePeriod(a);
+        if(choice=='due')changeDueDay(a);
       },
       itemBuilder:(_)=>[
         PopupMenuItem(value:'payment',child:Text(paidFor(a)?
           'Reabrir cobrança':'Registrar pagamento')),
         const PopupMenuItem(value:'absence',child:Text('Férias / ausência')),
+        const PopupMenuItem(value:'due',child:Text('Alterar vencimento')),
       ],
       icon:const Icon(Icons.more_horiz,color:_gold)),
   ]);
