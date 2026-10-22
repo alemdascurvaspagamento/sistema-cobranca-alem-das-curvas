@@ -231,6 +231,7 @@ class _DemoBillingState extends State<DemoBilling> {
       '🎟️ Créditos: − ${DemoData.currency(a.creditValue)}\\n'
       '🏷️ Descontos: − ${DemoData.currency(a.discount)}\\n'
       '*Total: ${DemoData.currency(totalFor(a))}*\\n'
+      '${ledger.professionalPixKey.isEmpty?'':'🔑 Chave Pix: ${ledger.professionalPixKey}\\n'}'
       '📌 Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${date.month.toString().padLeft(2,'0')}/${date.year}\\n\\n'
       'Confira a programação e os valores. Obrigado!';
     final approved=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
