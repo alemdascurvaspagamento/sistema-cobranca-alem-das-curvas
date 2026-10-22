@@ -5,6 +5,7 @@ import 'demo_mode.dart';
 import 'demo_modules.dart';
 import 'demo_billing.dart';
 import 'professional_dashboard.dart';
+import 'professional_clients.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -267,8 +268,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         if (selected == Section.agenda)
                           widget.demo ? const DemoAgenda() : const ProfessionalAgenda(),
                         if (selected == Section.clientes)
-                          widget.demo ? const DemoClients() :
-                            _panel('Clientes', 'Cadastro, contatos e situação financeira.'),
+                          widget.demo ? const DemoClients() : const ProfessionalClients(),
                         if (selected == Section.mais)
                           widget.demo ? const DemoMore() :
                             _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
