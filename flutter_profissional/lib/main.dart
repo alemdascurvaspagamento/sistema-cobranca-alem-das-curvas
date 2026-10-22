@@ -261,7 +261,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                             textAlign: TextAlign.center,
                             style: TextStyle(color: gold,fontSize: 10,letterSpacing: 1))),
                         if (selected == Section.inicio) ...[
-                          ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro)),
+                          ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro), onSecretary: () => setState(() => selected = Section.secretaria)),
                         ],
                         if (selected == Section.cobrancas)
                           widget.demo ? const DemoBilling() :
