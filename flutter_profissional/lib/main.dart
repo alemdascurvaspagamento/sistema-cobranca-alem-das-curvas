@@ -209,7 +209,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           final desktop = constraints.maxWidth >= 900;
           return Scaffold(
             appBar: AppBar(
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: const Color(0xFF112B4B),
+              foregroundColor: Colors.white,
               centerTitle: !desktop,
               leading: desktop ? null : IconButton(
                 tooltip:'Abrir opções',icon:const Icon(Icons.menu_rounded),onPressed:openMore),
@@ -217,7 +218,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 const Column(mainAxisSize:MainAxisSize.min,children:[
                   Text('Coach Flow',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),
                   Text('PROFISSIONAL',style:TextStyle(fontSize:9,letterSpacing:1.6,
-                    color:gold)),
+                    color:Color(0xFF9CC5F4))),
                 ]),
               bottom: null,
               actions: [
@@ -232,7 +233,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               children: [
                 if (desktop)
                   NavigationRail(
-                    backgroundColor: const Color(0xFFF5F7FA),
+                    backgroundColor: const Color(0xFFEAF0F7),
                     selectedIndex: selected.index,
                     onDestinationSelected: (index) =>
                         setState(() => selected = Section.values[index]),
@@ -291,7 +292,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             bottomNavigationBar: desktop ? null : NavigationBar(
               height: 72,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: const Color(0xFFFFFFFF),
               indicatorColor: gold.withValues(alpha: .18),
               selectedIndex: switch (selected) {
                 Section.inicio => 0,
