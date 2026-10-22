@@ -215,12 +215,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   Text('PROFISSIONAL',style:TextStyle(fontSize:9,letterSpacing:1.6,
                     color:gold)),
                 ]),
-              bottom: widget.demo ? const PreferredSize(
-                preferredSize: Size.fromHeight(28),
-                child: Padding(padding: EdgeInsets.only(bottom: 7),
-                  child: Text('DEMONSTRAÇÃO • DADOS FICTÍCIOS',
-                    style: TextStyle(color: Color(0xFFD8B56A), fontSize: 11, letterSpacing: 1))),
-              ) : null,
+              bottom: null,
               actions: [
                 IconButton(
                   tooltip: 'Notificações (em desenvolvimento)',
@@ -256,6 +251,11 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         vertical: desktop ? 24 : 12,
                       ),
                       children: [
+                        if (widget.demo) const Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text('DEMONSTRAÇÃO • DADOS FICTÍCIOS',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: gold,fontSize: 10,letterSpacing: 1))),
                         if (selected == Section.inicio) ...[
                           ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro)),
                         ],
