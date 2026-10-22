@@ -287,8 +287,8 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 style:TextStyle(color:amber,fontSize:11))),
           const SizedBox(height: 16),
           LayoutBuilder(builder: (context, size) {
-            final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
-            final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
+            final columns = size.maxWidth >= 1100 ? 5 : size.maxWidth >= 700 ? 3 : size.maxWidth >= 420 ? 2 : 1;
+            final cardWidth = (size.maxWidth - (columns - 1) * 14) / columns;
             final metrics = <Widget>[
               stat('Receita prevista',widget.demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
                 Icons.insights_outlined, amber),
@@ -300,9 +300,9 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               stat('Resultado de caixa',widget.demo?DemoData.currency(ledger.cash):'—','Recebido menos despesas pagas',
                 Icons.account_balance_outlined, ledger.cash < 0 ? red : green),
             ];
-            return Wrap(spacing: 10, runSpacing: 10, children: [
+            return Wrap(spacing: 14, runSpacing: 14, children: [
               for (final metric in metrics)
-                SizedBox(width: cardWidth, height: 176, child: metric),
+                SizedBox(width: cardWidth, height: 164, child: metric),
             ]);
           }),
           const SizedBox(height: 14),
@@ -311,44 +311,34 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             final monthlyGoal=ledger.annualGoal/12;
             final progress=monthlyGoal>0 ? (ledger.received/monthlyGoal).clamp(0.0,1.0) : 0.0;
             final target=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              const Text('Meta de receita',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
-              const Text('Acompanhamento mensal derivado da meta anual.',style:TextStyle(fontSize:12,color:muted)),
+              const Text('Metas de receita',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
+              const SizedBox(height:4),
+              const Text('Progresso mensal e cenário anual, sem confundir previsão com recebimento.',
+                style:TextStyle(fontSize:12,color:muted)),
+              const SizedBox(height:16),
               if(widget.demo) ...[
-                LayoutBuilder(builder:(context,box) {
-                  final annual=ledger.annualGoal;
-                  // O modo demo não possui histórico de recebimentos por mês.
-                  // A projeção anual é apenas um cenário linear, não receita realizada.
-                  final monthlyReference=annual/12;
-                  final projectedYear=ledger.received*12;
-                  final monthly=_goalChart('Meta mensal',ledger.received,monthlyReference,
-                    'Recebido no período demonstrativo');
-                  final yearly=_goalChart('Projeção anual',projectedYear,annual,
-                    'Cenário: mês atual repetido por 12 meses');
-                  return box.maxWidth>=630?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Expanded(child:monthly),const SizedBox(width:12),Expanded(child:yearly),
-                  ]):Column(children:[monthly,const SizedBox(height:12),yearly]);
+                LayoutBuilder(builder:(context,box){
+                  final monthly=_goalChart('Meta mensal',ledger.received,monthlyGoal,
+                    'Receita recebida na demonstração');
+                  final annual=_goalChart('Cenário anual',ledger.received*12,ledger.annualGoal,
+                    'Simulação: mês atual × 12');
+                  return box.maxWidth>=620?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Expanded(child:monthly),const SizedBox(width:12),Expanded(child:annual),
+                  ]):Column(children:[monthly,const SizedBox(height:12),annual]);
                 }),
                 const SizedBox(height:12),
-                const Text('Projeção ilustrativa: não representa receita anual recebida. '
-                  'A evolução anual real exige histórico financeiro mensal.',
+                const Text('O cenário anual é uma estimativa ilustrativa, não o total anual recebido.',
                   style:TextStyle(fontSize:11,color:muted)),
-              ],
-              const SizedBox(height:18),
-              Wrap(alignment:WrapAlignment.spaceBetween,children:[
-                Text(widget.demo?'Meta mensal  ${DemoData.currency(monthlyGoal)}':'Meta mensal  —',style:const TextStyle(fontWeight:FontWeight.w700,color:ink)),
-                Text(widget.demo?'${(progress*100).toStringAsFixed(1)}%':'—',style:const TextStyle(fontWeight:FontWeight.w800,color:ink)),
-              ]),
-              const SizedBox(height:10),
-              ClipRRect(borderRadius:BorderRadius.circular(9),child:LinearProgressIndicator(
-                value:widget.demo?progress:0,minHeight:10,color:green,backgroundColor:background)),
-              const SizedBox(height:12),
-              Wrap(spacing:12,runSpacing:10,children:[
+              ] else const Padding(padding:EdgeInsets.symmetric(vertical:18),
+                child:Text('As metas serão exibidas quando houver dados financeiros conectados.',
+                  style:TextStyle(color:muted))),
+              const SizedBox(height:14),
+              Wrap(spacing:10,runSpacing:10,children:[
                 _miniMetric('META ANUAL',widget.demo?DemoData.currency(ledger.annualGoal):'—'),
                 _miniMetric('RECEBIDO NO MÊS',widget.demo?DemoData.currency(ledger.received):'—'),
-                _miniMetric('FALTA NO MÊS',widget.demo?DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity).toDouble()):'—'),
+                _miniMetric('FALTA NO MÊS',widget.demo?
+                  DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity).toDouble()):'—'),
               ]),
-              const SizedBox(height:12),
-              Text(widget.demo?(progress>=1?'Meta mensal atingida.':'Acompanhe o progresso da meta mensal.'):'Meta disponível após conectar os dados.',style:const TextStyle(color:muted,fontSize:12)),
             ]));
             final financial=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               const Text('Agenda financeira',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
@@ -368,24 +358,25 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 _miniMetric('TICKET MÉDIO',widget.demo&&appointments.isNotEmpty?DemoData.currency(planned/appointments.length):'—'),
               ]),
             ]));
-            return wide?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Expanded(child:target),const SizedBox(width:14),Expanded(child:financial),
-            ]):Column(children:[target,const SizedBox(height:14),financial]);
+            return wide?IntrinsicHeight(child:Row(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              Expanded(child:target),const SizedBox(width:16),Expanded(child:financial),
+            ])):Column(children:[target,const SizedBox(height:16),financial]);
           }),
           const SizedBox(height: 16),
           LayoutBuilder(builder:(context,size) {
             final columns=size.maxWidth>=950?4:size.maxWidth>=500?2:1;
-            final w=(size.maxWidth-(columns-1)*10)/columns;
+            final w=(size.maxWidth-(columns-1)*14)/columns;
             final quick=<Widget>[
               stat('Atendimentos hoje',widget.demo?'${appointments.length}':'—','Agenda do dia',Icons.calendar_today_outlined,red),
               stat('Clientes ativos',widget.demo?'${ledger.amounts.length}':'—','Clientes cadastrados',Icons.people_outline,red),
               stat('A receber',widget.demo?DemoData.currency(ledger.pending):'—','Valores pendentes',Icons.payments_outlined,red),
               stat('Cobranças atrasadas',widget.demo?'${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length}':'—','Pendências vencidas',Icons.access_time,red),
             ];
-            return Wrap(spacing:10,runSpacing:10,children:[
-              for(final q in quick)SizedBox(width:w,height:145,child:q),
+            return Wrap(spacing:14,runSpacing:14,children:[
+              for(final q in quick)SizedBox(width:w,height:156,child:q),
             ]);
           }),
+          const SizedBox(height: 16),
           panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Row(children:[
               const Expanded(child:Text('Agenda de hoje',style:TextStyle(
