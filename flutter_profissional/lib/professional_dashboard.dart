@@ -59,6 +59,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   }
 
   late int selectedYear=DateTime.now().year;
+  String _goalPeriod='Mensal';
   static const ink = Color(0xFF132238);
   static const muted = Color(0xFF64748B);
   static const border = Color(0xFF245A98);
@@ -350,6 +351,42 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           return c.maxWidth>=530?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Expanded(child:monthly),const SizedBox(width:12),Expanded(child:annual),
           ]):Column(children:[monthly,const SizedBox(height:12),annual]);
+        }),
+        const SizedBox(height:16),
+        const Divider(color:Color(0xFFDCE9F6)),
+        const SizedBox(height:8),
+        const Text('Balanço da meta',style:TextStyle(fontSize:14,
+          fontWeight:FontWeight.w800,color:ink)),
+        const SizedBox(height:8),
+        Wrap(spacing:7,runSpacing:6,children:[
+          for(final period in ['Mensal','Trimestral','Semestral','Anual'])
+            ChoiceChip(label:Text(period),selected:_goalPeriod==period,
+              onSelected:(_)=>setState(()=>_goalPeriod=period)),
+        ]),
+        const SizedBox(height:10),
+        Builder(builder:(context){
+          final divisor=_goalPeriod=='Mensal'?12:_goalPeriod=='Trimestral'?4:
+            _goalPeriod=='Semestral'?2:1;
+          final target=ledger.annualGoal/divisor;
+          final balance=target-ledger.received;
+          return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Wrap(spacing:14,runSpacing:6,children:[
+              Text('Referência: ${DemoData.currency(target)}',
+                style:const TextStyle(fontWeight:FontWeight.w700,color:ink)),
+              Text('Recebido no mês: ${DemoData.currency(ledger.received)}',
+                style:const TextStyle(color:ink)),
+              Text('Diferença: ${DemoData.currency(balance>0?balance:0)}',
+                style:const TextStyle(color:muted)),
+            ]),
+            const SizedBox(height:7),
+            LinearProgressIndicator(value:target>0?
+              (ledger.received/target).clamp(0.0,1.0).toDouble():0,
+              minHeight:7,borderRadius:BorderRadius.circular(7)),
+            const SizedBox(height:7),
+            const Text('Comparação ilustrativa com o mês demonstrativo. '
+              'Sem histórico trimestral, semestral ou anual integrado.',
+              style:TextStyle(fontSize:10,color:muted)),
+          ]);
         }),
         const SizedBox(height:12),
         Container(padding:const EdgeInsets.all(10),
