@@ -34,6 +34,30 @@ class CoachFlowApp extends StatelessWidget {
             brightness: Brightness.light,
             surface: const Color(0xFFFFFFFF),
           ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF0C213A),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFFDCE4EF),
+              disabledForegroundColor: const Color(0xFF718096),
+              minimumSize: const Size(0, 46),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF0C213A),
+              side: const BorderSide(color: Color(0xFFB6C9DE)),
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFF174D85)),
+          ),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF17243A)),
             titleLarge: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF17243A)),
@@ -209,7 +233,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           final desktop = constraints.maxWidth >= 900;
           return Scaffold(
             appBar: AppBar(
-              backgroundColor: const Color(0xFF112B4B),
+              backgroundColor: const Color(0xFF0C213A),
               foregroundColor: Colors.white,
               centerTitle: !desktop,
               leading: desktop ? null : IconButton(
