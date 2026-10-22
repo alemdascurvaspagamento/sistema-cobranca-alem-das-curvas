@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'demo_mode.dart';
 import 'demo_ledger.dart';
@@ -88,6 +89,104 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       reason=='remarcar'?'Remarcada':'Cancelada',charge,reason);
     if(reason=='remarcar')widget.onAgenda();
   }
+  Future<void> _confirmAppointment(DemoAppointment a,DateTime day) async {
+    final ledger=DemoLedger.instance;
+    final phone=ledger.clientPhones[a.client]?.replaceAll(RegExp(r'[^0-9]'),'')??'';
+    final validPhone=phone.length==12||phone.length==13;
+    final date='${day.day.toString().padLeft(2,'0')}/'
+      '${day.month.toString().padLeft(2,'0')}/${day.year}';
+    final template=TextEditingController(text:ledger.confirmationTemplate);
+    final result=await showModalBottomSheet<String>(
+      context:context,isScrollControlled:true,useSafeArea:true,
+      builder:(sheetContext)=>Padding(
+        padding:EdgeInsets.only(
+          bottom:MediaQuery.viewInsetsOf(sheetContext).bottom),
+        child:SingleChildScrollView(child:Padding(
+          padding:const EdgeInsets.all(20),
+          child:Column(mainAxisSize:MainAxisSize.min,
+            crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Row(children:[
+              const Icon(Icons.chat_outlined,color:Color(0xFF128C4B)),
+              const SizedBox(width:10),
+              Expanded(child:Text('Confirmar • ${a.client}',
+                style:const TextStyle(fontSize:18,fontWeight:FontWeight.w800))),
+              IconButton(onPressed:()=>Navigator.pop(sheetContext),
+                icon:const Icon(Icons.close)),
+            ]),
+            const SizedBox(height:7),
+            Text('$date • ${a.hour} • ${a.service}',
+              style:const TextStyle(color:muted,fontSize:12)),
+            const SizedBox(height:12),
+            TextField(controller:template,minLines:5,maxLines:9,
+              decoration:const InputDecoration(
+                labelText:'Modelo de mensagem (editável)',
+                helperText:'Campos: {nome}, {data}, {hora}, {servico}',
+                helperMaxLines:2,border:OutlineInputBorder())),
+            const SizedBox(height:12),
+            if(!validPhone)const Text(
+              'Telefone de WhatsApp não disponível. Confira o cadastro do cliente.',
+              style:TextStyle(color:red,fontSize:12)),
+            const Text('O WhatsApp será aberto com a mensagem preenchida. '
+              'O envio e a confirmação do cliente não são automáticos.',
+              style:TextStyle(color:muted,fontSize:12)),
+            const SizedBox(height:14),
+            FilledButton.icon(onPressed:validPhone?
+              ()=>Navigator.pop(sheetContext,template.text):null,
+              style:FilledButton.styleFrom(
+                backgroundColor:const Color(0xFF128C4B),
+                minimumSize:const Size.fromHeight(48)),
+              icon:const Icon(Icons.open_in_new),
+              label:const Text('Revisar e abrir WhatsApp')),
+          ])),
+        )));
+    template.dispose();
+    if(result==null||!mounted)return;
+    ledger.setConfirmationTemplate(result);
+    var message=result;
+    final variables={
+      '{nome}':a.client,'{data}':date,
+      '{hora}':a.hour,'{servico}':a.service,
+    };
+    for(final item in variables.entries){
+      message=message.replaceAll(item.key,item.value);
+    }
+    final approved=await showDialog<bool>(context:context,
+      builder:(ctx)=>AlertDialog(
+        title:const Text('Revisar mensagem'),
+        content:SizedBox(width:440,child:SingleChildScrollView(
+          child:SelectableText(message))),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),
+            child:const Text('Voltar')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+            child:const Text('Abrir WhatsApp')),
+        ]));
+    if(approved!=true||!mounted)return;
+    final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
+    if(!await launchUrl(url,mode:LaunchMode.externalApplication)&&mounted){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content:Text('Não foi possível abrir o WhatsApp.')));
+    }
+  }
+
+  Future<void> _editConfirmationStatus(DemoAppointment a,DateTime day) async {
+    final ledger=DemoLedger.instance;
+    final selected=await showModalBottomSheet<String>(
+      context:context,builder:(ctx)=>SafeArea(
+        child:Column(mainAxisSize:MainAxisSize.min,children:[
+          ListTile(title:Text('Confirmação • ${a.client}'),
+            subtitle:const Text('Marcação manual, independente da realização.')),
+          for(final status in ['Aguardando','Confirmado','Solicitou remarcação'])
+            ListTile(
+              leading:Icon(status=='Confirmado'?Icons.check_circle_outline:
+                status=='Solicitou remarcação'?Icons.edit_calendar_outlined:
+                Icons.schedule_outlined),
+              title:Text(status),
+              onTap:()=>Navigator.pop(ctx,status)),
+        ])));
+    if(selected!=null)ledger.setConfirmationStatus(a.client,day,selected);
+  }
+
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: Color(0xFFFFFFFF),
@@ -484,18 +583,49 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               decoration:BoxDecoration(color:statusColor.withValues(alpha:.10),
                 borderRadius:BorderRadius.circular(18)),
               child:Text(state,style:TextStyle(fontSize:10,color:statusColor)));
-            final actions=Wrap(spacing:0,children:[
-              IconButton(tooltip:'Marcar realizada',visualDensity:VisualDensity.compact,
+            final confirmation=ledger.confirmationStatus(a.client,today);
+            final actions=Wrap(spacing:4,runSpacing:5,
+              crossAxisAlignment:WrapCrossAlignment.center,children:[
+              Tooltip(message:'Confirmar por WhatsApp',child:IconButton.filledTonal(
+                onPressed:()=>_confirmAppointment(a,today),
+                style:IconButton.styleFrom(
+                  backgroundColor:const Color(0xFFE1F7EA),
+                  foregroundColor:const Color(0xFF128C4B),
+                  minimumSize:const Size(44,44)),
+                icon:const Icon(Icons.chat_outlined,size:21))),
+              Tooltip(message:'Alterar confirmação',child:IconButton.outlined(
+                onPressed:()=>_editConfirmationStatus(a,today),
+                icon:Icon(confirmation=='Confirmado'?Icons.verified_outlined:
+                  confirmation=='Solicitou remarcação'?Icons.event_busy_outlined:
+                  Icons.schedule_outlined,size:20),
+                style:IconButton.styleFrom(minimumSize:const Size(44,44)))),
+              Tooltip(message:'Marcar realizada',child:IconButton.outlined(
                 onPressed:()=>ledger.updateVisit(a.client,today,'Realizada',true,
-                  'Confirmado na tela inicial'),icon:const Icon(Icons.check_circle_outline,size:19,color:green)),
-              IconButton(tooltip:'Não realizada ou remarcar',visualDensity:VisualDensity.compact,
-                onPressed:()=>_notDone(context,a,today),icon:const Icon(Icons.edit_calendar_outlined,size:19,color:Color(0xFF0065D7))),
+                  'Marcado na tela inicial'),
+                icon:const Icon(Icons.check_circle_outline,size:20,color:green),
+                style:IconButton.styleFrom(minimumSize:const Size(44,44)))),
+              Tooltip(message:'Não realizada ou remarcar',child:IconButton.outlined(
+                onPressed:()=>_notDone(context,a,today),
+                icon:const Icon(Icons.edit_calendar_outlined,size:20),
+                style:IconButton.styleFrom(minimumSize:const Size(44,44)))),
             ]);
-            if(c.maxWidth>=480)return Row(children:[
-              Expanded(child:info),const SizedBox(width:7),status,actions]);
+            final confirmationLabel=Text(
+              confirmation=='Aguardando'?'Confirmação pendente':confirmation,
+              style:TextStyle(fontSize:11,
+                color:confirmation=='Confirmado'?green:muted));
+            if(c.maxWidth>=650)return Row(children:[
+              Expanded(child:info),const SizedBox(width:8),
+              Column(crossAxisAlignment:CrossAxisAlignment.end,children:[
+                status,confirmationLabel,
+              ]),
+              const SizedBox(width:10),actions,
+            ]);
             return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
               info,const SizedBox(height:7),
-              Row(children:[status,const Spacer(),actions]),
+              Row(children:[status,const SizedBox(width:8),
+                Expanded(child:confirmationLabel)]),
+              const SizedBox(height:7),
+              actions,
             ]);
           }),
         ],
