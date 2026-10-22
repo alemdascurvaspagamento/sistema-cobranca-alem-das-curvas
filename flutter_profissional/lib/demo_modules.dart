@@ -93,6 +93,46 @@ class _DemoClientsState extends State<DemoClients> {
       if(day!=null&&day>=1&&day<=31)ledger.setDueDay(result.name,day);
     });
   }
+  Future<void> showHistory(DemoClient client) async {
+    final entries=ledger.visits[client.name]?.entries
+      .where((e)=>e.value.note.trim().isNotEmpty).toList()??[];
+    entries.sort((a,b)=>b.key.compareTo(a.key));
+    await showModalBottomSheet<void>(
+      context:context,isScrollControlled:true,showDragHandle:true,
+      builder:(ctx)=>SafeArea(child:FractionallySizedBox(
+        heightFactor:.78,child:Padding(
+          padding:const EdgeInsets.fromLTRB(16,8,16,20),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Text('Histórico • ${client.name}',
+              style:const TextStyle(fontSize:20,fontWeight:FontWeight.w800)),
+            const SizedBox(height:6),
+            const Text('Registros de atendimentos nesta sessão de demonstração.',
+              style:TextStyle(fontSize:12,color:Color(0xFF64748B))),
+            const SizedBox(height:14),
+            Expanded(child:entries.isEmpty?
+              const Center(child:Text('Nenhuma anotação registrada. Abra um atendimento na Agenda para começar.')):
+              ListView.separated(itemCount:entries.length,
+                separatorBuilder:(_,__)=>const Divider(),
+                itemBuilder:(ctx,index){
+                  final e=entries[index];
+                  final day=DateTime.fromMillisecondsSinceEpoch(e.key);
+                  final date='${day.day.toString().padLeft(2,'0')}/${day.month.toString().padLeft(2,'0')}/${day.year}';
+                  return ListTile(
+                    contentPadding:EdgeInsets.zero,
+                    leading:const Icon(Icons.description_outlined,color:Color(0xFF245A98)),
+                    title:Text('$date • ${e.value.state}',
+                      style:const TextStyle(fontWeight:FontWeight.w700)),
+                    subtitle:Padding(padding:const EdgeInsets.only(top:6),
+                      child:SelectableText(e.value.note)),
+                  );
+                })),
+            const SizedBox(height:8),
+            const Text('Dados temporários: não utilize para prontuários ou informações sensíveis.',
+              style:TextStyle(fontSize:11,color:Color(0xFF9D5420))),
+          ]),
+        ))),
+    );
+  }
   @override Widget build(BuildContext context) {
     final term=search.trim().toLowerCase();
     final shown=clients.where((c) =>
@@ -148,6 +188,12 @@ class _DemoClientsState extends State<DemoClients> {
             const SizedBox(height:12),
             const Divider(height:1,color:Color(0xFFE2E8F0)),
             const SizedBox(height:10),
+            OutlinedButton.icon(
+              onPressed:()=>showHistory(c),
+              icon:const Icon(Icons.history),
+              label:const Text('Histórico de atendimentos e anotações'),
+            ),
+            const SizedBox(height:8),
             LayoutBuilder(builder:(context,box){
               final compact=box.maxWidth<470;
               return Row(children:[
