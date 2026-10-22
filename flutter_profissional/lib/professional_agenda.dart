@@ -48,7 +48,7 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
         for (final a in items) ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.event, color: gold),
-          title: Text(a.clientName, style: const TextStyle(color: Colors.white)),
+          title: Text(a.clientName, style: const TextStyle(color: Color(0xFF17243A))),
           subtitle: Text(a.status, style: const TextStyle(color: silver)),
           trailing: Text(TimeOfDay.fromDateTime(a.startsAt).format(context), style: const TextStyle(color: gold)),
         ),
@@ -106,7 +106,7 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
           onSelectionChanged: (selection) => setState(() { view = selection.first; _load(); }),
           style: ButtonStyle(
             foregroundColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected) ? const Color(0xFFEDF2F8) : silver,
+              (states) => states.contains(WidgetState.selected) ? Colors.white : silver,
             ),
             backgroundColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected) ? gold : surface,
@@ -225,7 +225,7 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('$day', style: TextStyle(
-                  color: chosen ? const Color(0xFFEDF2F8) : Colors.white,
+                  color: chosen ? Colors.white : const Color(0xFF17243A),
                   fontWeight: chosen || isToday ? FontWeight.bold : FontWeight.normal,
                 )),
               ),
