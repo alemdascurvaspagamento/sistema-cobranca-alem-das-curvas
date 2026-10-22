@@ -31,8 +31,8 @@ class DemoAgenda extends StatefulWidget {
 }
 
 class _DemoAgendaState extends State<DemoAgenda> {
-  static const gold = Color(0xFFD8B56A);
-  static const surface = Color(0xFF1A1D22);
+  static const gold = Color(0xFF244C82);
+  static const surface = Color(0xFFFFFFFF);
   int tab = 0;
   String statusFilter = 'Todos';
   DateTime? selectedWeek;
@@ -138,7 +138,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
     }
     return Column(children: [
       for (final appointment in appointments)
-        Card(color: const Color(0xFF24282F), child: ListTile(
+        Card(color: const Color(0xFFF0F4F9), child: ListTile(
           onTap: () => editAppointment(day, appointment),
           leading: Icon(Icons.circle,
             color: appointmentColor(appointmentState(day, appointment.client))),
@@ -244,7 +244,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
             Row(children: [
               for (final label in const ['S','T','Q','Q','S','S','D'])
                 Expanded(child: Center(child: Text(label,
-                  style: const TextStyle(color: Color(0xFFCBD0D8))))),
+                  style: const TextStyle(color: Color(0xFF64748B))))),
             ]),
             const SizedBox(height: 8),
             LayoutBuilder(builder: (context, size) {
@@ -286,7 +286,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
             const SizedBox(height: 12),
             if (selectedDay != null) appointmentList(selectedDay!)
             else const Text('Selecione um dia para ver os atendimentos.',
-              style: TextStyle(color: Color(0xFFCBD0D8))),
+              style: TextStyle(color: Color(0xFF64748B))),
           ]),
         )),
       ],
