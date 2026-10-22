@@ -455,9 +455,10 @@ class _DemoBillingState extends State<DemoBilling> {
             icon:const Icon(Icons.event_note_outlined,size:16),
             label:const Text('Ver atendimentos',maxLines:1,
               overflow:TextOverflow.ellipsis),
-            style:OutlinedButton.styleFrom(foregroundColor:_gold,
+            style:OutlinedButton.styleFrom(foregroundColor:const Color(0xFF0C213A),
+              backgroundColor:const Color(0xFFE5EFFA),
               padding:const EdgeInsets.symmetric(horizontal:4,vertical:11),
-              side:const BorderSide(color:_gold)))),
+              side:const BorderSide(color:Color(0xFF245A98))))),
           const SizedBox(width:7),
           Expanded(flex:4,child:OutlinedButton.icon(
             onPressed:paidFor(a)?null:()=>whatsapp(a),
