@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 /// Dados simulados compartilhados entre telas durante a sessão.
 class DemoLedger extends ChangeNotifier {
   DemoLedger._(){seedVisits();}
+  @visibleForTesting DemoLedger.testing();
   static final DemoLedger instance = DemoLedger._();
   final Map<String, bool> payments = {'Mariana Costa': true};
   final Map<String,int> dueDays={'Mariana Costa':5,'Ricardo Almeida':28,'Fernanda Lima':15,'Paulo Martins':28};
