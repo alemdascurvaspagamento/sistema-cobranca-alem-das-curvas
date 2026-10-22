@@ -300,7 +300,7 @@ class _DemoFinanceState extends State<DemoFinance> {
               final periodTarget=annualGoal/divisor;
               final progress=periodTarget>0?(received/periodTarget).clamp(0.0,1.0).toDouble():0.0;
               return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                Text('Referência $balancePeriod.toLowerCase(): ${DemoData.currency(periodTarget)}',
+                Text('Referência ${balancePeriod.toLowerCase()}: ${DemoData.currency(periodTarget)}',
                   style:const TextStyle(fontWeight:FontWeight.w700)),
                 const SizedBox(height:8),
                 LinearProgressIndicator(value:progress,minHeight:10,
