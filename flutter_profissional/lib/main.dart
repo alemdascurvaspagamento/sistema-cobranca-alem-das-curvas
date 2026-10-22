@@ -125,7 +125,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   }
 }
 
-enum Section { inicio, agenda, clientes, cobrancas, financeiro, mais }
+enum Section { inicio, clientes, cobrancas, financeiro, agenda, mais }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
