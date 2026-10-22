@@ -228,15 +228,15 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   style:const TextStyle(color:amber,fontSize:11)),
               ]),
               Wrap(spacing:8,children:[
-                TextButton.icon(onPressed:()=>ledger.updateVisit(a.client,today,
+                OutlinedButton.icon(onPressed:()=>ledger.updateVisit(a.client,today,
                   'Realizada',true,'Confirmado na tela inicial'),
                   icon:const Icon(Icons.check,color:green),label:const Text('Realizada')),
-                TextButton.icon(onPressed:()=>_notDone(context,a,today),
+                OutlinedButton.icon(onPressed:()=>_notDone(context,a,today),
                   icon:const Icon(Icons.close,color:red),label:const Text('Não realizada')),
               ]),
             ],
             const SizedBox(height:8),
-            Align(alignment:Alignment.centerLeft,child:OutlinedButton.icon(
+            Align(alignment:Alignment.centerLeft,child:FilledButton.icon(
               onPressed:widget.onClients,
               icon:const Icon(Icons.person_add_alt_1_outlined,size:18),
               label:const Text('Novo cliente'),
