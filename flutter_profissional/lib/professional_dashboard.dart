@@ -37,9 +37,11 @@ class ProfessionalDashboard extends StatelessWidget {
         ]),
         Text(label.toUpperCase(), style: const TextStyle(
           fontSize: 10, fontWeight: FontWeight.w700, color: muted)),
-        Text(value, style: const TextStyle(
-          fontSize: 22, fontWeight: FontWeight.w800, color: ink)),
-        Text(detail, maxLines: 2, style: const TextStyle(fontSize: 11, color: muted)),
+        FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+          child:Text(value, maxLines:1, style: const TextStyle(
+          fontSize: 22, fontWeight: FontWeight.w800, color: ink))),
+        Text(detail, maxLines: 2, overflow:TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 11, color: muted)),
       ]));
 
   Widget action(String label, IconData icon, VoidCallback onTap) =>
@@ -106,7 +108,7 @@ class ProfessionalDashboard extends StatelessWidget {
             ];
             return Wrap(spacing: 10, runSpacing: 10, children: [
               for (final metric in metrics)
-                SizedBox(width: cardWidth, height: 158, child: metric),
+                SizedBox(width: cardWidth, height: 176, child: metric),
             ]);
           }),
           const SizedBox(height: 14),
