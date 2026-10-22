@@ -153,7 +153,7 @@ class _DemoBillingState extends State<DemoBilling> {
             crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               const Text('Datas demonstrativas: toque em um atendimento para '
                 'consultar ou alterar situação, cobrança e observações.',
-                style: TextStyle(fontSize: 12, color: const Color(0xFF64748B))),
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
               const SizedBox(height: 12),
               Wrap(spacing: 7, runSpacing: 8, children: [
                 for (final visit in visits)
@@ -191,7 +191,7 @@ class _DemoBillingState extends State<DemoBilling> {
               _line('Total a cobrar', DemoData.currency(totalFor(a))),
               const SizedBox(height: 12),
               const Text('Alterações recalculam esta cobrança e os indicadores da dashboard nesta sessão. Não são persistidas em banco nem alteram a agenda independente.',
-                style: TextStyle(fontSize: 12, color: const Color(0xFF64748B))),
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
             ]))),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx),
           child: const Text('Fechar'))],
@@ -382,7 +382,7 @@ class _DemoBillingState extends State<DemoBilling> {
         DataCell(Column(mainAxisAlignment:MainAxisAlignment.center,
           crossAxisAlignment:CrossAxisAlignment.start,children:[
           Text(a.name,style:const TextStyle(fontWeight:FontWeight.bold)),
-          Text(a.service,style:const TextStyle(fontSize:11,color:const Color(0xFF64748B)))])),
+          Text(a.service,style:const TextStyle(fontSize:11,color:Color(0xFF64748B)))])),
         DataCell(Text(DemoData.currency(a.unitPrice))),
         DataCell(Text('${a.scheduled}')),
         DataCell(Text('${a.completed}')),
@@ -411,7 +411,7 @@ class _DemoBillingState extends State<DemoBilling> {
               style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800)),
             const SizedBox(height:3),
             Text(a.service,maxLines:2,overflow:TextOverflow.ellipsis,
-              style:const TextStyle(fontSize:12,color:const Color(0xFF64748B))),
+              style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
             const SizedBox(height:3),
             Text(a.phone,maxLines:1,overflow:TextOverflow.ellipsis,
               style:const TextStyle(fontSize:11,color:Colors.white54)),
@@ -428,7 +428,7 @@ class _DemoBillingState extends State<DemoBilling> {
         ]),
         const SizedBox(height:7),
         Text('Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).month.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).year}',
-          style:const TextStyle(fontSize:11,color:const Color(0xFF64748B))),
+          style:const TextStyle(fontSize:11,color:Color(0xFF64748B))),
         if(ledger.paymentDates[a.name]!=null)
           const Text('Pagamento registrado',style:TextStyle(fontSize:11,color:Color(0xFF6EE2B0))),
         const SizedBox(height:13),
@@ -443,7 +443,7 @@ class _DemoBillingState extends State<DemoBilling> {
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
             maxLines:2,overflow:TextOverflow.ellipsis,
-            style:const TextStyle(fontSize:11,color:const Color(0xFF64748B)));
+            style:const TextStyle(fontSize:11,color:Color(0xFF64748B)));
           return compact?Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             visits,const SizedBox(height:6),amount,
           ]):Row(children:[Expanded(child:visits),const SizedBox(width:8),amount]);
@@ -487,13 +487,13 @@ class _DemoBillingState extends State<DemoBilling> {
   Widget metric(String label,double value,IconData icon,Color accent)=>Container(
     padding:const EdgeInsets.all(14),
     decoration:BoxDecoration(color:_surface,borderRadius:BorderRadius.circular(14),
-      border:Border.all(color:const Color(0xFFE2E8F0))),
+      border:Border.all(color:Color(0xFFE2E8F0))),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,
       mainAxisSize:MainAxisSize.min,children:[
         Icon(icon,color:accent,size:20),
         const SizedBox(height:8),
         Text(label,maxLines:1,overflow:TextOverflow.ellipsis,
-          style:const TextStyle(fontSize:12,color:const Color(0xFF64748B))),
+          style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
         const SizedBox(height:5),
         FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
           child:Text(DemoData.currency(value),maxLines:1,
@@ -508,7 +508,7 @@ class _DemoBillingState extends State<DemoBilling> {
       const Text('Cobranças',style:TextStyle(fontSize:23,fontWeight:FontWeight.w800)),
       const SizedBox(height:6),
       const Text('Clientes, valores e situação dos pagamentos.',
-        style:TextStyle(color:const Color(0xFF64748B))),
+        style:TextStyle(color:Color(0xFF64748B))),
       const SizedBox(height:14),
       LayoutBuilder(builder:(context,box){
         final columns=box.maxWidth>=900?3:2;
@@ -545,7 +545,7 @@ class _DemoBillingState extends State<DemoBilling> {
       const Text('DADOS FICTÍCIOS • Alterações de atendimentos atualizam os cálculos '
         'e a dashboard nesta sessão, sem persistência no banco. '
         'WhatsApp exige revisão humana antes do envio.',
-        style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+        style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
     ]);
   }
 }
