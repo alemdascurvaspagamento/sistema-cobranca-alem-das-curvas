@@ -51,6 +51,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
       '${date.year}-${date.month}-${date.day}-$client';
   String appointmentState(DateTime date, String client) =>
       DemoLedger.instance.absence(client,date)!=null ? 'Cancelada' :
+      DemoLedger.instance.visit(client,date)?.state ??
       appointmentStates[appointmentKey(date, client)] ?? 'Agendada';
   Color appointmentColor(String state) {
     switch (state) {
@@ -64,13 +65,15 @@ class _DemoAgendaState extends State<DemoAgenda> {
   Future<void> editAppointment(DateTime date, DemoAppointment appointment) async {
     final key = appointmentKey(date, appointment.client);
     String state = appointmentState(date, appointment.client);
-    bool charge = chargeOverrides[key] ?? state != 'Cancelada';
-    final note = TextEditingController(text: appointmentNotes[key] ?? '');
+    bool charge = DemoLedger.instance.visit(appointment.client,date)?.charge ??
+      chargeOverrides[key] ?? state != 'Cancelada';
+    final note = TextEditingController(text:
+      DemoLedger.instance.visit(appointment.client,date)?.note ?? appointmentNotes[key] ?? '');
     final confirmed = await showDialog<bool>(context: context,
       builder: (dialogContext) => StatefulBuilder(builder: (dialogContext, refresh) =>
         AlertDialog(
           title: Text('${appointment.client} • ${appointment.hour}'),
-          content: SizedBox(width: 400, child: SingleChildScrollView(
+          content: SizedBox(width: MediaQuery.sizeOf(dialogContext).width<480 ? MediaQuery.sizeOf(dialogContext).width*.73 : 400, child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('${appointment.service} • ${DemoData.currency(appointment.amount)}'),
               const SizedBox(height: 12),
@@ -109,6 +112,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
       appointmentStates[key] = state;
       chargeOverrides[key] = charge;
       appointmentNotes[key] = note.text.trim();
+      DemoLedger.instance.updateVisit(appointment.client,date,state,charge,note.text.trim());
     });
     note.dispose();
   }
