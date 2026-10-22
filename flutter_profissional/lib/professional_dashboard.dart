@@ -527,9 +527,11 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           secretary,
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
-            if(c.maxWidth>=1050)return IntrinsicHeight(child:Row(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Expanded(flex:11,child:goal),SizedBox(width:gap),Expanded(flex:10,child:finance),
-            ]));
+            if(c.maxWidth>=1050)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Expanded(flex:11,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:450),child:goal)),
+              SizedBox(width:gap),
+              Expanded(flex:10,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:450),child:finance)),
+            ]);
             return Column(children:[goal,SizedBox(height:gap),finance]);
           }),
           SizedBox(height:gap),
@@ -553,10 +555,11 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           }),
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
-            if(c.maxWidth>=920)return IntrinsicHeight(child:Row(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Expanded(flex:11,child:agenda),SizedBox(width:gap),
-              Expanded(flex:8,child:upcoming),
-            ]));
+            if(c.maxWidth>=920)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Expanded(flex:11,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:390),child:agenda)),
+              SizedBox(width:gap),
+              Expanded(flex:8,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:390),child:upcoming)),
+            ]);
             return Column(children:[agenda,SizedBox(height:gap),upcoming]);
           }),
           if(isDemo)const Padding(padding:EdgeInsets.only(top:14),
