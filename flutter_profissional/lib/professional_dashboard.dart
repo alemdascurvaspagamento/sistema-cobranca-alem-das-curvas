@@ -125,6 +125,35 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 style: const TextStyle(fontSize: 12, color: muted)),
             ]),
           ]),
+          const SizedBox(height: 14),
+          panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Row(children:[
+              const CircleAvatar(backgroundColor:Color(0xFF403620),
+                child:Icon(Icons.support_agent,color:amber)),
+              const SizedBox(width:10),
+              const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+                children:[
+                  Text('Sua secretária',style:TextStyle(fontSize:18,
+                    fontWeight:FontWeight.w800,color:ink)),
+                  Text('Resumo e prioridades do dia',
+                    style:TextStyle(fontSize:11,color:muted)),
+                ])),
+              TextButton(onPressed:widget.onSecretary,child:const Text('Ver tudo')),
+            ]),
+            const SizedBox(height:12),
+            if(widget.demo) ...[
+              Text('${appointments.length} atendimentos previstos hoje',
+                style:const TextStyle(color:ink,fontWeight:FontWeight.w600)),
+              const SizedBox(height:5),
+              Text('${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length} cobranças vencidas • ${DemoData.currency(ledger.pending)} a receber',
+                style:const TextStyle(color:muted,fontSize:12)),
+            ] else const Text('Ative seus dados para receber recomendações.',
+              style:TextStyle(color:muted,fontSize:12)),
+            const SizedBox(height:10),
+            FilledButton.icon(onPressed:widget.onSecretary,
+              icon:const Icon(Icons.auto_awesome_outlined),
+              label:const Text('Ver prioridades e próximas ações')),
+          ])),
           const SizedBox(height: 12),
           Row(children:[
             Expanded(child:DropdownButtonFormField<int>(
