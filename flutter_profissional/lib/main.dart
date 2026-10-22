@@ -57,14 +57,21 @@ class CoachFlowApp extends StatelessWidget {
           outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF0C213A),
-              side: const BorderSide(color: Color(0xFFB6C9DE)),
+              backgroundColor: const Color(0xFFE5EFFA),
+              side: const BorderSide(color: Color(0xFF245A98), width: 1.25),
               minimumSize: const Size(0, 44),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               textStyle: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
           textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF174D85)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF0C213A),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          iconButtonTheme: IconButtonThemeData(
+            style: IconButton.styleFrom(foregroundColor: const Color(0xFF174D85)),
           ),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF17243A)),
