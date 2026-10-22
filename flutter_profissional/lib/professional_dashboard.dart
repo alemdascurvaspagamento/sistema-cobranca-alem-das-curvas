@@ -192,7 +192,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               Wrap(spacing:12,runSpacing:10,children:[
                 _miniMetric('META ANUAL',widget.demo?DemoData.currency(ledger.annualGoal):'—'),
                 _miniMetric('RECEBIDO NO MÊS',widget.demo?DemoData.currency(ledger.received):'—'),
-                _miniMetric('FALTA NO MÊS',widget.demo?DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity)):'—'),
+                _miniMetric('FALTA NO MÊS',widget.demo?DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity).toDouble()):'—'),
               ]),
               const SizedBox(height:12),
               Text(widget.demo?(progress>=1?'Meta mensal atingida.':'Acompanhe o progresso da meta mensal.'):'Meta disponível após conectar os dados.',style:const TextStyle(color:muted,fontSize:12)),
