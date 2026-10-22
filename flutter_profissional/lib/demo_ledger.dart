@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Dados simulados compartilhados entre telas durante a sessão.
 class DemoLedger extends ChangeNotifier {
-  DemoLedger._();
+  DemoLedger._(){seedVisits();}
   static final DemoLedger instance = DemoLedger._();
   final Map<String, bool> payments = {'Mariana Costa': true};
   final Map<String, Map<int, String>> absences = {};
@@ -24,6 +24,46 @@ class DemoLedger extends ChangeNotifier {
     'Mariana Costa': 180, 'Ricardo Almeida': 220,
     'Fernanda Lima': 150, 'Paulo Martins': 180,
   };
+  final Map<String, int> credits={'Fernanda Lima':1};
+  final Map<String, double> discounts={'Paulo Martins':90};
+  final Map<String, int> sessionCounts={
+    'Mariana Costa':8,'Ricardo Almeida':4,
+    'Fernanda Lima':6,'Paulo Martins':5,
+  };
+  final Map<String, int> completedCounts={
+    'Mariana Costa':7,'Ricardo Almeida':3,
+    'Fernanda Lima':5,'Paulo Martins':4,
+  };
+  void seedVisits(){
+    final now=DateTime.now();
+    final weekdays=<DateTime>[];
+    for(var day=1;day<=DateTime(now.year,now.month+1,0).day;day++){
+      final date=DateTime(now.year,now.month,day);
+      if(date.weekday<=5)weekdays.add(date);
+    }
+    for(final name in sessionCounts.keys){
+      final count=sessionCounts[name]!;
+      final completed=completedCounts[name]!;
+      final map=visits.putIfAbsent(name,()=>{});
+      for(var i=0;i<count && i<weekdays.length;i++){
+        map[dateKey(weekdays[i])]=(
+          state:i<completed?'Realizada':'Cancelada',
+          charge:i<completed,note:'');
+      }
+    }
+    for(final name in sessionCounts.keys){_recalculate(name);}
+  }
+  void _recalculate(String name){
+    final completed=visits[name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??0;
+    final gross=completed*(prices[name]??0);
+    amounts[name]=(gross-(credits[name]??0)*(prices[name]??0)-
+      (discounts[name]??0)).clamp(0.0,double.infinity).toDouble();
+  }
+  void updateVisit(String name,DateTime date,String state,bool charge,String note){
+    visits.putIfAbsent(name,()=>{})[dateKey(date)]=(state:state,charge:charge,note:note);
+    _recalculate(name);
+    notifyListeners();
+  }
   bool isPaid(String name) => payments[name] ?? false;
   void setPaid(String name, bool paid) { payments[name] = paid; notifyListeners(); }
   void setAmount(String name, double amount) { amounts[name] = amount; notifyListeners(); }
