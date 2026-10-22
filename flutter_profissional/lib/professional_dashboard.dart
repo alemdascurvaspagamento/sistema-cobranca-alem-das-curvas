@@ -16,10 +16,10 @@ class ProfessionalDashboard extends StatefulWidget {
 class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   late int selectedMonth=DateTime.now().month;
   late int selectedYear=DateTime.now().year;
-  static const ink = Color(0xFFF5F2EA);
-  static const muted = Color(0xFFADB0B8);
-  static const border = Color(0xFF383A40);
-  static const background = Color(0xFF111317);
+  static const ink = Color(0xFF17243A);
+  static const muted = Color(0xFF64748B);
+  static const border = Color(0xFFE2E8F0);
+  static const background = Color(0xFFF5F7FA);
   static const green = Color(0xFF52D69A);
   static const amber = Color(0xFFE0BA62);
   static const red = Color(0xFFF1767B);
@@ -46,7 +46,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   }
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(color: const Color(0xFF1E2127),
+    decoration: BoxDecoration(color: const Color(0xFFFFFFFF),
       border: Border.all(color: border),
       borderRadius: BorderRadius.circular(17)),
     child: child);
@@ -71,7 +71,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       ]));
 
   Widget action(String label, String subtitle, IconData icon, VoidCallback onTap) =>
-    Material(color: const Color(0xFF1E2127), borderRadius: BorderRadius.circular(14),
+    Material(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(14),
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
         child:Container(
           padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
@@ -108,7 +108,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   Widget _buildDashboard(BuildContext context, DateTime today,
     List<String> months, List<DemoAppointment> appointments, double planned) {
     final ledger=DemoLedger.instance;
-    return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.dark,
+    return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.dark),
       scaffoldBackgroundColor: background), child: Container(
       decoration: BoxDecoration(color: background,
@@ -128,7 +128,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           const SizedBox(height: 14),
           panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Row(children:[
-              const CircleAvatar(backgroundColor:Color(0xFF403620),
+              const CircleAvatar(backgroundColor:Color(0xFFE7EFF9),
                 child:Icon(Icons.support_agent,color:amber)),
               const SizedBox(width:10),
               const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
