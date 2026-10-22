@@ -160,8 +160,7 @@ class _DemoClientsState extends State<DemoClients> {
                       backgroundColor:const Color(0xFF25D366),
                       side:const BorderSide(color:Color(0xFF25D366))))),
                 const SizedBox(width:6),
-                Expanded(child:
-                    child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
+                Expanded(child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
                       icon:const Icon(Icons.receipt_long_outlined,size:17),
                       label:Text(compact?'':'Cobrar',maxLines:1,overflow:TextOverflow.ellipsis),
                       style:OutlinedButton.styleFrom(
