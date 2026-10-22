@@ -164,6 +164,40 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       content: Text('Em Clientes, selecione Novo cliente para abrir o cadastro.')));
   }
 
+  void openMore() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1D22),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Mais opções', style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 14),
+            for (final entry in <(Section, String, IconData)>[
+              (Section.agenda, 'Calendário e atendimentos', Icons.calendar_month_outlined),
+              (Section.mais, 'Configurações e relatórios', Icons.tune_outlined),
+            ])
+              ListTile(
+                leading: Icon(entry.$3, color: gold),
+                title: Text(entry.$2),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  setState(() => selected = entry.$1);
+                },
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
@@ -236,23 +270,33 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 ),
               ],
             ),
-            bottomNavigationBar: desktop
-                ? null
-                : NavigationBar(
-                    backgroundColor: const Color(0xFF101216),
-                    indicatorColor: gold.withValues(alpha: .20),
-                    selectedIndex: selected.index,
-                    onDestinationSelected: (index) =>
-                        setState(() => selected = Section.values[index]),
-                    destinations: [
-                      for (final section in Section.values)
-                        NavigationDestination(
-                          icon: Icon(section.icon),
-                          selectedIcon: Icon(section.icon, color: gold),
-                          label: section.label,
-                        ),
-                    ],
-                  ),
+            bottomNavigationBar: desktop ? null : NavigationBar(
+              height: 72,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              backgroundColor: const Color(0xFF101216),
+              indicatorColor: gold.withValues(alpha: .18),
+              selectedIndex: switch (selected) {
+                Section.inicio => 0,
+                Section.cobrancas => 1,
+                Section.financeiro => 2,
+                Section.clientes => 3,
+                _ => 4,
+              },
+              onDestinationSelected: (index) {
+                if (index == 4) { openMore(); return; }
+                setState(() => selected = [
+                  Section.inicio, Section.cobrancas,
+                  Section.financeiro, Section.clientes,
+                ][index]);
+              },
+              destinations: const [
+                NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Início'),
+                NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Cobrança'),
+                NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'Financeiro'),
+                NavigationDestination(icon: Icon(Icons.groups_outlined), label: 'Clientes'),
+                NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Mais'),
+              ],
+            ),
           );
         },
       );
