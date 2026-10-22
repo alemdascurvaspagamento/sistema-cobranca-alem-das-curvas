@@ -119,7 +119,7 @@ class _DemoClientsState extends State<DemoClients> {
         color:demoSurface,
         margin:const EdgeInsets.only(bottom:12),
         shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
-          side:const BorderSide(color:Color(0xFFE2E8F0))),
+          side:const BorderSide(color:Color(0xFF245A98),width:1.5)),
         child:Padding(padding:const EdgeInsets.all(15),
           child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -334,7 +334,7 @@ class _DemoFinanceState extends State<DemoFinance> {
   }
   Widget _metric(String label,double value,IconData icon)=>Container(
     padding:const EdgeInsets.all(12),
-    decoration:BoxDecoration(color:demoSurface,borderRadius:BorderRadius.circular(18),border:Border.all(color:Colors.white24)),
+    decoration:BoxDecoration(color:demoSurface,borderRadius:BorderRadius.circular(18),border:Border.all(color:const Color(0xFF245A98),width:1.5)),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Icon(icon,color:demoGold,size:23),const SizedBox(height:10),
       Text(label,maxLines:2,overflow:TextOverflow.ellipsis,
