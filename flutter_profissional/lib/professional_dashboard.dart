@@ -44,12 +44,31 @@ class ProfessionalDashboard extends StatelessWidget {
           style: const TextStyle(fontSize: 11, color: muted)),
       ]));
 
-  Widget action(String label, IconData icon, VoidCallback onTap) =>
-    OutlinedButton.icon(onPressed: onTap, icon: Icon(icon, size: 18),
-      label: Text(label), style: OutlinedButton.styleFrom(
-        foregroundColor: ink, side: const BorderSide(color: border),
-        backgroundColor: const Color(0xFF1E2127),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 14)));
+  Widget action(String label, String subtitle, IconData icon, VoidCallback onTap) =>
+    Material(color: const Color(0xFF1E2127), borderRadius: BorderRadius.circular(14),
+      child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
+        child:Container(
+          padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
+          decoration:BoxDecoration(border:Border.all(color:border),
+            borderRadius:BorderRadius.circular(14)),
+          child:Row(children:[
+            Container(width:38,height:38,alignment:Alignment.center,
+              decoration:BoxDecoration(color:green.withValues(alpha:.12),
+                borderRadius:BorderRadius.circular(10)),
+              child:Icon(icon,color:green,size:21)),
+            const SizedBox(width:9),
+            Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+              mainAxisSize:MainAxisSize.min,children:[
+                Text(label,maxLines:1,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:13,fontWeight:FontWeight.w700,color:ink)),
+                Text(subtitle,maxLines:1,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:10,color:muted)),
+              ])),
+            const Icon(Icons.chevron_right,color:green,size:15),
+          ]),
+        ),
+      ),
+    );
 
   @override Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -85,12 +104,19 @@ class ProfessionalDashboard extends StatelessWidget {
                 foregroundColor: const Color(0xFF111317))),
           ]),
           const SizedBox(height: 16),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            action('Agenda', Icons.calendar_month_outlined, onAgenda),
-            action('Cobranças', Icons.receipt_long_outlined, onBilling),
-            action('Financeiro', Icons.account_balance_wallet_outlined, onFinance),
-            action('Clientes', Icons.groups_outlined, onClients),
-          ]),
+          LayoutBuilder(builder:(context,box){
+            final width=(box.maxWidth-10)/2;
+            return Wrap(spacing:10,runSpacing:10,children:[
+              SizedBox(width:width,child:action('Agenda','Atendimentos',
+                Icons.calendar_month_outlined,onAgenda)),
+              SizedBox(width:width,child:action('Cobranças','Pagamentos',
+                Icons.receipt_long_outlined,onBilling)),
+              SizedBox(width:width,child:action('Financeiro','Receitas e metas',
+                Icons.bar_chart_outlined,onFinance)),
+              SizedBox(width:width,child:action('Clientes','Cadastros',
+                Icons.groups_outlined,onClients)),
+            ]);
+          }),
           const SizedBox(height: 18),
           LayoutBuilder(builder: (context, size) {
             final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
