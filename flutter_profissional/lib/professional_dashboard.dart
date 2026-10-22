@@ -167,7 +167,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
             final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
             final metrics = <Widget>[
-              stat('Receita prevista',widget.widget.demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
+              stat('Receita prevista',widget.demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
                 Icons.insights_outlined, amber),
               stat('Recebido no mês',widget.demo?DemoData.currency(ledger.received):'—','Pagamentos marcados como recebidos',
                 Icons.check_circle_outline, green),
@@ -221,7 +221,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             const Text('Recebido e pendente • dados fictícios da Central de Cobranças',
               style:TextStyle(fontSize:12,color:muted)),
             const SizedBox(height:14),
-            if(widget.widget.demo && ledger.projected>0) ...[
+            if(widget.demo && ledger.projected>0) ...[
               ClipRRect(borderRadius:BorderRadius.circular(9),
                 child:Row(children:[
                   Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(1,1000).toInt(),
@@ -304,7 +304,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   child: LinearProgressIndicator(value:widget.demo && ledger.annualGoal>0 ? (ledger.received/ledger.annualGoal).clamp(0.0,1.0):0, minHeight: 9,
                     color: green, backgroundColor: background)),
                 const SizedBox(height: 15),
-                Text(widget.widget.demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
+                Text(widget.demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
                   style: const TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 12),
                 Align(alignment: Alignment.centerLeft,
