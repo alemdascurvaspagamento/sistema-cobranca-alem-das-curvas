@@ -31,7 +31,7 @@ class DemoAgenda extends StatefulWidget {
 }
 
 class _DemoAgendaState extends State<DemoAgenda> {
-  static const gold = Color(0xFF244C82);
+  static const gold = Color(0xFF0C213A);
   static const surface = Color(0xFFFFFFFF);
   int tab = 0;
   String statusFilter = 'Todos';
@@ -55,7 +55,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
       appointmentStates[appointmentKey(date, client)] ?? 'Agendada';
   Color appointmentColor(String state) {
     switch (state) {
-      case 'Realizada': return const Color(0xFF42BA83);
+      case 'Realizada': return const Color(0xFF20835D);
       case 'Cancelada': return const Color(0xFFE96767);
       case 'Remarcada': return const Color(0xFFF4A15A);
       case 'Crédito': return const Color(0xFFA47DE1);
