@@ -130,7 +130,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             padding:const EdgeInsets.all(18),
             decoration:BoxDecoration(
               gradient:const LinearGradient(
-                colors:[Color(0xFF102A4A),Color(0xFF1D4675)],
+                colors:[Color(0xFF0C213A),Color(0xFF173B64)],
                 begin:Alignment.topLeft,end:Alignment.bottomRight),
               borderRadius:BorderRadius.circular(18)),
             child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -240,7 +240,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               onPressed:widget.onClients,
               icon:const Icon(Icons.person_add_alt_1_outlined,size:18),
               label:const Text('Novo cliente'),
-              style:OutlinedButton.styleFrom(foregroundColor:amber))),
+              style:FilledButton.styleFrom(backgroundColor:const Color(0xFF0C213A),foregroundColor:Colors.white))),
             const Text('Atendimento realizado não confirma pagamento.',
               style:TextStyle(color:muted,fontSize:11)),
           ])),
