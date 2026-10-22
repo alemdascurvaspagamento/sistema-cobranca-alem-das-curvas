@@ -120,7 +120,7 @@ class ProfessionalDashboard extends StatelessWidget {
             if(demo && ledger.projected>0) ...[
               ClipRRect(borderRadius:BorderRadius.circular(9),
                 child:Row(children:[
-                  Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(0,1000),
+                  Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(1,1000).toInt(),
                     child:Container(height:16,color:green)),
                   Expanded(flex:(ledger.pending/ledger.projected*1000).round().clamp(0,1000),
                     child:Container(height:16,color:amber)),
@@ -204,9 +204,20 @@ class ProfessionalDashboard extends StatelessWidget {
                   style: const TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 12),
                 Align(alignment: Alignment.centerLeft,
-                  child: TextButton.icon(onPressed: onFinance,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Abrir financeiro'))),
+                  child: TextButton.icon(onPressed: demo ? () async {
+                    final controller=TextEditingController(text:ledger.annualGoal.toStringAsFixed(0));
+                    final result=await showDialog<double>(context:context,builder:(ctx)=>AlertDialog(
+                      title:const Text('Meta anual demonstrativa'),
+                      content:TextField(controller:controller,
+                        keyboardType:const TextInputType.numberWithOptions(decimal:true),
+                        decoration:const InputDecoration(labelText:'Meta em reais')),
+                      actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
+                        FilledButton(onPressed:()=>Navigator.pop(ctx,double.tryParse(controller.text.replaceAll(',','.'))),child:const Text('Salvar'))]));
+                    controller.dispose();
+                    if(result!=null&&result>0)ledger.setGoal(result);
+                  } : onFinance,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Definir meta'))),
               ]));
             final agenda = panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
