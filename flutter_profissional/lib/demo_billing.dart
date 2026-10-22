@@ -344,8 +344,8 @@ class _DemoBillingState extends State<DemoBilling> {
     OutlinedButton.icon(onPressed:()=>details(a),
       icon:const Icon(Icons.event_note_outlined,size:17),
       label:const Text('Ver atendimentos')),
-    if(!paidFor(a)) OutlinedButton.icon(onPressed:()=>whatsapp(a),
-      icon:const Icon(Icons.chat_outlined,size:17,color:Color(0xFF42BA83)),
+    if(!paidFor(a)) FilledButton.icon(onPressed:()=>whatsapp(a),
+      icon:const Icon(Icons.chat_outlined,size:17),
       label:const Text('WhatsApp')),
     PopupMenuButton<String>(
       tooltip:'Outras ações',
@@ -465,8 +465,9 @@ class _DemoBillingState extends State<DemoBilling> {
             label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
             style:OutlinedButton.styleFrom(
               padding:const EdgeInsets.symmetric(horizontal:3,vertical:11),
-              foregroundColor:const Color(0xFF6EE2B0),
-              side:const BorderSide(color:Color(0xFF287E61))))),
+              foregroundColor:Colors.white,
+              backgroundColor:const Color(0xFF0C213A),
+              side:const BorderSide(color:Color(0xFF0C213A))))),
           const SizedBox(width:3),
           PopupMenuButton<String>(
             tooltip:'Mais ações',
