@@ -35,8 +35,8 @@ class CoachFlowApp extends StatelessWidget {
             surface: const Color(0xFFFFFFFF),
           ),
           textTheme: const TextTheme(
-            headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: const Color(0xFF17243A)),
-            titleLarge: TextStyle(fontWeight: FontWeight.w700, color: const Color(0xFF17243A)),
+            headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF17243A)),
+            titleLarge: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF17243A)),
             bodyMedium: TextStyle(color: Color(0xFF64748B)),
           ),
         ),
@@ -334,7 +334,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             Text('HOJE', style: TextStyle(color: gold, letterSpacing: 2)),
             SizedBox(height: 12),
             Text('Seu negócio em movimento',
-                style: TextStyle(fontSize: 27, color: const Color(0xFF17243A), fontWeight: FontWeight.w800)),
+                style: TextStyle(fontSize: 27, color: Color(0xFF17243A), fontWeight: FontWeight.w800)),
             SizedBox(height: 8),
             Text('Agenda, clientes e finanças em um só lugar.',
                 style: TextStyle(color: silver)),
@@ -365,8 +365,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              color: Color(0xFFFFFFFF),
+              border: Border.all(color: Color(0xFFE2E8F0)),
               borderRadius: BorderRadius.circular(19),
             ),
             child: Column(
@@ -378,7 +378,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                     style: const TextStyle(color: silver, fontSize: 11, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 7),
                 Text(value,
-                    style: const TextStyle(color: const Color(0xFF17243A), fontSize: 25, fontWeight: FontWeight.w800)),
+                    style: const TextStyle(color: Color(0xFF17243A), fontSize: 25, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -390,7 +390,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     const Text('Agenda de hoje', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
     const SizedBox(height: 12),
     for (final a in DemoData.appointments)
-      Card(color: const Color(0xFFFFFFFF), child: ListTile(
+      Card(color: Color(0xFFFFFFFF), child: ListTile(
         leading: const Icon(Icons.event, color: gold),
         title: Text(a.client), subtitle: Text(a.service),
         trailing: Text(a.hour, style: const TextStyle(color: gold)),
@@ -399,7 +399,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
 
   Widget _demoClients() => Column(children: [
     for (final (name, service, status) in DemoData.clients)
-      Card(color: const Color(0xFFFFFFFF), child: ListTile(
+      Card(color: Color(0xFFFFFFFF), child: ListTile(
         leading: const Icon(Icons.person_outline, color: gold),
         title: Text(name), subtitle: Text(service),
         trailing: Text(status, style: const TextStyle(color: silver, fontSize: 11)),
@@ -409,9 +409,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   Widget _panel(String title, String description) => Container(
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Color(0xFFE2E8F0)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
