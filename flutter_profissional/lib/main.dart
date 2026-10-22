@@ -28,9 +28,9 @@ class CoachFlowApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+          scaffoldBackgroundColor: const Color(0xFFEDF2F8),
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF244C82),
+            seedColor: const Color(0xFF245A98),
             brightness: Brightness.light,
             surface: const Color(0xFFFFFFFF),
           ),
@@ -95,7 +95,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
         child: Padding(padding: const EdgeInsets.all(24), child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.workspace_premium_outlined, size: 64, color: Color(0xFF244C82)),
+            const Icon(Icons.workspace_premium_outlined, size: 64, color: Color(0xFF0C213A)),
             const SizedBox(height: 18),
             const Text('Coach Flow Profissional', textAlign: TextAlign.center,
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
@@ -107,7 +107,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
               icon: const Icon(Icons.play_arrow), label: const Text('Entrar na demonstração')),
             const SizedBox(height: 16),
             const Text('MODO DEMONSTRAÇÃO • Nenhum dado real será alterado',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Color(0xFF244C82))),
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Color(0xFF0C213A))),
           ],
         )),
       )));
@@ -183,7 +183,7 @@ class CoachFlowShell extends StatefulWidget {
 
 class _CoachFlowShellState extends State<CoachFlowShell> {
   Section selected = Section.inicio;
-  static const gold = Color(0xFF244C82);
+  static const gold = Color(0xFF0C213A);
   static const silver = Color(0xFF64748B);
 
   void newClient() {
