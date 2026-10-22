@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'demo_mode.dart';
+import 'demo_ledger.dart';
 
 /// Painel visual demonstrativo. Não confundir agenda prevista com receita recebida.
 class ProfessionalDashboard extends StatelessWidget {
@@ -54,6 +55,12 @@ class ProfessionalDashboard extends StatelessWidget {
       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     final appointments = demo ? DemoData.appointments : <DemoAppointment>[];
     final planned = appointments.fold<double>(0, (sum, a) => sum + a.amount);
+    return AnimatedBuilder(animation:DemoLedger.instance,
+      builder:(context,_)=>_buildDashboard(context,today,months,appointments,planned));
+  }
+  Widget _buildDashboard(BuildContext context, DateTime today,
+    List<String> months, List<DemoAppointment> appointments, double planned) {
+    final ledger=DemoLedger.instance;
     return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.dark),
       scaffoldBackgroundColor: background), child: Container(
@@ -87,14 +94,14 @@ class ProfessionalDashboard extends StatelessWidget {
             final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
             final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
             final metrics = <Widget>[
-              stat('Receita prevista','—','Aguardando integração financeira',
+              stat('Receita prevista',demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
                 Icons.insights_outlined, green),
-              stat('Recebido no mês','—','Somente pagamentos confirmados',
+              stat('Recebido no mês',demo?DemoData.currency(ledger.received):'—','Pagamentos marcados como recebidos',
                 Icons.check_circle_outline, green),
-              stat('A receber','—','Cobranças pendentes',Icons.schedule, amber),
-              stat('Despesas do mês','—','Pagas e a pagar separadamente',
+              stat('A receber',demo?DemoData.currency(ledger.pending):'—','Cobranças pendentes',Icons.schedule, amber),
+              stat('Despesas do mês',demo?DemoData.currency(ledger.paidExpenses):'—','Despesa fictícia paga, para demonstração',
                 Icons.trending_down, red),
-              stat('Resultado de caixa','—','Recebido menos despesas pagas',
+              stat('Resultado de caixa',demo?DemoData.currency(ledger.cash):'—','Recebido menos despesas pagas',
                 Icons.account_balance_outlined, green),
             ];
             return Wrap(spacing: 10, runSpacing: 10, children: [
@@ -102,6 +109,28 @@ class ProfessionalDashboard extends StatelessWidget {
                 SizedBox(width: cardWidth, height: 158, child: metric),
             ]);
           }),
+          const SizedBox(height: 14),
+          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Text('Panorama financeiro',style:TextStyle(
+              fontSize:17,fontWeight:FontWeight.w800,color:ink)),
+            const SizedBox(height:5),
+            const Text('Recebido e pendente • dados fictícios da Central de Cobranças',
+              style:TextStyle(fontSize:12,color:muted)),
+            const SizedBox(height:14),
+            if(demo && ledger.projected>0) ...[
+              ClipRRect(borderRadius:BorderRadius.circular(9),
+                child:Row(children:[
+                  Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(0,1000),
+                    child:Container(height:16,color:green)),
+                  Expanded(flex:(ledger.pending/ledger.projected*1000).round().clamp(0,1000),
+                    child:Container(height:16,color:amber)),
+                ])),
+              const SizedBox(height:12),
+              Text('Recebido ${(ledger.received/ledger.projected*100).toStringAsFixed(1)}%   •   Pendente ${(ledger.pending/ledger.projected*100).toStringAsFixed(1)}%',
+                style:const TextStyle(color:muted,fontSize:12)),
+            ] else const Text('Sem dados financeiros para o gráfico.',
+              style:TextStyle(color:muted)),
+          ])),
           const SizedBox(height: 14),
           panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Row(children: [
@@ -164,15 +193,15 @@ class ProfessionalDashboard extends StatelessWidget {
                 const Text('Acompanhamento mensal e anual',
                   style: TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 22),
-                const Text('Defina sua meta nas configurações financeiras',
-                  style: TextStyle(color: muted)),
+                Text(demo ? '${DemoData.currency(ledger.received)} de ${DemoData.currency(ledger.annualGoal)}' : 'Aguardando dados financeiros',
+                  style: const TextStyle(color: muted)),
                 const SizedBox(height: 12),
                 ClipRRect(borderRadius: BorderRadius.circular(8),
-                  child: const LinearProgressIndicator(value: 0, minHeight: 9,
+                  child: LinearProgressIndicator(value:demo && ledger.annualGoal>0 ? (ledger.received/ledger.annualGoal).clamp(0.0,1.0):0, minHeight: 9,
                     color: green, backgroundColor: background)),
                 const SizedBox(height: 15),
-                const Text('Nenhum progresso calculado sem receitas e meta válidas.',
-                  style: TextStyle(fontSize: 12, color: muted)),
+                Text(demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
+                  style: const TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 12),
                 Align(alignment: Alignment.centerLeft,
                   child: TextButton.icon(onPressed: onFinance,
