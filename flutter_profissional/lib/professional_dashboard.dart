@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'demo_mode.dart';
 import 'demo_ledger.dart';
 
@@ -15,6 +17,47 @@ class ProfessionalDashboard extends StatefulWidget {
 
 class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   late int selectedMonth=DateTime.now().month;
+  DateTime _localNow = DateTime.now();
+  Timer? _greetingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && DateTime.now().hour != _localNow.hour) {
+        setState(() => _localNow = DateTime.now());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _greetingTimer?.cancel();
+    super.dispose();
+  }
+
+  String get _greeting {
+    final hour = _localNow.hour;
+    if (hour >= 5 && hour < 12) return 'Bom dia';
+    if (hour >= 12 && hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  }
+
+  String? get _firstName {
+    if (widget.demo) return null;
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return null;
+    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    final raw = metadata['full_name'] ?? metadata['name'] ?? metadata['display_name'];
+    if (raw is! String || raw.trim().isEmpty) return null;
+    return raw.trim().split(RegExp(r'\\s+')).first;
+  }
+
+  String get _welcome {
+    final name = _firstName;
+    return name == null ? '$_greeting! 👋' : '$_greeting, $name! 👋';
+  }
+
   late int selectedYear=DateTime.now().year;
   static const ink = Color(0xFF132238);
   static const muted = Color(0xFF64748B);
@@ -125,7 +168,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       child: DefaultTextStyle.merge(style: const TextStyle(color: ink),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:const Color(0xFFE2EDFA),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFB7D0EF))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            const Text('Boa tarde, Prof. 👋',style:TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
+            Text(_welcome,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
             Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
               style:const TextStyle(fontSize:12,color:muted)),
           ])),
