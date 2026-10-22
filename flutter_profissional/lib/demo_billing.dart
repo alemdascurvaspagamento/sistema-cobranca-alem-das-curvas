@@ -376,6 +376,54 @@ class _DemoBillingState extends State<DemoBilling> {
     input.dispose();
     if(day!=null)ledger.setDueDay(a.name,day);
   }
+  Future<void> emailBilling(BillingAccount a) async {
+    final email=TextEditingController();
+    final due=ledger.dueDate(a.name);
+    final message=TextEditingController(text:
+      'Olá, ${a.name}!\\n\\nSegue o resumo de cobrança referente a '
+      '${a.service}.\\nValor: ${DemoData.currency(totalFor(a))}.'
+      '\\nVencimento: ${due.day.toString().padLeft(2,'0')}/'
+      '${due.month.toString().padLeft(2,'0')}/${due.year}.'
+      '\\n\\nQualquer dúvida, estou à disposição.');
+    final approved=await showDialog<bool>(context:context,builder:(ctx)=>
+      AlertDialog(title:Text('Cobrança por e-mail • ${a.name}'),
+        content:SizedBox(width:480,child:SingleChildScrollView(child:
+          Column(mainAxisSize:MainAxisSize.min,children:[
+            const Text('Informe o e-mail do cliente e revise a mensagem. '
+              'O envio será feito manualmente no aplicativo de e-mail.'),
+            const SizedBox(height:12),
+            TextField(controller:email,keyboardType:TextInputType.emailAddress,
+              decoration:const InputDecoration(labelText:'E-mail do destinatário',
+                border:OutlineInputBorder())),
+            const SizedBox(height:12),
+            TextField(controller:message,maxLines:7,minLines:5,
+              decoration:const InputDecoration(labelText:'Mensagem',
+                border:OutlineInputBorder())),
+          ]))),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),
+            child:const Text('Cancelar')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+            child:const Text('Abrir aplicativo de e-mail')),
+        ]));
+    if(approved==true&&mounted){
+      final address=email.text.trim();
+      if(!RegExp(r'^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$').hasMatch(address)){
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content:Text('Informe um e-mail válido.')));
+      }else{
+        final url=Uri(scheme:'mailto',path:address,query:
+          'subject=${Uri.encodeComponent('Cobrança • ${a.service}')}&'
+          'body=${Uri.encodeComponent(message.text)}');
+        if(!await launchUrl(url)){
+          if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content:Text('Não foi possível abrir o aplicativo de e-mail.')));
+        }
+      }
+    }
+    email.dispose();message.dispose();
+  }
+
   Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:4,children:[
     IconButton.outlined(onPressed:()=>details(a),tooltip:'Ver atendimentos',
       icon:const Icon(Icons.event_note_outlined,size:19)),
@@ -383,6 +431,9 @@ class _DemoBillingState extends State<DemoBilling> {
       style:IconButton.styleFrom(backgroundColor:const Color(0xFF25D366),
         foregroundColor:Colors.white),
       icon:const Icon(Icons.chat_outlined,size:19)),
+    IconButton.outlined(onPressed:()=>emailBilling(a),
+      tooltip:'Preparar cobrança por e-mail',
+      icon:const Icon(Icons.email_outlined,size:19)),
     IconButton.outlined(onPressed:()=>changePaid(a),
       tooltip:paidFor(a)?'Reabrir cobrança':'Registrar pagamento',
       icon:Icon(paidFor(a)?Icons.lock_open_outlined:Icons.payments_outlined,size:19)),
