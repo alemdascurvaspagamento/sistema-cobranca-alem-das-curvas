@@ -38,6 +38,8 @@ class DemoBilling extends StatefulWidget {
 
 class _DemoBillingState extends State<DemoBilling> {
   String search='',filter='Todos';
+  String? _customWhatsAppTemplate;
+  static const _defaultWhatsAppTemplate = 'Olá, {nome}! 😊\\n\\nSegue o resumo de {mes}:\\n💰 Valor: {valor}\\n📌 Vencimento: {vencimento}\\n{pix}\\nConfira os valores e, se precisar, estou à disposição!';
   final ledger=DemoLedger.instance;
   @override void initState(){super.initState(); ledger.addListener(_refresh);}
   void _refresh(){if(mounted)setState((){});}
@@ -202,7 +204,6 @@ class _DemoBillingState extends State<DemoBilling> {
     child:Row(children:[Expanded(child:Text(label)),Text(value,
       style:const TextStyle(fontWeight:FontWeight.w600))]));
   Future<void> whatsapp(BillingAccount a) async {
-    if(paidFor(a)||totalFor(a)<=0)return;
     var phone=a.phone.replaceAll(RegExp(r'[^0-9]'),'');
     if(phone.length==10||phone.length==11)phone='55$phone';
     if(phone.length<12||phone.length>13){
@@ -234,16 +235,74 @@ class _DemoBillingState extends State<DemoBilling> {
       '${ledger.professionalPixKey.isEmpty?'':'🔑 Chave Pix: ${ledger.professionalPixKey}\\n'}'
       '📌 Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${date.month.toString().padLeft(2,'0')}/${date.year}\\n\\n'
       'Confira a programação e os valores. Obrigado!';
+    final due=ledger.dueDate(a.name);
+    final replacements=<String,String>{
+      '{nome}':a.name,
+      '{mes}':'${date.month.toString().padLeft(2,'0')}/${date.year}',
+      '{valor}':DemoData.currency(totalFor(a)),
+      '{vencimento}':'${due.day.toString().padLeft(2,'0')}/${due.month.toString().padLeft(2,'0')}/${due.year}',
+      '{pix}':ledger.professionalPixKey.isEmpty?'':'🔑 Pix: ${ledger.professionalPixKey}',
+      '{servico}':a.service,
+    };
+    String renderTemplate(String template){
+      var result=template.replaceAll(r'\\n','\n');
+      for(final entry in replacements.entries){
+        result=result.replaceAll(entry.key,entry.value);
+      }
+      return result;
+    }
+    final controller=TextEditingController(
+      text:_customWhatsAppTemplate??_defaultWhatsAppTemplate);
+    var custom=_customWhatsAppTemplate!=null;
+    final selected=await showDialog<String>(context:context,
+      builder:(ctx)=>StatefulBuilder(builder:(ctx,refresh)=>AlertDialog(
+        title:Text('Mensagem WhatsApp • ${a.name}'),
+        content:SizedBox(width:520,child:SingleChildScrollView(
+          child:Column(mainAxisSize:MainAxisSize.min,
+            crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              const Text('Escolha a mensagem padrão ou personalize seu modelo. '
+                'Revise o texto antes de abrir o WhatsApp.',
+                style:TextStyle(fontSize:12,color:Color(0xFF64748B))),
+              const SizedBox(height:12),
+              SegmentedButton<bool>(segments:const [
+                ButtonSegment(value:false,label:Text('Padrão')),
+                ButtonSegment(value:true,label:Text('Personalizada')),
+              ],selected:{custom},onSelectionChanged:(v){
+                refresh((){
+                  custom=v.first;
+                  controller.text=custom?(_customWhatsAppTemplate??_defaultWhatsAppTemplate):
+                    _defaultWhatsAppTemplate;
+                });
+              }),
+              const SizedBox(height:12),
+              TextField(controller:controller,maxLines:7,minLines:5,
+                decoration:InputDecoration(labelText:custom?'Modelo personalizado':'Mensagem padrão',
+                  helperText:'Campos: {nome}, {valor}, {vencimento}, {mes}, {pix}, {servico}',
+                  helperMaxLines:2,border:const OutlineInputBorder())),
+              const SizedBox(height:10),
+              const Text('O modelo personalizado fica salvo somente nesta sessão demonstrativa.',
+                style:TextStyle(fontSize:11,color:Color(0xFF64748B))),
+            ]))),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,controller.text),
+            child:const Text('Revisar e abrir WhatsApp')),
+        ],
+      )));
+    if(selected==null||!mounted){controller.dispose();return;}
+    if(custom)_customWhatsAppTemplate=selected;
+    final finalMessage=renderTemplate(selected);
+    controller.dispose();
     final approved=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
-      title:Text('Revisar cobrança • ${a.name}'),
-      content:SizedBox(width:420,child:SingleChildScrollView(child:SelectableText(message))),
+      title:Text('Conferir mensagem • ${a.name}'),
+      content:SizedBox(width:460,child:SingleChildScrollView(
+        child:SelectableText(finalMessage))),
       actions:[
-        TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
-        FilledButton(onPressed:()=>Navigator.pop(ctx,true),
-          child:const Text('Abrir WhatsApp')),
+        TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Voltar')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Abrir WhatsApp')),
       ]));
     if(approved!=true)return;
-    final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
+    final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(finalMessage)}');
     if(!await launchUrl(url,mode:LaunchMode.externalApplication)&&mounted){
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));
@@ -341,12 +400,10 @@ class _DemoBillingState extends State<DemoBilling> {
     if(day!=null)ledger.setDueDay(a.name,day);
   }
   Widget actions(BillingAccount a)=>Wrap(spacing:4,runSpacing:6,children:[
-    OutlinedButton.icon(onPressed:()=>details(a),
-      icon:const Icon(Icons.event_note_outlined,size:17),
-      label:const Text('Ver atendimentos')),
-    FilledButton.icon(onPressed:()=>whatsapp(a),
-      icon:const Icon(Icons.chat_outlined,size:17),
-      label:const Text('WhatsApp')),
+    IconButton.outlined(onPressed:()=>details(a),tooltip:'Ver atendimentos',
+      icon:const Icon(Icons.event_note_outlined,size:19)),
+    IconButton.filled(onPressed:()=>whatsapp(a),tooltip:'Mensagem WhatsApp',
+      icon:const Icon(Icons.chat_outlined,size:19)),
     PopupMenuButton<String>(
       tooltip:'Outras ações',
       onSelected:(choice){
@@ -364,7 +421,7 @@ class _DemoBillingState extends State<DemoBilling> {
   ]);
   Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
     scrollDirection:Axis.horizontal,child:DataTable(
-      columnSpacing:20,headingRowColor:WidgetStateProperty.all(_surface),
+      columnSpacing:26,headingRowHeight:54,dataRowMinHeight:76,dataRowMaxHeight:88,\n      horizontalMargin:22,headingRowColor:WidgetStateProperty.all(_surface),
       columns:const [
         DataColumn(label:Text('Cliente / serviço')),
         DataColumn(label:Text('Valor / sessão')),
@@ -414,9 +471,7 @@ class _DemoBillingState extends State<DemoBilling> {
             Text(a.phone,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
             Text(a.service,maxLines:2,overflow:TextOverflow.ellipsis,
               style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
-            const SizedBox(height:3),
-            Text(a.phone,maxLines:1,overflow:TextOverflow.ellipsis,
-              style:const TextStyle(fontSize:11,color:Colors.white54)),
+
           ])),
           const SizedBox(width:6),
           Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
