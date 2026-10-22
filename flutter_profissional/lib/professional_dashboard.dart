@@ -239,6 +239,49 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               for(final q in quick)SizedBox(width:w,height:145,child:q),
             ]);
           }),
+          Container(
+            padding:const EdgeInsets.all(18),
+            decoration:BoxDecoration(
+              gradient:const LinearGradient(
+                colors:[Color(0xFF0C213A),Color(0xFF173B64)],
+                begin:Alignment.topLeft,end:Alignment.bottomRight),
+              borderRadius:BorderRadius.circular(18)),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              Row(children:[
+                const CircleAvatar(backgroundColor:Color(0xFF345B88),
+                  child:Icon(Icons.support_agent,color:Colors.white)),
+                const SizedBox(width:10),
+                const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+                  children:[
+                    Text('Sua secretária',style:TextStyle(fontSize:19,
+                      fontWeight:FontWeight.w800,color:Colors.white)),
+                    Text('Resumo e prioridades do dia',
+                      style:TextStyle(fontSize:12,color:Color(0xFFD2E3F7))),
+                  ])),
+                TextButton(onPressed:widget.onSecretary,
+                  style:TextButton.styleFrom(foregroundColor:Colors.white),
+                  child:const Text('Ver tudo')),
+              ]),
+              const SizedBox(height:14),
+              if(widget.demo) ...[
+                Text('${appointments.length} atendimentos previstos hoje',
+                  style:const TextStyle(color:Colors.white,fontSize:15,fontWeight:FontWeight.w700)),
+                const SizedBox(height:6),
+                Text('${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length} cobranças vencidas • ${DemoData.currency(ledger.pending)} a receber',
+                  style:const TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
+              ] else const Text('Conecte seus dados para receber recomendações.',
+                style:TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
+              const SizedBox(height:14),
+              FilledButton.icon(onPressed:widget.onSecretary,
+                style:FilledButton.styleFrom(backgroundColor:Colors.white,
+                  foregroundColor:const Color(0xFF17375D),
+                  padding:const EdgeInsets.symmetric(vertical:13,horizontal:12)),
+                icon:const Icon(Icons.auto_awesome_outlined),
+                label:const Text('Ver prioridades e próximas ações',
+                  style:TextStyle(fontWeight:FontWeight.w700))),
+            ]),
+          ),
+          const SizedBox(height: 12),
           const SizedBox(height:14),
           panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Row(children:[
