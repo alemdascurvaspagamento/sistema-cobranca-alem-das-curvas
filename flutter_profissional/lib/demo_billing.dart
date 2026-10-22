@@ -397,6 +397,11 @@ class _DemoBillingState extends State<DemoBilling> {
               fontWeight:FontWeight.w700,
               color:paidFor(a)?const Color(0xFF6EE2B0):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold))),
         ]),
+        const SizedBox(height:7),
+        Text('Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).month.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).year}',
+          style:const TextStyle(fontSize:11,color:Colors.white70)),
+        if(ledger.paymentDates[a.name]!=null)
+          const Text('Pagamento registrado',style:TextStyle(fontSize:11,color:Color(0xFF6EE2B0))),
         const SizedBox(height:13),
         const Divider(height:1,color:Color(0xFF383A40)),
         const SizedBox(height:10),
