@@ -103,6 +103,57 @@ class ProfessionalDashboard extends StatelessWidget {
             ]);
           }),
           const SizedBox(height: 14),
+          panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Row(children: [
+              Icon(Icons.auto_graph_rounded, color: green, size: 22),
+              SizedBox(width: 8),
+              Expanded(child: Text('Ritmo dos atendimentos',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: ink))),
+            ]),
+            const SizedBox(height: 4),
+            const Text('Distribuição por horário da agenda demonstrativa — não é faturamento',
+              style: TextStyle(fontSize: 12, color: muted)),
+            const SizedBox(height: 18),
+            SizedBox(height: 124, child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final slot in <(String, int, int)>[
+                  ('06–09', 6, 9), ('09–12', 9, 12),
+                  ('12–15', 12, 15), ('15–18', 15, 18),
+                  ('18–21', 18, 21),
+                ])
+                  Expanded(child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                      Text('${appointments.where((a) {
+                        final hour = int.tryParse(a.hour.split(':').first) ?? -1;
+                        return hour >= slot.$2 && hour < slot.$3;
+                      }).length}', style: const TextStyle(
+                        fontSize: 12, color: ink, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 5),
+                      Container(
+                        height: 12 + 16.0 * appointments.where((a) {
+                          final hour = int.tryParse(a.hour.split(':').first) ?? -1;
+                          return hour >= slot.$2 && hour < slot.$3;
+                        }).length,
+                        decoration: BoxDecoration(
+                          color: green.withValues(alpha: demo ? .85 : .18),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(7)))),
+                      const SizedBox(height: 7),
+                      FittedBox(child: Text(slot.$1, style: const TextStyle(
+                        fontSize: 11, color: muted))),
+                    ]),
+                  )),
+              ],
+            )),
+            const SizedBox(height: 10),
+            Text(demo
+              ? '${appointments.length} atendimentos previstos no exemplo. Acompanhe seu ritmo ao longo do dia.'
+              : 'O gráfico será preenchido após a integração com a agenda.',
+              style: const TextStyle(fontSize: 12, color: muted)),
+          ])),
+          const SizedBox(height: 14),
           LayoutBuilder(builder: (context, size) {
             final wide = size.maxWidth >= 780;
             final target = panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch,
