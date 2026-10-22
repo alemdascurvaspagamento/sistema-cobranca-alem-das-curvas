@@ -14,9 +14,9 @@ class ProfessionalDashboard extends StatelessWidget {
   static const muted = Color(0xFFADB0B8);
   static const border = Color(0xFF383A40);
   static const background = Color(0xFF111317);
-  static const green = Color(0xFFD6B46B);
+  static const green = Color(0xFF52D69A);
   static const amber = Color(0xFFE0BA62);
-  static const red = Color(0xFFBD8E62);
+  static const red = Color(0xFFF1767B);
 
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
@@ -53,9 +53,9 @@ class ProfessionalDashboard extends StatelessWidget {
             borderRadius:BorderRadius.circular(14)),
           child:Row(children:[
             Container(width:38,height:38,alignment:Alignment.center,
-              decoration:BoxDecoration(color:green.withValues(alpha:.12),
+              decoration:BoxDecoration(color:amber.withValues(alpha:.12),
                 borderRadius:BorderRadius.circular(10)),
-              child:Icon(icon,color:green,size:21)),
+              child:Icon(icon,color:amber,size:21)),
             const SizedBox(width:9),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               mainAxisSize:MainAxisSize.min,children:[
@@ -64,7 +64,7 @@ class ProfessionalDashboard extends StatelessWidget {
                 Text(subtitle,maxLines:1,overflow:TextOverflow.ellipsis,
                   style:const TextStyle(fontSize:10,color:muted)),
               ])),
-            const Icon(Icons.chevron_right,color:green,size:15),
+            const Icon(Icons.chevron_right,color:amber,size:15),
           ]),
         ),
       ),
@@ -123,14 +123,14 @@ class ProfessionalDashboard extends StatelessWidget {
             final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
             final metrics = <Widget>[
               stat('Receita prevista',demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
-                Icons.insights_outlined, green),
+                Icons.insights_outlined, amber),
               stat('Recebido no mês',demo?DemoData.currency(ledger.received):'—','Pagamentos marcados como recebidos',
                 Icons.check_circle_outline, green),
               stat('A receber',demo?DemoData.currency(ledger.pending):'—','Cobranças pendentes',Icons.schedule, amber),
               stat('Despesas do mês',demo?DemoData.currency(ledger.paidExpenses):'—','Despesa fictícia paga, para demonstração',
                 Icons.trending_down, red),
               stat('Resultado de caixa',demo?DemoData.currency(ledger.cash):'—','Recebido menos despesas pagas',
-                Icons.account_balance_outlined, green),
+                Icons.account_balance_outlined, ledger.cash < 0 ? red : green),
             ];
             return Wrap(spacing: 10, runSpacing: 10, children: [
               for (final metric in metrics)
