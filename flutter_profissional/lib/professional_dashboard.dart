@@ -50,7 +50,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final raw = metadata['full_name'] ?? metadata['name'] ?? metadata['display_name'];
     if (raw is! String || raw.trim().isEmpty) return null;
-    return raw.trim().split(RegExp(r'\\s+')).first;
+    return raw.trim().split(RegExp(r'\s+')).first;
   }
 
   String get _welcome {
