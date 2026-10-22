@@ -18,8 +18,8 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   late int selectedYear=DateTime.now().year;
   static const ink = Color(0xFF132238);
   static const muted = Color(0xFF64748B);
-  static const border = Color(0xFFE9DDD3);
-  static const background = Color(0xFFFAF5F0);
+  static const border = Color(0xFF245A98);
+  static const background = Color(0xFFEDF2F8);
   static const green = Color(0xFF29856F);
   static const amber = Color(0xFFE4A11B);
   static const red = Color(0xFFE36C4A);
@@ -47,7 +47,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: Color(0xFFFFFFFF),
-      border: Border.all(color: border, width: 1),
+      border: Border.all(color: border, width: 1.5),
       borderRadius: BorderRadius.circular(16)),
     child: child);
 
@@ -72,7 +72,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
 
   Widget _miniMetric(String label,String value)=>Container(
     constraints:const BoxConstraints(minWidth:125),padding:const EdgeInsets.all(10),
-    decoration:BoxDecoration(color:const Color(0xFFF8F5F2),borderRadius:BorderRadius.circular(10)),
+    decoration:BoxDecoration(color:const Color(0xFFF3F7FC),borderRadius:BorderRadius.circular(10)),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Text(label,style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700)),
       Text(value,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w800)),
@@ -83,7 +83,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
         child:Container(
           padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
-          decoration:BoxDecoration(border:Border.all(color:border,width:1),
+          decoration:BoxDecoration(border:Border.all(color:border,width:1.5),
             borderRadius:BorderRadius.circular(14)),
           child:Row(children:[
             Container(width:38,height:38,alignment:Alignment.center,
