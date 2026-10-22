@@ -285,23 +285,23 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               indicatorColor: gold.withValues(alpha: .18),
               selectedIndex: switch (selected) {
                 Section.inicio => 0,
-                Section.cobrancas => 1,
-                Section.financeiro => 2,
-                Section.clientes => 3,
+                Section.clientes => 1,
+                Section.cobrancas => 2,
+                Section.financeiro => 3,
                 _ => 4,
               },
               onDestinationSelected: (index) {
                 if (index == 4) { openMore(); return; }
                 setState(() => selected = [
-                  Section.inicio, Section.cobrancas,
-                  Section.financeiro, Section.clientes,
+                  Section.inicio, Section.clientes,
+                  Section.cobrancas, Section.financeiro,
                 ][index]);
               },
               destinations: const [
                 NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Início'),
-                NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Cobrança'),
-                NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'Financeiro'),
                 NavigationDestination(icon: Icon(Icons.groups_outlined), label: 'Clientes'),
+                NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Cobranças'),
+                NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'Financeiro'),
                 NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Mais'),
               ],
             ),
