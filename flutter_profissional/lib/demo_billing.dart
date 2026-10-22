@@ -44,7 +44,7 @@ class _DemoBillingState extends State<DemoBilling> {
   @override void dispose(){ledger.removeListener(_refresh);super.dispose();}
   double totalFor(BillingAccount a)=>ledger.amounts[a.name] ?? a.total;
   bool paidFor(BillingAccount a)=>ledger.isPaid(a.name);
-  String statusFor(BillingAccount a)=>paidFor(a)?'Recebido':'Pendente';
+  String statusFor(BillingAccount a)=>ledger.paymentStatus(a.name);
   void recalculate(BillingAccount a){
     final current=ledger.visits[a.name]?.values.toList()??[];
     final completed=current.where((v)=>v.state=='Realizada'&&v.charge).length;
@@ -477,7 +477,7 @@ class _DemoBillingState extends State<DemoBilling> {
             decoration:const InputDecoration(prefixIcon:Icon(Icons.search),
               hintText:'Buscar cliente ou serviço',border:OutlineInputBorder()))),
           DropdownButton<String>(value:filter,items:[
-            for(final option in ['Todos','Pendente','Recebido'])
+            for(final option in ['Todos','Pendente','Em atraso','Recebido'])
               DropdownMenuItem(value:option,child:Text(option))],
             onChanged:(value)=>setState(()=>filter=value??'Todos')),
         ]),
