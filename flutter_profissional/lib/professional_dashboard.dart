@@ -196,321 +196,387 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
     return AnimatedBuilder(animation:DemoLedger.instance,
       builder:(context,_)=>_buildDashboard(context,today,months,appointments,planned));
   }
-  Widget _buildDashboard(BuildContext context, DateTime today,
-    List<String> months, List<DemoAppointment> appointments, double planned) {
-    final ledger=DemoLedger.instance;
-    return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF245A98), brightness: Brightness.light),
-      scaffoldBackgroundColor: background), child: Container(
-      decoration: BoxDecoration(color: background,
-        borderRadius: BorderRadius.circular(20)),
-      padding: const EdgeInsets.all(18),
-      child: DefaultTextStyle.merge(style: const TextStyle(color: ink),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:const Color(0xFFE2EDFA),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFB7D0EF))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text(_welcome,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
-            Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
-              style:const TextStyle(fontSize:12,color:muted)),
-          ])),
-          const SizedBox(height: 14),
-          Wrap(alignment: WrapAlignment.spaceBetween, spacing: 12, runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center, children: [
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Visão geral', style: TextStyle(
-                fontSize: 25, fontWeight: FontWeight.w800, color: ink)),
-              Text('${months[selectedMonth-1]}/$selectedYear • Seu negócio em uma única leitura financeira e operacional.',
-                style: const TextStyle(fontSize: 12, color: muted)),
-            ]),
-          ]),
-          const SizedBox(height: 14),
-          Container(
-            padding:const EdgeInsets.all(18),
-            decoration:BoxDecoration(
-              gradient:const LinearGradient(
-                colors:[Color(0xFF0C213A),Color(0xFF173B64)],
-                begin:Alignment.topLeft,end:Alignment.bottomRight),
-              borderRadius:BorderRadius.circular(18)),
-            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Row(children:[
-                const CircleAvatar(backgroundColor:Color(0xFF345B88),
-                  child:Icon(Icons.support_agent,color:Colors.white)),
-                const SizedBox(width:10),
-                const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
-                  children:[
-                    Text('Sua secretária',style:TextStyle(fontSize:19,
-                      fontWeight:FontWeight.w800,color:Colors.white)),
-                    Text('Resumo e prioridades do dia',
-                      style:TextStyle(fontSize:12,color:Color(0xFFD2E3F7))),
-                  ])),
-                TextButton(onPressed:widget.onSecretary,
-                  style:TextButton.styleFrom(foregroundColor:Colors.white),
-                  child:const Text('Ver tudo')),
-              ]),
-              const SizedBox(height:14),
-              if(widget.demo) ...[
-                Text('${appointments.length} atendimentos previstos hoje',
-                  style:const TextStyle(color:Colors.white,fontSize:15,fontWeight:FontWeight.w700)),
-                const SizedBox(height:6),
-                Text('${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length} cobranças vencidas • ${DemoData.currency(ledger.pending)} a receber',
-                  style:const TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
-              ] else const Text('Conecte seus dados para receber recomendações.',
-                style:TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
-              const SizedBox(height:14),
-              FilledButton.icon(onPressed:widget.onSecretary,
-                style:FilledButton.styleFrom(backgroundColor:Colors.white,
-                  foregroundColor:const Color(0xFF17375D),
-                  padding:const EdgeInsets.symmetric(vertical:13,horizontal:12)),
-                icon:const Icon(Icons.auto_awesome_outlined),
-                label:const Text('Ver prioridades e próximas ações',
-                  style:TextStyle(fontWeight:FontWeight.w700))),
-            ]),
-          ),
-          const SizedBox(height: 12),
-          const SizedBox(height:14),
-          Align(alignment:Alignment.centerLeft,child:Wrap(spacing:10,runSpacing:10,children:[
-            SizedBox(width:170,child:DropdownButtonFormField<int>(
-              value:selectedMonth,isExpanded:true,decoration:const InputDecoration(labelText:'Mês',
-                border:OutlineInputBorder(),isDense:true,contentPadding:EdgeInsets.symmetric(horizontal:10,vertical:10)),
-              items:[for(var i=1;i<=12;i++)DropdownMenuItem(value:i,child:Text(months[i-1]))],
-              onChanged:(value){if(value!=null)setState(()=>selectedMonth=value);})),
 
-            SizedBox(width:108,child:DropdownButtonFormField<int>(
-              value:selectedYear,isExpanded:true,decoration:const InputDecoration(labelText:'Ano',
-                border:OutlineInputBorder(),isDense:true,contentPadding:EdgeInsets.symmetric(horizontal:10,vertical:10)),
-              items:[for(var i=DateTime.now().year-3;i<=DateTime.now().year+3;i++)
-                DropdownMenuItem(value:i,child:Text('$i'))],
-              onChanged:(value){if(value!=null)setState(()=>selectedYear=value);})),
+  Widget _dashboardCard(Widget child) => Container(
+    padding:const EdgeInsets.all(20),
+    decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),
+      border:Border.all(color:const Color(0xFFB5D5F4),width:1.2)),
+    child:child);
+
+  Widget _heading(IconData icon,String title,String subtitle,{Widget? trailing}) =>
+    Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Container(padding:const EdgeInsets.all(9),
+        decoration:BoxDecoration(color:const Color(0xFFE7F3FF),borderRadius:BorderRadius.circular(10)),
+        child:Icon(icon,color:const Color(0xFF0065D7),size:23)),
+      const SizedBox(width:12),
+      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(title,style:const TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
+        Text(subtitle,style:const TextStyle(fontSize:12,color:muted)),
+      ])),
+      if(trailing!=null)trailing,
+    ]);
+
+  Widget _goalTile(String title,double amount,double goal,String note,Color accent) {
+    final progress=goal>0?(amount/goal).clamp(0.0,1.0).toDouble():0.0;
+    final missing=(goal-amount).clamp(0.0,double.infinity).toDouble();
+    return Container(
+      padding:const EdgeInsets.all(14),
+      decoration:BoxDecoration(
+        color:const Color(0xFFF5F9FD),borderRadius:BorderRadius.circular(12),
+        border:Border.all(color:const Color(0xFFD0E4F9))),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        Text(title,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:14,color:ink)),
+        Text(note,style:const TextStyle(fontSize:11,color:muted)),
+        const SizedBox(height:14),
+        Row(children:[
+          SizedBox(height:82,width:82,child:Stack(alignment:Alignment.center,children:[
+            SizedBox.expand(child:CircularProgressIndicator(value:progress,strokeWidth:10,
+              strokeCap:StrokeCap.round,color:accent,
+              backgroundColor:const Color(0xFFD4E5F4))),
+            Text('${(progress*100).toStringAsFixed(0)}%',
+              style:const TextStyle(fontSize:19,fontWeight:FontWeight.w800,color:ink)),
           ])),
-          if(selectedMonth!=today.month||selectedYear!=today.year)
-            const Padding(padding:EdgeInsets.only(top:8),
-              child:Text('Indicadores demonstrativos exibem o mês atual; histórico mensal ainda não integrado.',
-                style:TextStyle(color:amber,fontSize:11))),
-          const SizedBox(height: 16),
-          LayoutBuilder(builder: (context, size) {
-            final columns = size.maxWidth >= 1100 ? 5 : size.maxWidth >= 700 ? 3 : size.maxWidth >= 420 ? 2 : 1;
-            final cardWidth = (size.maxWidth - (columns - 1) * 14) / columns;
-            final metrics = <Widget>[
-              stat('Receita prevista',widget.demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
-                Icons.insights_outlined, amber),
-              stat('Recebido no mês',widget.demo?DemoData.currency(ledger.received):'—','Pagamentos marcados como recebidos',
-                Icons.check_circle_outline, green),
-              stat('A receber',widget.demo?DemoData.currency(ledger.pending):'—','Cobranças pendentes',Icons.schedule, amber),
-              stat('Despesas do mês',widget.demo?DemoData.currency(ledger.paidExpenses):'—','Despesa fictícia paga, para demonstração',
-                Icons.trending_down, red),
-              stat('Resultado de caixa',widget.demo?DemoData.currency(ledger.cash):'—','Recebido menos despesas pagas',
-                Icons.account_balance_outlined, ledger.cash < 0 ? red : green),
-            ];
-            return Wrap(spacing: 14, runSpacing: 14, children: [
-              for (final metric in metrics)
-                SizedBox(width: cardWidth, height: 164, child: metric),
-            ]);
-          }),
-          const SizedBox(height: 14),
-          LayoutBuilder(builder:(context, constraints) {
-            final monthlyGoal=ledger.annualGoal/12;
-            final progress=monthlyGoal>0 ? (ledger.received/monthlyGoal).clamp(0.0,1.0) : 0.0;
-            final target=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              const Text('Metas de receita',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
-              const SizedBox(height:4),
-              const Text('Progresso mensal e cenário anual, sem confundir previsão com recebimento.',
-                style:TextStyle(fontSize:12,color:muted)),
-              const SizedBox(height:16),
-              if(widget.demo) ...[
-                LayoutBuilder(builder:(context,box){
-                  final monthly=_goalChart('Meta mensal',ledger.received,monthlyGoal,
-                    'Receita recebida na demonstração');
-                  final annual=_goalChart('Projeção anual',ledger.received*12,ledger.annualGoal,
-                    'Estimativa: mês atual × 12 (não recebido)');
-                  return box.maxWidth>=680?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Expanded(child:monthly),const SizedBox(width:12),Expanded(child:annual),
-                  ]):Column(children:[monthly,const SizedBox(height:12),annual]);
-                }),
-                const SizedBox(height:12),
-                const Text('O cenário anual é uma estimativa ilustrativa, não o total anual recebido.',
-                  style:TextStyle(fontSize:11,color:muted)),
-              ] else const Padding(padding:EdgeInsets.symmetric(vertical:18),
-                child:Text('As metas serão exibidas quando houver dados financeiros conectados.',
-                  style:TextStyle(color:muted))),
-              const SizedBox(height:14),
-              Wrap(spacing:10,runSpacing:10,children:[
-                _miniMetric('META ANUAL',widget.demo?DemoData.currency(ledger.annualGoal):'—'),
-                _miniMetric('RECEBIDO NO MÊS',widget.demo?DemoData.currency(ledger.received):'—'),
-                _miniMetric('FALTA NO MÊS',widget.demo?
-                  DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity).toDouble()):'—'),
-              ]),
-            ]));
-            final financial=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              const Text('Agenda financeira',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
-              const Text('Entradas e saídas do mês em uma única leitura.',style:TextStyle(fontSize:12,color:muted)),
-              const SizedBox(height:18),
-              Wrap(spacing:10,runSpacing:10,children:[
-                _miniMetric('A PAGAR',widget.demo?DemoData.currency(ledger.paidExpenses):'—'),
-                _miniMetric('PAGO',widget.demo?DemoData.currency(ledger.received):'—'),
-                _miniMetric('A RECEBER',widget.demo?DemoData.currency(ledger.pending):'—'),
-              ]),
-              const SizedBox(height:12),
-              OutlinedButton(onPressed:widget.onFinance,child:const Text('Abrir agenda financeira')),
-              const SizedBox(height:12),
-              Wrap(spacing:10,runSpacing:10,children:[
-                _miniMetric('CLIENTES ATIVOS',widget.demo?'${ledger.amounts.length}':'—'),
-                _miniMetric('ATENDIMENTOS',widget.demo?'${appointments.length}':'—'),
-                _miniMetric('TICKET MÉDIO',widget.demo&&appointments.isNotEmpty?DemoData.currency(planned/appointments.length):'—'),
-              ]),
-              const SizedBox(height:18),
-              const Divider(color:border),
-              const SizedBox(height:12),
-              const Text('Situação dos recebimentos',
-                style:TextStyle(fontSize:14,fontWeight:FontWeight.w800,color:ink)),
-              const SizedBox(height:5),
-              Text(widget.demo?'Do total previsto, ${ledger.projected>0?(ledger.received/ledger.projected*100).toStringAsFixed(0):'0'}% já foi recebido.':
-                'Os indicadores serão exibidos quando houver dados conectados.',
-                style:const TextStyle(fontSize:12,color:muted)),
-              const SizedBox(height:12),
-              ClipRRect(borderRadius:BorderRadius.circular(9),
-                child:LinearProgressIndicator(value:widget.demo&&ledger.projected>0?
-                  (ledger.received/ledger.projected).clamp(0.0,1.0).toDouble():0,
-                  minHeight:12,color:green,backgroundColor:const Color(0xFFDCE8F7))),
-              const SizedBox(height:10),
-              Wrap(spacing:16,runSpacing:6,children:[
-                Text(widget.demo?'Recebido: ${DemoData.currency(ledger.received)}':'Recebido: —',
-                  style:const TextStyle(color:green,fontSize:12,fontWeight:FontWeight.w700)),
-                Text(widget.demo?'Pendente: ${DemoData.currency(ledger.pending)}':'Pendente: —',
-                  style:const TextStyle(color:muted,fontSize:12)),
-              ]),
-            ]));
-            return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              target,const SizedBox(height:16),financial,
-            ]);
-          }),
-          const SizedBox(height: 16),
-          LayoutBuilder(builder:(context,size) {
-            final columns=size.maxWidth>=950?4:size.maxWidth>=500?2:1;
-            final w=(size.maxWidth-(columns-1)*14)/columns;
-            final quick=<Widget>[
-              stat('Atendimentos hoje',widget.demo?'${appointments.length}':'—','Agenda do dia',Icons.calendar_today_outlined,red),
-              stat('Clientes ativos',widget.demo?'${ledger.amounts.length}':'—','Clientes cadastrados',Icons.people_outline,red),
-              stat('A receber',widget.demo?DemoData.currency(ledger.pending):'—','Valores pendentes',Icons.payments_outlined,red),
-              stat('Cobranças atrasadas',widget.demo?'${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length}':'—','Pendências vencidas',Icons.access_time,red),
-            ];
-            return Wrap(spacing:14,runSpacing:14,children:[
-              for(final q in quick)SizedBox(width:w,height:156,child:q),
-            ]);
-          }),
-          const SizedBox(height: 16),
-          panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            Row(children:[
-              const Expanded(child:Text('Agenda de hoje',style:TextStyle(
-                color:ink,fontSize:18,fontWeight:FontWeight.w800))),
-              TextButton(onPressed:widget.onAgenda,child:const Text('Ver agenda')),
-            ]),
-            Text('${today.day}/${today.month}/${today.year} • ${appointments.length} atendimentos fictícios',
-              style:const TextStyle(color:muted,fontSize:12)),
-            for(final a in appointments)...[
-              const Divider(color:border),
-              Row(children:[
-                SizedBox(width:55,child:Text(a.hour,style:const TextStyle(color:amber))),
-                Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Text(a.client,style:const TextStyle(color:ink,fontWeight:FontWeight.w700)),
-                  Text(a.service,style:const TextStyle(color:muted,fontSize:11)),
-                ])),
-                Text(ledger.visit(a.client,today)?.state??'Agendada',
-                  style:const TextStyle(color:amber,fontSize:11)),
-              ]),
-              Wrap(spacing:8,children:[
-                OutlinedButton.icon(onPressed:()=>ledger.updateVisit(a.client,today,
-                  'Realizada',true,'Confirmado na tela inicial'),
-                  icon:const Icon(Icons.check,color:green),label:const Text('Realizada')),
-                OutlinedButton.icon(onPressed:()=>_notDone(context,a,today),
-                  icon:const Icon(Icons.close,color:red),label:const Text('Não realizada')),
-              ]),
-            ],
-            const SizedBox(height:8),
-            Align(alignment:Alignment.centerLeft,child:FilledButton.icon(
-              onPressed:widget.onClients,
-              icon:const Icon(Icons.person_add_alt_1_outlined,size:18),
-              label:const Text('Novo cliente'),
-              style:FilledButton.styleFrom(backgroundColor:const Color(0xFF0C213A),foregroundColor:Colors.white))),
-            const Text('Atendimento realizado não confirma pagamento.',
-              style:TextStyle(color:muted,fontSize:11)),
+          const SizedBox(width:12),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+              child:Text(widget.demo?DemoData.currency(amount):'—',
+                style:const TextStyle(fontWeight:FontWeight.w800,fontSize:19,color:ink))),
+            Text(widget.demo?'de ${DemoData.currency(goal)}':'Sem dados conectados',
+              style:const TextStyle(fontSize:11,color:muted)),
+            const SizedBox(height:9),
+            Text(widget.demo?'Faltam ${DemoData.currency(missing)}':'',
+              style:const TextStyle(fontSize:11,color:ink)),
           ])),
-          const SizedBox(height: 14),
-          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            const Text('Panorama financeiro',style:TextStyle(
-              fontSize:17,fontWeight:FontWeight.w800,color:ink)),
-            const SizedBox(height:5),
-            const Text('Recebido e pendente • dados fictícios da Central de Cobranças',
-              style:TextStyle(fontSize:12,color:muted)),
-            const SizedBox(height:14),
-            if(widget.demo && ledger.projected>0) ...[
-              ClipRRect(borderRadius:BorderRadius.circular(9),
-                child:Row(children:[
-                  Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(1,1000).toInt(),
-                    child:Container(height:16,color:green)),
-                  Expanded(flex:(ledger.pending/ledger.projected*1000).round().clamp(0,1000),
-                    child:Container(height:16,color:amber)),
-                ])),
-              const SizedBox(height:12),
-              Text('Recebido ${(ledger.received/ledger.projected*100).toStringAsFixed(1)}%   •   Pendente ${(ledger.pending/ledger.projected*100).toStringAsFixed(1)}%',
-                style:const TextStyle(color:muted,fontSize:12)),
-            ] else const Text('Sem dados financeiros para o gráfico.',
-              style:TextStyle(color:muted)),
-          ])),
-          const SizedBox(height: 14),
-          panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Row(children: [
-              Icon(Icons.auto_graph_rounded, color: green, size: 22),
-              SizedBox(width: 8),
-              Expanded(child: Text('Ritmo dos atendimentos',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: ink))),
-            ]),
-            const SizedBox(height: 4),
-            const Text('Distribuição por horário da agenda demonstrativa — não é faturamento',
-              style: TextStyle(fontSize: 12, color: muted)),
-            const SizedBox(height: 18),
-            SizedBox(height: 124, child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (final slot in <(String, int, int)>[
-                  ('06–09', 6, 9), ('09–12', 9, 12),
-                  ('12–15', 12, 15), ('15–18', 15, 18),
-                  ('18–21', 18, 21),
-                ])
-                  Expanded(child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
-                    child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                      Text('${appointments.where((a) {
-                        final hour = int.tryParse(a.hour.split(':').first) ?? -1;
-                        return hour >= slot.$2 && hour < slot.$3;
-                      }).length}', style: const TextStyle(
-                        fontSize: 12, color: ink, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 5),
-                      Container(
-                        height: 12 + 16.0 * appointments.where((a) {
-                          final hour = int.tryParse(a.hour.split(':').first) ?? -1;
-                          return hour >= slot.$2 && hour < slot.$3;
-                        }).length,
-                        decoration: BoxDecoration(
-                          color: green.withValues(alpha: widget.demo ? .85 : .18),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(7)))),
-                      const SizedBox(height: 7),
-                      FittedBox(child: Text(slot.$1, style: const TextStyle(
-                        fontSize: 11, color: muted))),
-                    ]),
-                  )),
-              ],
-            )),
-            const SizedBox(height: 10),
-            Text(widget.demo
-              ? '${appointments.length} atendimentos previstos no exemplo. Acompanhe seu ritmo ao longo do dia.'
-              : 'O gráfico será preenchido após a integração com a agenda.',
-              style: const TextStyle(fontSize: 12, color: muted)),
-          ])),
-          const SizedBox(height: 14),
-          const SizedBox(height: 12),
-          const Text('PAINEL DEMONSTRATIVO • Dados fictícios da agenda. '
-            'Indicadores financeiros indisponíveis até integração e validação.',
-            style: TextStyle(fontSize: 11, color: muted)),
-        ]))));
+        ]),
+        const SizedBox(height:14),
+        ClipRRect(borderRadius:BorderRadius.circular(8),
+          child:LinearProgressIndicator(value:widget.demo?progress:0,minHeight:9,
+            color:accent,backgroundColor:const Color(0xFFD7E7F5))),
+      ]),
+    );
   }
+
+  Widget _financeTile(String label,String value,IconData icon,Color accent) =>
+    Container(padding:const EdgeInsets.all(13),
+      decoration:BoxDecoration(color:accent.withValues(alpha:.09),
+        borderRadius:BorderRadius.circular(12)),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[Icon(icon,size:17,color:accent),const SizedBox(width:7),
+          Expanded(child:Text(label,style:TextStyle(color:accent,fontSize:11,fontWeight:FontWeight.w700)))]),
+        const SizedBox(height:12),
+        FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+          child:Text(value,style:TextStyle(color:accent,fontSize:20,fontWeight:FontWeight.w800))),
+      ]));
+
+  Widget _monthlyBars(double received,double pending) {
+    final amounts=List<double>.generate(12,(i) => widget.demo?
+      (i==DateTime.now().month-1?received:0):0);
+    final maxAmount=amounts.fold<double>(1,(a,b)=>b>a?b:a);
+    const labels=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      const Wrap(spacing:14,runSpacing:5,children:[
+        Text('● Recebido',style:TextStyle(fontSize:11,color:Color(0xFF079B79))),
+        Text('● Demais meses sem histórico',style:TextStyle(fontSize:11,color:muted)),
+      ]),
+      const SizedBox(height:14),
+      SizedBox(height:115,child:Row(crossAxisAlignment:CrossAxisAlignment.end,children:[
+        for(var i=0;i<12;i++)Expanded(child:Padding(
+          padding:const EdgeInsets.symmetric(horizontal:3),
+          child:Column(mainAxisAlignment:MainAxisAlignment.end,children:[
+            Expanded(child:Align(alignment:Alignment.bottomCenter,child:Container(
+              height:widget.demo&&amounts[i]>0?12+70*amounts[i]/maxAmount:4,
+              decoration:BoxDecoration(color:amounts[i]>0?const Color(0xFF12A88A):const Color(0xFFDCE9F6),
+                borderRadius:BorderRadius.circular(5))))),
+            const SizedBox(height:7),
+            FittedBox(child:Text(labels[i],style:const TextStyle(fontSize:10,color:muted))),
+          ]),
+        )),
+      ])),
+      const SizedBox(height:7),
+      const Text('Histórico mensal não integrado: somente o mês demonstrativo contém valor.',
+        style:TextStyle(fontSize:10,color:muted)),
+    ]);
+  }
+
+  Widget _quickTile(String title,String value,IconData icon,Color accent,
+      String action,VoidCallback onTap) => Material(color:Colors.white,
+    borderRadius:BorderRadius.circular(14),child:InkWell(
+      borderRadius:BorderRadius.circular(14),onTap:onTap,
+      child:Container(padding:const EdgeInsets.all(15),
+        decoration:BoxDecoration(border:Border.all(color:const Color(0xFFB5D5F4),width:1.2),
+          borderRadius:BorderRadius.circular(14)),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Row(children:[
+            Container(padding:const EdgeInsets.all(8),
+              decoration:BoxDecoration(color:accent.withValues(alpha:.09),
+                borderRadius:BorderRadius.circular(9)),
+              child:Icon(icon,size:21,color:accent)),
+            const SizedBox(width:9),
+            Expanded(child:Text(title,maxLines:2,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(fontSize:12,fontWeight:FontWeight.w800,color:ink))),
+          ]),
+          const SizedBox(height:12),
+          Text(value,maxLines:1,overflow:TextOverflow.ellipsis,
+            style:const TextStyle(fontSize:23,fontWeight:FontWeight.w800,color:ink)),
+          const SizedBox(height:6),
+          Row(children:[Expanded(child:Text(action,style:const TextStyle(
+            fontSize:11,color:Color(0xFF0065D7)))),
+            const Icon(Icons.chevron_right,size:17,color:Color(0xFF0065D7))]),
+        ])),
+    ));
+
+  Widget _buildDashboard(BuildContext context,DateTime today,List<String> months,
+      List<DemoAppointment> appointments,double planned) {
+    final ledger=DemoLedger.instance;
+    final isDemo=widget.demo;
+    final overdue=ledger.amounts.keys.where((n)=>ledger.overdue(n)).length;
+    final monthlyGoal=ledger.annualGoal/12;
+    final annualProjection=ledger.received*12;
+    final pendingNames=ledger.amounts.keys.where((n)=>!ledger.isPaid(n)).toList()
+      ..sort((a,b)=>ledger.dueDate(a).compareTo(ledger.dueDate(b)));
+    return LayoutBuilder(builder:(context,viewport) {
+      final desktop=viewport.maxWidth>=1080;
+      final compact=viewport.maxWidth<650;
+      final gap=compact?12.0:16.0;
+      final goal=_dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        _heading(Icons.track_changes_outlined,'Metas de receita',
+          'Acompanhe seu progresso mensal e a projeção anual.'),
+        const SizedBox(height:16),
+        LayoutBuilder(builder:(context,c){
+          final monthly=_goalTile('Meta mensal',ledger.received,monthlyGoal,
+            'Receita recebida no mês',const Color(0xFF079B79));
+          final annual=_goalTile('Projeção anual',annualProjection,ledger.annualGoal,
+            'Cenário: mês atual × 12',const Color(0xFF0068D8));
+          return c.maxWidth>=530?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Expanded(child:monthly),const SizedBox(width:12),Expanded(child:annual),
+          ]):Column(children:[monthly,const SizedBox(height:12),annual]);
+        }),
+        const SizedBox(height:12),
+        Container(padding:const EdgeInsets.all(10),
+          decoration:BoxDecoration(color:const Color(0xFFEAF5FF),borderRadius:BorderRadius.circular(9)),
+          child:const Text('ⓘ A projeção anual é uma estimativa, não o total anual recebido.',
+            style:TextStyle(fontSize:11,color:Color(0xFF245A98)))),
+      ]));
+      final finance=_dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        _heading(Icons.bar_chart_rounded,'Agenda financeira',
+          'Entradas e saídas do mês em uma única leitura.',
+          trailing:IconButton(tooltip:'Abrir financeiro',onPressed:widget.onFinance,
+            icon:const Icon(Icons.chevron_right,color:Color(0xFF0065D7)))),
+        const SizedBox(height:16),
+        LayoutBuilder(builder:(context,c){
+          final tiles=[
+            _financeTile('Entradas',isDemo?DemoData.currency(ledger.received):'—',
+              Icons.trending_up,const Color(0xFF008F69)),
+            _financeTile('Saídas',isDemo?DemoData.currency(ledger.paidExpenses):'—',
+              Icons.south_east,const Color(0xFFB63C27)),
+            _financeTile('A receber',isDemo?DemoData.currency(ledger.pending):'—',
+              Icons.schedule,const Color(0xFF0754A6)),
+          ];
+          if(c.maxWidth>=450)return Row(children:[
+            for(var i=0;i<3;i++)...[
+              if(i>0)const SizedBox(width:9),Expanded(child:tiles[i])]]);
+          return Wrap(spacing:9,runSpacing:9,children:[
+            for(final tile in tiles)SizedBox(width:(c.maxWidth-9)/2,child:tile)]);
+        }),
+        const SizedBox(height:15),
+        _monthlyBars(ledger.received,ledger.pending),
+        const SizedBox(height:10),
+        Align(alignment:Alignment.centerRight,child:TextButton.icon(
+          onPressed:widget.onFinance,icon:const Icon(Icons.arrow_forward,size:16),
+          label:const Text('Abrir agenda financeira'))),
+      ]));
+      final secretary=_dashboardCard(LayoutBuilder(builder:(context,c){
+        final info=Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Row(children:[
+            Container(width:52,height:52,
+              decoration:BoxDecoration(color:const Color(0xFFEAF4FF),borderRadius:BorderRadius.circular(18)),
+              child:const Icon(Icons.smart_toy_rounded,size:35,color:Color(0xFF0065D7))),
+            const SizedBox(width:12),
+            Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              const Text('Secretária Inteligente',style:TextStyle(
+                fontSize:18,fontWeight:FontWeight.w800,color:Color(0xFF0754A6))),
+              const Text('Suas prioridades do dia, resumidas por aqui.',
+                style:TextStyle(fontSize:11,color:muted)),
+            ])),
+          ]),
+        ]);
+        final stats=Wrap(spacing:13,runSpacing:9,children:[
+          _secretaryStat(Icons.calendar_today_outlined,isDemo?'${appointments.length}':'—','atendimentos',const Color(0xFF7C3AED)),
+          _secretaryStat(Icons.receipt_long_outlined,isDemo?'${pendingNames.length}':'—','cobranças pendentes',red),
+          _secretaryStat(Icons.people_outline,isDemo?'${ledger.amounts.length}':'—','clientes',const Color(0xFF0065D7)),
+          _secretaryStat(Icons.schedule,isDemo?'${overdue}':'—','atrasadas',const Color(0xFF7C3AED)),
+        ]);
+        final open=FilledButton.icon(onPressed:widget.onSecretary,
+          style:FilledButton.styleFrom(backgroundColor:const Color(0xFF06427C),
+            padding:const EdgeInsets.symmetric(horizontal:20,vertical:14)),
+          icon:const Icon(Icons.chat_bubble_outline,size:17),
+          label:const Text('Abrir secretária'));
+        return c.maxWidth>=950?Row(children:[
+          Expanded(flex:4,child:info),const SizedBox(width:14),
+          Expanded(flex:5,child:stats),const SizedBox(width:14),open,
+        ]):Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          info,const SizedBox(height:14),stats,const SizedBox(height:14),
+          Align(alignment:Alignment.centerLeft,child:open),
+        ]);
+      }));
+      final agenda=_dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        _heading(Icons.calendar_month_outlined,'Agenda de hoje',
+          '${today.day.toString().padLeft(2,'0')}/${today.month.toString().padLeft(2,'0')}/${today.year} • ${appointments.length} atendimentos demonstrativos',
+          trailing:TextButton(onPressed:widget.onAgenda,child:const Text('Ver agenda'))),
+        const SizedBox(height:10),
+        for(final a in appointments)...[
+          const Divider(color:Color(0xFFE2EBF5),height:13),
+          LayoutBuilder(builder:(context,c){
+            final state=ledger.visit(a.client,today)?.state??'Agendada';
+            final statusColor=state=='Realizada'?green:
+              state=='Cancelada'?red:const Color(0xFF0065D7);
+            final info=Row(children:[
+              SizedBox(width:48,child:Text(a.hour,style:const TextStyle(
+                fontWeight:FontWeight.w800,fontSize:12,color:ink))),
+              Container(width:8,height:8,decoration:BoxDecoration(
+                color:statusColor,shape:BoxShape.circle)),
+              const SizedBox(width:9),
+              Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text(a.client,maxLines:1,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:12,fontWeight:FontWeight.w800,color:ink)),
+                Text(a.service,maxLines:1,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:10,color:muted)),
+              ])),
+            ]);
+            final status=Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
+              decoration:BoxDecoration(color:statusColor.withValues(alpha:.10),
+                borderRadius:BorderRadius.circular(18)),
+              child:Text(state,style:TextStyle(fontSize:10,color:statusColor)));
+            final actions=Wrap(spacing:0,children:[
+              IconButton(tooltip:'Marcar realizada',visualDensity:VisualDensity.compact,
+                onPressed:()=>ledger.updateVisit(a.client,today,'Realizada',true,
+                  'Confirmado na tela inicial'),icon:const Icon(Icons.check_circle_outline,size:19,color:green)),
+              IconButton(tooltip:'Não realizada ou remarcar',visualDensity:VisualDensity.compact,
+                onPressed:()=>_notDone(context,a,today),icon:const Icon(Icons.edit_calendar_outlined,size:19,color:Color(0xFF0065D7))),
+            ]);
+            if(c.maxWidth>=480)return Row(children:[
+              Expanded(child:info),const SizedBox(width:7),status,actions]);
+            return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              info,const SizedBox(height:7),
+              Row(children:[status,const Spacer(),actions]),
+            ]);
+          }),
+        ],
+        const SizedBox(height:12),
+        Align(alignment:Alignment.centerLeft,child:FilledButton.icon(
+          onPressed:widget.onAgenda,
+          style:FilledButton.styleFrom(backgroundColor:const Color(0xFF06427C)),
+          icon:const Icon(Icons.add,size:18),label:const Text('Novo atendimento'))),
+        const SizedBox(height:6),
+        const Text('Marcar atendimento como realizado não confirma pagamento.',
+          style:TextStyle(fontSize:10,color:muted)),
+      ]));
+      final upcoming=_dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        _heading(Icons.schedule_outlined,'Próximos recebimentos',
+          'Cobranças pendentes por vencimento.',
+          trailing:TextButton(onPressed:widget.onBilling,child:const Text('Ver todos'))),
+        const SizedBox(height:10),
+        if(!isDemo)const Text('Conecte os dados para consultar vencimentos.',
+          style:TextStyle(color:muted))
+        else if(pendingNames.isEmpty)const Text('Nenhuma cobrança pendente.',
+          style:TextStyle(color:muted))
+        else for(final name in pendingNames.take(5))...[
+          const Divider(color:Color(0xFFE2EBF5),height:14),
+          InkWell(onTap:widget.onBilling,child:Row(children:[
+            SizedBox(width:44,child:Column(children:[
+              Text('${ledger.dueDate(name).day}',style:const TextStyle(
+                fontSize:19,fontWeight:FontWeight.w800,color:ink)),
+              const Text('VENC.',style:TextStyle(fontSize:9,color:muted)),
+            ])),
+            const SizedBox(width:9),
+            Expanded(child:Text(name,maxLines:1,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:ink))),
+            const SizedBox(width:6),
+            Text(DemoData.currency(ledger.amounts[name]??0),
+              style:const TextStyle(fontSize:11,fontWeight:FontWeight.w700,color:ink)),
+            const SizedBox(width:7),
+            const Icon(Icons.chevron_right,color:Color(0xFF0065D7),size:18),
+          ])),
+        ],
+      ]));
+      return Container(
+        decoration:BoxDecoration(color:const Color(0xFFEAF4FC),
+          borderRadius:BorderRadius.circular(18)),
+        padding:EdgeInsets.all(compact?10:16),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          Padding(padding:const EdgeInsets.symmetric(horizontal:4,vertical:6),
+            child:Row(children:[
+              Icon(_localNow.hour>=18||_localNow.hour<5?Icons.nightlight_round:Icons.wb_sunny_rounded,
+                size:30,color:const Color(0xFFF5AF24)),
+              const SizedBox(width:12),
+              Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text(_welcome,style:TextStyle(fontSize:compact?23:29,
+                  fontWeight:FontWeight.w800,color:const Color(0xFF06427C))),
+                const Text('Seu negócio em uma única leitura.',
+                  style:TextStyle(fontSize:12,color:Color(0xFF45648B))),
+              ])),
+              if(!compact)Container(
+                padding:const EdgeInsets.symmetric(horizontal:12,vertical:9),
+                decoration:BoxDecoration(color:Colors.white,
+                  border:Border.all(color:const Color(0xFFBCD9F6)),
+                  borderRadius:BorderRadius.circular(10)),
+                child:Text('${today.day.toString().padLeft(2,'0')}/${today.month.toString().padLeft(2,'0')}/${today.year}',
+                  style:const TextStyle(color:Color(0xFF06427C),fontSize:12))),
+            ])),
+          SizedBox(height:gap),
+          secretary,
+          SizedBox(height:gap),
+          LayoutBuilder(builder:(context,c){
+            if(c.maxWidth>=1050)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Expanded(flex:11,child:goal),SizedBox(width:gap),Expanded(flex:10,child:finance),
+            ]);
+            return Column(children:[goal,SizedBox(height:gap),finance]);
+          }),
+          SizedBox(height:gap),
+          LayoutBuilder(builder:(context,c){
+            final count=c.maxWidth>=1000?4:c.maxWidth>=530?2:1;
+            final w=(c.maxWidth-gap*(count-1))/count;
+            final items=[
+              _quickTile('Atendimentos hoje',isDemo?'${appointments.length}':'—',
+                Icons.calendar_month_outlined,const Color(0xFF7C3AED),
+                'Ver agenda do dia',widget.onAgenda),
+              _quickTile('Clientes ativos',isDemo?'${ledger.amounts.length}':'—',
+                Icons.groups_outlined,red,'Ver lista de clientes',widget.onClients),
+              _quickTile('A receber',isDemo?DemoData.currency(ledger.pending):'—',
+                Icons.payments_outlined,red,'Ver cobranças',widget.onBilling),
+              _quickTile('Cobranças atrasadas',isDemo?'${overdue}':'—',
+                Icons.access_time_outlined,red,'Ver pendências',widget.onBilling),
+            ];
+            return Wrap(spacing:gap,runSpacing:gap,children:[
+              for(final item in items)SizedBox(width:w,child:item),
+            ]);
+          }),
+          SizedBox(height:gap),
+          LayoutBuilder(builder:(context,c){
+            if(c.maxWidth>=920)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Expanded(flex:11,child:agenda),SizedBox(width:gap),
+              Expanded(flex:8,child:upcoming),
+            ]);
+            return Column(children:[agenda,SizedBox(height:gap),upcoming]);
+          }),
+          if(isDemo)const Padding(padding:EdgeInsets.only(top:14),
+            child:Text('DEMONSTRAÇÃO • Dados fictícios; histórico financeiro anual não conectado.',
+              style:TextStyle(fontSize:10,color:muted))),
+        ]),
+      );
+    });
+  }
+
+  Widget _secretaryStat(IconData icon,String value,String label,Color accent) =>
+    Row(mainAxisSize:MainAxisSize.min,children:[
+      Container(padding:const EdgeInsets.all(7),
+        decoration:BoxDecoration(color:accent.withValues(alpha:.09),
+          borderRadius:BorderRadius.circular(8)),
+        child:Icon(icon,size:18,color:accent)),
+      const SizedBox(width:6),
+      Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(value,style:const TextStyle(fontWeight:FontWeight.w800,color:ink,fontSize:15)),
+        Text(label,style:const TextStyle(fontSize:10,color:muted)),
+      ]),
+    ]);
 }
