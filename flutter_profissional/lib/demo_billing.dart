@@ -390,9 +390,9 @@ class _DemoBillingState extends State<DemoBilling> {
           const SizedBox(width:6),
           Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
             decoration:BoxDecoration(
-              color:paidFor(a)?const Color(0xFF103C30):const Color(0xFF352C19),
+              color:paidFor(a)?const Color(0xFF103C30):ledger.overdue(a.name)?const Color(0xFF44252B):const Color(0xFF352C19),
               borderRadius:BorderRadius.circular(9),
-              border:Border.all(color:paidFor(a)?const Color(0xFF287E61):_gold)),
+              border:Border.all(color:paidFor(a)?const Color(0xFF287E61):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold)),
             child:Text(statusFor(a),style:TextStyle(fontSize:11,
               fontWeight:FontWeight.w700,
               color:paidFor(a)?const Color(0xFF6EE2B0):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold))),
