@@ -106,17 +106,75 @@ class _DemoClientsState extends State<DemoClients> {
       ]),
       const SizedBox(height:14),
       if(shown.isEmpty) const Padding(padding:EdgeInsets.all(24),child:Text('Nenhum cliente encontrado.')),
-      for(final c in shown) Card(color:demoSurface,child:ListTile(
-        leading:const CircleAvatar(backgroundColor:Color(0xFF383124),child:Icon(Icons.person,color:demoGold)),
-        title:Text(c.name),subtitle:Text('${c.service} • ${c.phone}'),
-        trailing:Wrap(crossAxisAlignment:WrapCrossAlignment.center,spacing:4,children:[
-          Text(c.status,style:const TextStyle(color:demoGold,fontSize:12)),
-          IconButton(tooltip:'Abrir WhatsApp',onPressed:()=>openWhatsApp(c),icon:const Icon(Icons.chat_outlined,color:Color(0xFF25D366))),
-          if(c.status=='Pendente') IconButton(tooltip:'Preparar cobrança pelo WhatsApp',onPressed:()=>openBillingWhatsApp(c),icon:const Icon(Icons.request_quote_outlined,color:demoGold)),
-          IconButton(tooltip:'Editar cliente',onPressed:()=>edit(c),icon:const Icon(Icons.edit_outlined)),
-          IconButton(tooltip:'Excluir cliente fictício',onPressed:()=>deleteClient(c),icon:const Icon(Icons.delete_outline)),
-        ]),
-      )),
+      for(final c in shown) Card(
+        color:demoSurface,
+        margin:const EdgeInsets.only(bottom:12),
+        shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
+          side:const BorderSide(color:Color(0xFF373940))),
+        child:Padding(padding:const EdgeInsets.all(15),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              const CircleAvatar(radius:22,backgroundColor:Color(0xFF383124),
+                child:Icon(Icons.person,color:demoGold)),
+              const SizedBox(width:12),
+              Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text(c.name,maxLines:2,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:17,fontWeight:FontWeight.w800)),
+                const SizedBox(height:4),
+                Text(c.service,maxLines:2,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:13,color:Colors.white70)),
+                const SizedBox(height:3),
+                Text(c.phone,maxLines:1,overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:12,color:Colors.white60)),
+              ])),
+              const SizedBox(width:8),
+              Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
+                decoration:BoxDecoration(
+                  color:c.status=='Em dia'?const Color(0xFF16392D):const Color(0xFF3A2E1D),
+                  borderRadius:BorderRadius.circular(9)),
+                child:Text(c.status,maxLines:1,style:TextStyle(
+                  color:c.status=='Em dia'?const Color(0xFF7EE2AD):demoGold,
+                  fontSize:11,fontWeight:FontWeight.w700))),
+            ]),
+            const SizedBox(height:12),
+            const Divider(height:1,color:Color(0xFF373940)),
+            const SizedBox(height:10),
+            LayoutBuilder(builder:(context,box){
+              final compact=box.maxWidth<360;
+              return Wrap(spacing:8,runSpacing:8,children:[
+                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                  child:OutlinedButton.icon(onPressed:()=>openWhatsApp(c),
+                    icon:const Icon(Icons.chat_outlined,size:17,color:Color(0xFF6EE2B0)),
+                    label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
+                    style:OutlinedButton.styleFrom(
+                      padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
+                      foregroundColor:const Color(0xFF6EE2B0),
+                      side:const BorderSide(color:Color(0xFF287E61))))),
+                if(c.status=='Pendente')
+                  SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                    child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
+                      icon:const Icon(Icons.receipt_long_outlined,size:17),
+                      label:const Text('Cobrar',maxLines:1,overflow:TextOverflow.ellipsis),
+                      style:OutlinedButton.styleFrom(
+                        padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
+                        foregroundColor:demoGold,
+                        side:const BorderSide(color:demoGold)))),
+                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                  child:OutlinedButton.icon(onPressed:()=>edit(c),
+                    icon:const Icon(Icons.edit_outlined,size:17),
+                    label:const Text('Editar',maxLines:1,overflow:TextOverflow.ellipsis),
+                    style:OutlinedButton.styleFrom(
+                      padding:const EdgeInsets.symmetric(horizontal:6,vertical:12)))),
+                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                  child:OutlinedButton.icon(onPressed:()=>deleteClient(c),
+                    icon:const Icon(Icons.delete_outline,size:17),
+                    label:const Text('Excluir',maxLines:1,overflow:TextOverflow.ellipsis),
+                    style:OutlinedButton.styleFrom(
+                      padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
+                      foregroundColor:Colors.white70))),
+              ]);
+            }),
+          ]))),
       const SizedBox(height:12),
       const Text('Os cadastros são temporários: serão descartados ao atualizar a página.',style:TextStyle(color:Colors.white60,fontSize:12)),
     ]);
