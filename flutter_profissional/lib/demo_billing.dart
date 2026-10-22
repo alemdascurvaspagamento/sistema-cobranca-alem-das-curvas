@@ -382,7 +382,7 @@ class _DemoBillingState extends State<DemoBilling> {
           final compact=box.maxWidth<340;
           final amount=Text(DemoData.currency(totalFor(a)),maxLines:1,
             overflow:TextOverflow.ellipsis,
-            style:const TextStyle(color:_gold,fontSize:17,fontWeight:FontWeight.w800));
+            style:TextStyle(color:paidFor(a)?const Color(0xFF52D69A):_gold,fontSize:17,fontWeight:FontWeight.w800));
           final visits=Text(
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
@@ -428,20 +428,20 @@ class _DemoBillingState extends State<DemoBilling> {
       ])));
 
 
-  Widget metric(String label,double value,IconData icon)=>Container(
+  Widget metric(String label,double value,IconData icon,Color accent)=>Container(
     padding:const EdgeInsets.all(14),
     decoration:BoxDecoration(color:_surface,borderRadius:BorderRadius.circular(14),
       border:Border.all(color:const Color(0xFF36383E))),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,
       mainAxisSize:MainAxisSize.min,children:[
-        Icon(icon,color:_gold,size:20),
+        Icon(icon,color:accent,size:20),
         const SizedBox(height:8),
         Text(label,maxLines:1,overflow:TextOverflow.ellipsis,
           style:const TextStyle(fontSize:12,color:Colors.white70)),
         const SizedBox(height:5),
         FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
           child:Text(DemoData.currency(value),maxLines:1,
-            style:const TextStyle(fontSize:21,fontWeight:FontWeight.w800))),
+            style:TextStyle(fontSize:21,fontWeight:FontWeight.w800,color:accent))),
       ]));
 
   @override Widget build(BuildContext context){
@@ -459,13 +459,13 @@ class _DemoBillingState extends State<DemoBilling> {
         const gap=10.0;
         final cardWidth=(box.maxWidth-(columns-1)*gap)/columns;
         return Wrap(spacing:gap,runSpacing:gap,children:[
-          for(final entry in <(String,double,IconData)>[
-            ('Total calculado',total,Icons.receipt_long_outlined),
-            ('Recebido',received,Icons.check_circle_outline),
-            ('A receber',total-received,Icons.schedule_outlined),
-            ('A pagar',120,Icons.south_east_outlined),
+          for(final entry in <(String,double,IconData,Color)>[
+            ('Total calculado',total,Icons.receipt_long_outlined,_gold),
+            ('Recebido',received,Icons.check_circle_outline,const Color(0xFF52D69A)),
+            ('A receber',total-received,Icons.schedule_outlined,_gold),
+            ('A pagar',120,Icons.south_east_outlined,const Color(0xFFF1767B)),
           ])
-            SizedBox(width:cardWidth,child:metric(entry.$1,entry.$2,entry.$3)),
+            SizedBox(width:cardWidth,child:metric(entry.$1,entry.$2,entry.$3,entry.$4)),
         ]);
       }),
       const SizedBox(height:12),
