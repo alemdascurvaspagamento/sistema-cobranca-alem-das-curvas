@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
+import 'calendar_connections.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
 import 'demo_billing.dart';
@@ -198,6 +199,7 @@ class CoachFlowShell extends StatefulWidget {
 
 class _CoachFlowShellState extends State<CoachFlowShell> {
   Section selected = Section.inicio;
+  bool calendarSettings = false;
   static const gold = Color(0xFF0C213A);
   static const silver = Color(0xFF64748B);
 
@@ -233,7 +235,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(sheetContext);
-                  setState(() => selected = entry.$1);
+                  setState(() { selected = entry.$1; calendarSettings = false; });
                 },
               ),
           ]),
@@ -319,9 +321,22 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                             onBilling:()=>setState(()=>selected=Section.cobrancas),
                             onClients:()=>setState(()=>selected=Section.clientes),
                             onFinance:()=>setState(()=>selected=Section.financeiro)),
-                        if (selected == Section.mais)
-                          widget.demo ? const DemoMore() :
-                            _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
+                        if (selected == Section.mais) ...[
+                          if (calendarSettings) ...[
+                            TextButton.icon(onPressed:()=>setState(()=>calendarSettings=false),icon:const Icon(Icons.arrow_back),label:const Text('Voltar às configurações')),
+                            const CalendarConnections(),
+                          ] else ...[
+                            Card(child:ListTile(
+                              leading:const Icon(Icons.sync, color:Color(0xFF245A98)),
+                              title:const Text('Sincronização de calendários'),
+                              subtitle:const Text('Apple, Google e privacidade dos compromissos'),
+                              trailing:const Icon(Icons.chevron_right),
+                              onTap:()=>setState(()=>calendarSettings=true),
+                            )),
+                            if (widget.demo) const DemoMore() else
+                              _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
+                          ],
+                        ],
                       ],
                     ),
                   ),
