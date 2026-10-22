@@ -274,13 +274,16 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               children: [
                 if (desktop)
                   NavigationRail(
-                    backgroundColor: const Color(0xFFDCE8F7),
+                    backgroundColor: const Color(0xFF06427C),
                     selectedIndex: selected.index,
                     onDestinationSelected: (index) =>
                         setState(() => selected = Section.values[index]),
                     extended: constraints.maxWidth >= 1150,
-                    indicatorColor: gold.withValues(alpha: .18),
-                    selectedIconTheme: const IconThemeData(color: gold),
+                    indicatorColor: const Color(0xFF2263A0),
+                    selectedIconTheme: const IconThemeData(color: Colors.white),
+                    unselectedIconTheme: const IconThemeData(color: Color(0xFFD1E8FF)),
+                    selectedLabelTextStyle: const TextStyle(color: Colors.white,fontWeight:FontWeight.w800),
+                    unselectedLabelTextStyle: const TextStyle(color: Color(0xFFD1E8FF)),
                     destinations: [
                       for (final section in Section.values)
                         NavigationRailDestination(
@@ -293,8 +296,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   child: SafeArea(
                     child: ListView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: desktop ? 32 : 12,
-                        vertical: desktop ? 24 : 12,
+                        horizontal: desktop ? 16 : 8,
+                        vertical: desktop ? 12 : 8,
                       ),
                       children: [
                         if (widget.demo) const Padding(
