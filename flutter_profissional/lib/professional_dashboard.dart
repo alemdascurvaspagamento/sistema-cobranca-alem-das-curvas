@@ -162,6 +162,37 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 SizedBox(width: cardWidth, height: 176, child: metric),
             ]);
           }),
+          const SizedBox(height:14),
+          panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            Row(children:[
+              const Expanded(child:Text('Agenda de hoje',style:TextStyle(
+                color:ink,fontSize:18,fontWeight:FontWeight.w800))),
+              TextButton(onPressed:widget.onAgenda,child:const Text('Ver agenda')),
+            ]),
+            Text('${today.day}/${today.month}/${today.year} • ${appointments.length} atendimentos fictícios',
+              style:const TextStyle(color:muted,fontSize:12)),
+            for(final a in appointments)...[
+              const Divider(color:border),
+              Row(children:[
+                SizedBox(width:55,child:Text(a.hour,style:const TextStyle(color:amber))),
+                Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text(a.client,style:const TextStyle(color:ink,fontWeight:FontWeight.w700)),
+                  Text(a.service,style:const TextStyle(color:muted,fontSize:11)),
+                ])),
+                Text(ledger.visit(a.client,today)?.state??'Agendada',
+                  style:const TextStyle(color:amber,fontSize:11)),
+              ]),
+              Wrap(spacing:8,children:[
+                TextButton.icon(onPressed:()=>ledger.updateVisit(a.client,today,
+                  'Realizada',true,'Confirmado na tela inicial'),
+                  icon:const Icon(Icons.check,color:green),label:const Text('Realizada')),
+                TextButton.icon(onPressed:()=>_notDone(context,a,today),
+                  icon:const Icon(Icons.close,color:red),label:const Text('Não realizada')),
+              ]),
+            ],
+            const Text('Atendimento realizado não confirma pagamento.',
+              style:TextStyle(color:muted,fontSize:11)),
+          ])),
           const SizedBox(height: 14),
           panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             const Text('Panorama financeiro',style:TextStyle(
