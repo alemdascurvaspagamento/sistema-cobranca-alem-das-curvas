@@ -124,7 +124,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       padding: const EdgeInsets.all(18),
       child: DefaultTextStyle.merge(style: const TextStyle(color: ink),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:const Color(0xFFE2EDFA),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFB7D0EF))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             const Text('Boa tarde, Prof. 👋',style:TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
             Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
               style:const TextStyle(fontSize:12,color:muted)),
