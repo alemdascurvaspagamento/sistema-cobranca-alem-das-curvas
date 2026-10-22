@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'professional_agenda.dart';
+import 'booking_requests.dart';
 import 'calendar_connections.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
@@ -83,7 +84,8 @@ class CoachFlowApp extends StatelessWidget {
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, GlobalWidgetsLocalizations.delegate],
-        home: const CoachFlowEntry(),
+        home: Uri.base.queryParameters['agendar']=='demo'
+      ? const BookingPublicDemo() : const CoachFlowEntry(),
       );
 }
 
@@ -314,8 +316,16 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         if (selected == Section.financeiro)
                           widget.demo ? const DemoFinance() :
                             _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),
-                        if (selected == Section.agenda)
+                        if (selected == Section.agenda) ...[
                           widget.demo ? const DemoAgenda() : const ProfessionalAgenda(),
+                          const SizedBox(height:16),
+                          if(widget.demo)const BookingManagementDemo()
+                          else Card(child:ListTile(
+                            leading:const Icon(Icons.link),
+                            title:const Text('Link de agendamento'),
+                            subtitle:const Text('A publicação de links reais requer um serviço de reservas conectado e seguro.'),
+                          )),
+                        ],
                         if (selected == Section.clientes)
                           widget.demo ? const DemoClients() : const ProfessionalClients(),
                         if (selected == Section.secretaria)
