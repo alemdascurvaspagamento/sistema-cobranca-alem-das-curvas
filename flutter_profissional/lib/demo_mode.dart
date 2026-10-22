@@ -238,51 +238,76 @@ class _DemoAgendaState extends State<DemoAgenda> {
                 selectedDay = null;
               }), icon: const Icon(Icons.chevron_right)),
             ]),
-            Center(child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(children: [
-            Row(children: [
-              for (final label in const ['S','T','Q','Q','S','S','D'])
-                Expanded(child: Center(child: Text(label,
-                  style: const TextStyle(color: Color(0xFF64748B))))),
-            ]),
-            const SizedBox(height: 8),
-            LayoutBuilder(builder: (context, size) {
-              final offset = DateTime(month.year, month.month).weekday - 1;
-              final days = DateTime(month.year, month.month + 1, 0).day;
-              final count = ((offset + days + 6) ~/ 7) * 7;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: count,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7, mainAxisSpacing: 5, crossAxisSpacing: 5,
-                  mainAxisExtent: 42),
-                itemBuilder: (context, index) {
-                  final number = index - offset + 1;
-                  if (number < 1 || number > days) return const SizedBox.shrink();
-                  final date = DateTime(month.year, month.month, number);
-                  final chosen = DateUtils.isSameDay(selectedDay, date);
-                  final current = DateUtils.isSameDay(today, date);
-                  return InkWell(
-                    onTap: () => setState(() => selectedDay = date),
-                    borderRadius: BorderRadius.circular(9),
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: chosen ? const Color(0xFF0C213A) : Colors.transparent,
-                        border: current ? Border.all(color: const Color(0xFF245A98), width: 1.5) : null,
-                        borderRadius: BorderRadius.circular(9)),
-                      child: Text('$number', style: TextStyle(
-                        color: chosen ? Colors.white : const Color(0xFF17243A),
-                        fontWeight: current || chosen ? FontWeight.bold : FontWeight.w600)),
-                    ),
-                  );
-                },
-              );
+            const SizedBox(height:8),
+            LayoutBuilder(builder:(context,size){
+              final desktop=size.maxWidth>=760;
+              final offset=DateTime(month.year,month.month,1).weekday%7;
+              final days=DateTime(month.year,month.month+1,0).day;
+              final count=((offset+days+6)~/7)*7;
+              return Column(children:[
+                Row(children:[
+                  for(final label in const ['DOM','SEG','TER','QUA','QUI','SEX','SAB'])
+                    Expanded(child:Center(child:Text(label,style:const TextStyle(
+                      color:Color(0xFF64748B),fontWeight:FontWeight.w700,fontSize:11)))),
+                ]),
+                const SizedBox(height:8),
+                GridView.builder(
+                  shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),
+                  itemCount:count,
+                  gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:7,mainAxisSpacing:6,crossAxisSpacing:6,
+                    mainAxisExtent:desktop?195:86),
+                  itemBuilder:(context,index){
+                    final number=index-offset+1;
+                    if(number<1||number>days)return const SizedBox.shrink();
+                    final day=DateTime(month.year,month.month,number);
+                    final selected=DateUtils.isSameDay(selectedDay,day);
+                    final current=DateUtils.isSameDay(today,day);
+                    // Dados fictícios recorrentes somente para demonstrar o calendário.
+                    final scheduled=day.weekday<=5?DemoData.appointments.where((a)=>
+                      statusFilter=='Todos'||appointmentState(day,a.client)==statusFilter).toList():<DemoAppointment>[];
+                    return InkWell(
+                      onTap:()=>setState(()=>selectedDay=day),
+                      borderRadius:BorderRadius.circular(10),
+                      child:Container(
+                        padding:EdgeInsets.all(desktop?7:4),
+                        decoration:BoxDecoration(
+                          color:selected?const Color(0xFFE5EFFA):Colors.white,
+                          border:Border.all(color:current?const Color(0xFF245A98):const Color(0xFFD5E0EE),
+                            width:current||selected?1.8:1),
+                          borderRadius:BorderRadius.circular(10)),
+                        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Text('$number',style:TextStyle(fontWeight:FontWeight.w800,
+                            color:selected?const Color(0xFF174D85):const Color(0xFF17243A))),
+                          const SizedBox(height:5),
+                          if(desktop)
+                            for(final a in scheduled.take(5))
+                              Padding(padding:const EdgeInsets.only(bottom:4),
+                                child:InkWell(onTap:()=>editAppointment(day,a),
+                                  child:Container(width:double.infinity,
+                                    padding:const EdgeInsets.symmetric(horizontal:5,vertical:3),
+                                    decoration:BoxDecoration(
+                                      color:appointmentColor(appointmentState(day,a.client)).withValues(alpha:.13),
+                                      borderRadius:BorderRadius.circular(5)),
+                                    child:Text('${a.hour} ${a.client}',
+                                      maxLines:1,overflow:TextOverflow.ellipsis,
+                                      style:TextStyle(fontSize:10,
+                                        color:appointmentColor(appointmentState(day,a.client)),
+                                        decoration:appointmentState(day,a.client)=='Cancelada'
+                                          ?TextDecoration.lineThrough:null))))),
+                          if(desktop&&scheduled.length>5)
+                            Text('+${scheduled.length-5} atendimentos',
+                              style:const TextStyle(fontSize:10,color:Color(0xFF64748B))),
+                          if(!desktop&&scheduled.isNotEmpty)
+                            Text('${scheduled.length} atend.',
+                              maxLines:2,style:const TextStyle(fontSize:9,color:Color(0xFF245A98))),
+                        ]),
+                      ),
+                    );
+                  },
+                ),
+              ]);
             }),
-              ]),
-            )),
             const SizedBox(height: 12),
             if (selectedDay != null) appointmentList(selectedDay!)
             else const Text('Selecione um dia para ver os atendimentos.',
