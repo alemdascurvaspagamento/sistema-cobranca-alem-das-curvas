@@ -344,8 +344,13 @@ class _DemoFinanceState extends State<DemoFinance> {
     ]));
 }
 
-class DemoMore extends StatelessWidget {
+class DemoMore extends StatefulWidget {
   const DemoMore({super.key});
+  @override State<DemoMore> createState()=>_DemoMoreState();
+}
+class _DemoMoreState extends State<DemoMore> {
+  late final pix=TextEditingController(text:DemoLedger.instance.professionalPixKey);
+  @override void dispose(){pix.dispose();super.dispose();}
   @override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.shield_outlined,color:demoGold),
       title:Text('Ambiente de demonstração'),subtitle:Text('Dados temporários e fictícios. Nenhuma cobrança real.'))),
