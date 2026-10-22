@@ -354,6 +354,21 @@ class _DemoMoreState extends State<DemoMore> {
   @override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.shield_outlined,color:demoGold),
       title:Text('Ambiente de demonstração'),subtitle:Text('Dados temporários e fictícios. Nenhuma cobrança real.'))),
+    Card(color:demoSurface,child:Padding(padding:const EdgeInsets.all(14),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        const Text('Dados para recebimento',style:TextStyle(fontWeight:FontWeight.bold)),
+        const SizedBox(height:10),
+        TextField(controller:pix,decoration:const InputDecoration(
+          labelText:'Sua chave Pix (opcional)',border:OutlineInputBorder())),
+        const SizedBox(height:8),
+        FilledButton(onPressed:(){
+          DemoLedger.instance.setProfessionalPixKey(pix.text);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content:Text('Chave Pix salva na demonstração.')));
+        },child:const Text('Salvar chave Pix')),
+        const Text('A chave só aparece na cobrança quando preenchida. Dados temporários.',
+          style:TextStyle(color:Colors.white60,fontSize:12)),
+      ]))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.settings_outlined,color:demoGold),
       title:Text('Configurações'),subtitle:Text('A personalização por profissional será conectada ao backend isolado.'))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.summarize_outlined,color:demoGold),
