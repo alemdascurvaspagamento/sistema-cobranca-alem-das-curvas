@@ -15,7 +15,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
   final hidden=<String>{};
   DateTime? hiddenDay;
   @override void initState(){super.initState();hiddenDay=DateUtils.dateOnly(DateTime.now());}
-  static const gold=Color(0xFF244C82);
+  static const gold=Color(0xFF0C213A);
   static const surface=Color(0xFFFFFFFF);
   Widget suggestion(String id,IconData icon,String title,String detail,
       String priority,Color color,VoidCallback action){
@@ -89,18 +89,18 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
         if(widget.demo&&overdue.isNotEmpty)suggestion('overdue',
           Icons.warning_amber_rounded,'${overdue.length} cobrança(s) vencida(s)',
           'Verifique os vencimentos e os valores antes de cobrar.',
-          'URGENTE',const Color(0xFFF1767B),widget.onBilling),
+          'URGENTE',const Color(0xFFC34B50),widget.onBilling),
         if(widget.demo&&unresolved>0)suggestion('attendance',
           Icons.fact_check_outlined,'$unresolved atendimento(s) para conferir',
           'Registre presença, falta ou remarcação na agenda.',
-          'ATENÇÃO',const Color(0xFFE0BA62),widget.onAgenda),
+          'ATENÇÃO',const Color(0xFFB98522),widget.onAgenda),
         if(widget.demo&&ledger.pending>0)suggestion('payments',
           Icons.receipt_long_outlined,'Pagamentos pendentes',
           'Há ${DemoData.currency(ledger.pending)} a receber. Nem tudo está vencido.',
-          'ATENÇÃO',const Color(0xFFE0BA62),widget.onBilling),
+          'ATENÇÃO',const Color(0xFFB98522),widget.onBilling),
         suggestion('clients',Icons.people_outline,'Revisar carteira de clientes',
           'Confira horários, recorrências e cadastros.',
-          'OPORTUNIDADE',const Color(0xFF52D69A),widget.onClients),
+          'OPORTUNIDADE',const Color(0xFF20835D),widget.onClients),
         if(hidden.isNotEmpty)TextButton.icon(
           onPressed:()=>setState(hidden.clear),
           icon:const Icon(Icons.refresh),label:const Text('Restaurar sugestões')),
