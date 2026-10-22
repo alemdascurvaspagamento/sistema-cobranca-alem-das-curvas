@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profession_terms.dart';
 
 /// Cadastro demonstrativo, sem persistência ou acesso a dados reais.
 class ClientProfile {
@@ -27,8 +28,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
   late final Map<String,TextEditingController> fields;
   late String profession, status, cycle, method;
   String? error;
-  static const professions=['Personal trainer','Fisioterapeuta','Nutricionista',
-    'Professor','Consultor','Prestador de serviços','Outro'];
+  static const professions=ProfessionTerms.professions;
   static const keys=['name','service','phone','email','plan','goal','notes','pixKey',
     'startDate','birthDate','weekdays','schedule','duration','rate','dueDay'];
   @override void initState(){
@@ -72,9 +72,8 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
       for(final child in children)...[child,const SizedBox(height:14)],
     ]));
   @override Widget build(BuildContext context){
-    final sessionLabel=profession=='Personal trainer'?'Aula':
-      profession=='Nutricionista'?'Consulta':
-      profession=='Fisioterapeuta'?'Sessão':'Atendimento';
+    final sessionLabel=ProfessionTerms.appointment(profession);
+    final clientLabel=ProfessionTerms.client(profession);
     return Dialog(child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:740,maxHeight:740),
       child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,
         crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -94,7 +93,9 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
             section([
               field('name','Nome completo *'),
               dropdown('Área profissional',profession,professions,(v)=>profession=v),
-              field('service','Serviço / atendimento',hint:'Ex.: Treinamento individual'),
+              Text('Neste perfil: $clientLabel • $sessionLabel',
+                style:const TextStyle(color:Color(0xFFD8B56A),fontSize:12)),
+              field('service','Serviço / $sessionLabel',hint:'Descreva o serviço oferecido'),
               field('phone','Telefone / WhatsApp',hint:'(11) 99999-9999',
                 type:TextInputType.phone),
               field('email','E-mail',type:TextInputType.emailAddress),
@@ -105,7 +106,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
               dropdown('Situação',status,['Em dia','Pendente'],(v)=>status=v),
             ]),
             section([
-              Text('Configuração de $sessionLabel',style:Theme.of(context).textTheme.titleMedium),
+              Text('Agenda • $sessionLabel',style:Theme.of(context).textTheme.titleMedium),
               field('weekdays','Dias fixos',hint:'Ex.: SEG, QUA, SEX'),
               field('schedule','Horários por dia',hint:'Ex.: SEG 11:00; QUA 09:45'),
               field('duration','Duração em minutos',type:TextInputType.number),
