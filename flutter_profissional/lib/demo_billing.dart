@@ -222,7 +222,7 @@ class _DemoBillingState extends State<DemoBilling> {
       '{servico}':a.service,
     };
     String renderTemplate(String template){
-      var result=template.replaceAll(r'\\n','\n');
+      var result=template.replaceAll(r'\n','\n');
       for(final entry in replacements.entries){
         result=result.replaceAll(entry.key,entry.value);
       }
