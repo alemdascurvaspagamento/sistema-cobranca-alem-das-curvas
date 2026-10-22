@@ -6,9 +6,9 @@ import 'demo_ledger.dart';
 class ProfessionalDashboard extends StatefulWidget {
   const ProfessionalDashboard({super.key, required this.demo,
     required this.onClients, required this.onAgenda, required this.onBilling,
-    required this.onFinance});
+    required this.onFinance,required this.onSecretary});
   final bool demo;
-  final VoidCallback onClients, onAgenda, onBilling, onFinance;
+  final VoidCallback onClients, onAgenda, onBilling, onFinance, onSecretary;
 
   @override State<ProfessionalDashboard> createState()=>_ProfessionalDashboardState();
 }
