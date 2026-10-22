@@ -16,13 +16,13 @@ class ProfessionalDashboard extends StatefulWidget {
 class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   late int selectedMonth=DateTime.now().month;
   late int selectedYear=DateTime.now().year;
-  static const ink = Color(0xFF17243A);
+  static const ink = Color(0xFF132238);
   static const muted = Color(0xFF64748B);
-  static const border = Color(0xFFE2E8F0);
-  static const background = Color(0xFFEDF2F8);
-  static const green = Color(0xFF20835D);
-  static const amber = Color(0xFFB98522);
-  static const red = Color(0xFFC34B50);
+  static const border = Color(0xFFE9DDD3);
+  static const background = Color(0xFFFAF5F0);
+  static const green = Color(0xFF29856F);
+  static const amber = Color(0xFFE4A11B);
+  static const red = Color(0xFFE36C4A);
 
   Future<void> _notDone(BuildContext context,DemoAppointment a,DateTime day) async {
     final reason=await showModalBottomSheet<String>(context:context,
@@ -47,8 +47,8 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: Color(0xFFFFFFFF),
-      border: Border.all(color: const Color(0xFF245A98), width: 1.5),
-      borderRadius: BorderRadius.circular(17)),
+      border: Border.all(color: border, width: 1),
+      borderRadius: BorderRadius.circular(16)),
     child: child);
 
   Widget stat(String label, String value, String detail, IconData icon, Color accent) =>
@@ -70,12 +70,20 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           style: const TextStyle(fontSize: 11, color: muted)),
       ]));
 
+  Widget _miniMetric(String label,String value)=>Container(
+    constraints:const BoxConstraints(minWidth:125),padding:const EdgeInsets.all(10),
+    decoration:BoxDecoration(color:const Color(0xFFF8F5F2),borderRadius:BorderRadius.circular(10)),
+    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Text(label,style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700)),
+      Text(value,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w800)),
+    ]));
+
   Widget action(String label, String subtitle, IconData icon, VoidCallback onTap) =>
     Material(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(14),
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
         child:Container(
           padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
-          decoration:BoxDecoration(border:Border.all(color:const Color(0xFF245A98),width:1.5),
+          decoration:BoxDecoration(border:Border.all(color:border,width:1),
             borderRadius:BorderRadius.circular(14)),
           child:Row(children:[
             Container(width:38,height:38,alignment:Alignment.center,
@@ -121,54 +129,11 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Visão geral', style: TextStyle(
                 fontSize: 25, fontWeight: FontWeight.w800, color: ink)),
-              Text('${months[selectedMonth-1]} / $selectedYear • Seu negócio em uma única leitura',
+              Text('${months[selectedMonth-1]}/$selectedYear • Seu negócio em uma única leitura financeira e operacional.',
                 style: const TextStyle(fontSize: 12, color: muted)),
             ]),
           ]),
           const SizedBox(height: 14),
-          Container(
-            padding:const EdgeInsets.all(18),
-            decoration:BoxDecoration(
-              gradient:const LinearGradient(
-                colors:[Color(0xFF0C213A),Color(0xFF173B64)],
-                begin:Alignment.topLeft,end:Alignment.bottomRight),
-              borderRadius:BorderRadius.circular(18)),
-            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Row(children:[
-                const CircleAvatar(backgroundColor:Color(0xFF345B88),
-                  child:Icon(Icons.support_agent,color:Colors.white)),
-                const SizedBox(width:10),
-                const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
-                  children:[
-                    Text('Sua secretária',style:TextStyle(fontSize:19,
-                      fontWeight:FontWeight.w800,color:Colors.white)),
-                    Text('Resumo e prioridades do dia',
-                      style:TextStyle(fontSize:12,color:Color(0xFFD2E3F7))),
-                  ])),
-                TextButton(onPressed:widget.onSecretary,
-                  style:TextButton.styleFrom(foregroundColor:Colors.white),
-                  child:const Text('Ver tudo')),
-              ]),
-              const SizedBox(height:14),
-              if(widget.demo) ...[
-                Text('${appointments.length} atendimentos previstos hoje',
-                  style:const TextStyle(color:Colors.white,fontSize:15,fontWeight:FontWeight.w700)),
-                const SizedBox(height:6),
-                Text('${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length} cobranças vencidas • ${DemoData.currency(ledger.pending)} a receber',
-                  style:const TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
-              ] else const Text('Conecte seus dados para receber recomendações.',
-                style:TextStyle(color:Color(0xFFD2E3F7),fontSize:12)),
-              const SizedBox(height:14),
-              FilledButton.icon(onPressed:widget.onSecretary,
-                style:FilledButton.styleFrom(backgroundColor:Colors.white,
-                  foregroundColor:const Color(0xFF17375D),
-                  padding:const EdgeInsets.symmetric(vertical:13,horizontal:12)),
-                icon:const Icon(Icons.auto_awesome_outlined),
-                label:const Text('Ver prioridades e próximas ações',
-                  style:TextStyle(fontWeight:FontWeight.w700))),
-            ]),
-          ),
-          const SizedBox(height: 12),
           Row(children:[
             Expanded(child:DropdownButtonFormField<int>(
               value:selectedMonth,decoration:const InputDecoration(labelText:'Mês',
@@ -205,6 +170,73 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             return Wrap(spacing: 10, runSpacing: 10, children: [
               for (final metric in metrics)
                 SizedBox(width: cardWidth, height: 176, child: metric),
+            ]);
+          }),
+          const SizedBox(height: 14),
+          LayoutBuilder(builder:(context, constraints) {
+            final wide=constraints.maxWidth>=780;
+            final monthlyGoal=ledger.annualGoal/12;
+            final progress=monthlyGoal>0 ? (ledger.received/monthlyGoal).clamp(0.0,1.0) : 0.0;
+            final target=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              const Text('Meta de receita',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
+              const Text('Acompanhamento mensal derivado da meta anual.',style:TextStyle(fontSize:12,color:muted)),
+              const SizedBox(height:18),
+              Wrap(alignment:WrapAlignment.spaceBetween,children:[
+                Text(widget.demo?'Meta mensal  ${DemoData.currency(monthlyGoal)}':'Meta mensal  —',style:const TextStyle(fontWeight:FontWeight.w700,color:ink)),
+                Text(widget.demo?'${(progress*100).toStringAsFixed(1)}%':'—',style:const TextStyle(fontWeight:FontWeight.w800,color:ink)),
+              ]),
+              const SizedBox(height:10),
+              ClipRRect(borderRadius:BorderRadius.circular(9),child:LinearProgressIndicator(
+                value:widget.demo?progress:0,minHeight:10,color:green,backgroundColor:background)),
+              const SizedBox(height:12),
+              Wrap(spacing:12,runSpacing:10,children:[
+                _miniMetric('META ANUAL',widget.demo?DemoData.currency(ledger.annualGoal):'—'),
+                _miniMetric('RECEBIDO NO MÊS',widget.demo?DemoData.currency(ledger.received):'—'),
+                _miniMetric('FALTA NO MÊS',widget.demo?DemoData.currency((monthlyGoal-ledger.received).clamp(0.0,double.infinity)):'—'),
+              ]),
+              const SizedBox(height:12),
+              Text(widget.demo?(progress>=1?'Meta mensal atingida.':'Acompanhe o progresso da meta mensal.'):'Meta disponível após conectar os dados.',style:const TextStyle(color:muted,fontSize:12)),
+            ]));
+            final financial=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              const Text('Agenda financeira',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
+              const Text('Entradas e saídas do mês em uma única leitura.',style:TextStyle(fontSize:12,color:muted)),
+              const SizedBox(height:18),
+              Wrap(spacing:10,runSpacing:10,children:[
+                _miniMetric('A PAGAR',widget.demo?DemoData.currency(ledger.paidExpenses):'—'),
+                _miniMetric('PAGO',widget.demo?DemoData.currency(ledger.received):'—'),
+                _miniMetric('A RECEBER',widget.demo?DemoData.currency(ledger.pending):'—'),
+              ]),
+              const SizedBox(height:12),
+              OutlinedButton(onPressed:widget.onFinance,child:const Text('Abrir agenda financeira')),
+              const SizedBox(height:12),
+              Wrap(spacing:10,runSpacing:10,children:[
+                _miniMetric('CLIENTES ATIVOS',widget.demo?'${ledger.amounts.length}':'—'),
+                _miniMetric('ATENDIMENTOS',widget.demo?'${appointments.length}':'—'),
+                _miniMetric('TICKET MÉDIO',widget.demo&&appointments.isNotEmpty?DemoData.currency(planned/appointments.length):'—'),
+              ]),
+            ]));
+            return wide?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Expanded(child:target),const SizedBox(width:14),Expanded(child:financial),
+            ]):Column(children:[target,const SizedBox(height:14),financial]);
+          }),
+          const SizedBox(height: 16),
+          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Text('Boa tarde, Prof. 👋',style:TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
+            Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
+              style:const TextStyle(fontSize:12,color:muted)),
+          ])),
+          const SizedBox(height: 14),
+          LayoutBuilder(builder:(context,size) {
+            final columns=size.maxWidth>=950?4:size.maxWidth>=500?2:1;
+            final w=(size.maxWidth-(columns-1)*10)/columns;
+            final quick=<Widget>[
+              stat('Atendimentos hoje',widget.demo?'${appointments.length}':'—','Agenda do dia',Icons.calendar_today_outlined,red),
+              stat('Clientes ativos',widget.demo?'${ledger.amounts.length}':'—','Clientes cadastrados',Icons.people_outline,red),
+              stat('A receber',widget.demo?DemoData.currency(ledger.pending):'—','Valores pendentes',Icons.payments_outlined,red),
+              stat('Cobranças atrasadas',widget.demo?'${ledger.amounts.keys.where((n)=>ledger.overdue(n)).length}':'—','Pendências vencidas',Icons.access_time,red),
+            ];
+            return Wrap(spacing:10,runSpacing:10,children:[
+              for(final q in quick)SizedBox(width:w,height:145,child:q),
             ]);
           }),
           const SizedBox(height:14),
@@ -318,51 +350,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               style: const TextStyle(fontSize: 12, color: muted)),
           ])),
           const SizedBox(height: 14),
-          LayoutBuilder(builder: (context, size) {
-            final wide = size.maxWidth >= 780;
-            final target = panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Meta de receita', style: TextStyle(
-                  fontSize: 17, fontWeight: FontWeight.w800, color: ink)),
-                const SizedBox(height: 4),
-                const Text('Acompanhamento mensal e anual',
-                  style: TextStyle(fontSize: 12, color: muted)),
-                const SizedBox(height: 22),
-                Text(widget.demo ? '${DemoData.currency(ledger.received)} de ${DemoData.currency(ledger.annualGoal)}' : 'Aguardando dados financeiros',
-                  style: const TextStyle(color: muted)),
-                const SizedBox(height: 12),
-                ClipRRect(borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(value:widget.demo && ledger.annualGoal>0 ? (ledger.received/ledger.annualGoal).clamp(0.0,1.0):0, minHeight: 9,
-                    color: green, backgroundColor: background)),
-                const SizedBox(height: 15),
-                Text(widget.demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
-                  style: const TextStyle(fontSize: 12, color: muted)),
-                const SizedBox(height: 12),
-                Align(alignment: Alignment.centerLeft,
-                  child: TextButton.icon(onPressed: widget.demo ? () async {
-                    final controller=TextEditingController(text:ledger.annualGoal.toStringAsFixed(0));
-                    final result=await showDialog<double>(context:context,builder:(ctx)=>AlertDialog(
-                      title:const Text('Meta anual demonstrativa'),
-                      content:TextField(controller:controller,
-                        keyboardType:const TextInputType.numberWithOptions(decimal:true),
-                        decoration:const InputDecoration(labelText:'Meta em reais')),
-                      actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
-                        FilledButton(onPressed:()=>Navigator.pop(ctx,double.tryParse(controller.text.replaceAll(',','.'))),child:const Text('Salvar'))]));
-                    controller.dispose();
-                    if(result!=null&&result>0)ledger.setGoal(result);
-                  } : widget.onFinance,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Definir meta'))),
-              ]));
-            const agenda = SizedBox.shrink();
-            if (!wide) return Column(children: [
-              target, const SizedBox(height: 12), agenda,
-            ]);
-            return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: target), const SizedBox(width: 12),
-              Expanded(child: agenda),
-            ]);
-          }),
           const SizedBox(height: 12),
           const Text('PAINEL DEMONSTRATIVO • Dados fictícios da agenda. '
             'Indicadores financeiros indisponíveis até integração e validação.',
