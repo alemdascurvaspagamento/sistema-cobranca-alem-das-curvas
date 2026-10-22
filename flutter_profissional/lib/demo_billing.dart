@@ -339,34 +339,104 @@ class _DemoBillingState extends State<DemoBilling> {
         DataCell(Text('${a.rescheduled}')),
         DataCell(Text('${a.credits}')),
         DataCell(Text(DemoData.currency(a.discount))),
-        DataCell(Text(DemoData.currency(a.total),
+        DataCell(Text(DemoData.currency(totalFor(a)),
           style:const TextStyle(color:_gold,fontWeight:FontWeight.bold))),
         DataCell(Text(statusFor(a))),
         DataCell(actions(a)),
       ])]));
-  Widget mobileCard(BillingAccount a)=>Card(color:_surface,child:Padding(
-    padding:const EdgeInsets.all(14),child:Column(
+  Widget mobileCard(BillingAccount a)=>Card(
+    color:_surface,margin:const EdgeInsets.only(bottom:12),
+    shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
+      side:const BorderSide(color:Color(0xFF36383E))),
+    child:Padding(padding:const EdgeInsets.all(16),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-        Row(children:[Expanded(child:Text(a.name,
-          style:const TextStyle(fontSize:16,fontWeight:FontWeight.bold))),
-          Chip(label:Text(statusFor(a)))]),
-        Text(a.service,style:const TextStyle(color:Colors.white70)),
+        Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          CircleAvatar(radius:21,backgroundColor:_gold.withValues(alpha:.15),
+            child:Text(a.name.split(' ').map((w)=>w.isNotEmpty?w[0]:'').take(2).join(),
+              style:const TextStyle(color:_gold,fontWeight:FontWeight.w800,fontSize:14))),
+          const SizedBox(width:10),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text(a.name,maxLines:2,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800)),
+            const SizedBox(height:3),
+            Text(a.service,maxLines:2,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(fontSize:12,color:Colors.white70)),
+          ])),
+          const SizedBox(width:6),
+          Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:6),
+            decoration:BoxDecoration(
+              color:paidFor(a)?const Color(0xFF103C30):const Color(0xFF352C19),
+              borderRadius:BorderRadius.circular(9),
+              border:Border.all(color:paidFor(a)?const Color(0xFF287E61):_gold)),
+            child:Text(statusFor(a),style:TextStyle(fontSize:11,
+              fontWeight:FontWeight.w700,
+              color:paidFor(a)?const Color(0xFF6EE2B0):_gold))),
+        ]),
+        const SizedBox(height:13),
+        const Divider(height:1,color:Color(0xFF383A40)),
+        const SizedBox(height:12),
+        Text('${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
+          '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
+          maxLines:2,style:const TextStyle(fontSize:12,color:Colors.white70)),
         const SizedBox(height:8),
-        Text('${a.completed} realizados · ${a.cancelled} cancelados · '
-          '${a.credits} créditos',style:const TextStyle(fontSize:12)),
+        const Text('TOTAL DO MÊS',style:TextStyle(
+          fontSize:10,letterSpacing:.8,color:Colors.white60)),
+        const SizedBox(height:2),
+        Text(DemoData.currency(totalFor(a)),maxLines:1,
+          overflow:TextOverflow.ellipsis,
+          style:const TextStyle(color:_gold,fontSize:23,fontWeight:FontWeight.w800)),
+        const SizedBox(height:12),
+        Row(children:[
+          Expanded(child:OutlinedButton.icon(
+            onPressed:()=>details(a),
+            icon:const Icon(Icons.event_note_outlined,size:16),
+            label:const Text('Atendimentos',maxLines:1,overflow:TextOverflow.ellipsis),
+            style:OutlinedButton.styleFrom(foregroundColor:_gold,
+              padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
+              side:const BorderSide(color:_gold)))),
+          const SizedBox(width:8),
+          if(!paidFor(a)) ...[
+            Expanded(child:OutlinedButton.icon(
+              onPressed:()=>whatsapp(a),
+              icon:const Icon(Icons.chat_outlined,size:16,color:Color(0xFF6EE2B0)),
+              label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
+              style:OutlinedButton.styleFrom(
+                padding:const EdgeInsets.symmetric(horizontal:4,vertical:12),
+                foregroundColor:const Color(0xFF6EE2B0),
+                side:const BorderSide(color:Color(0xFF287E61))))),
+            const SizedBox(width:6),
+          ],
+          PopupMenuButton<String>(
+            tooltip:'Mais ações',
+            onSelected:(choice){
+              if(choice=='payment')changePaid(a);
+              if(choice=='absence')absencePeriod(a);
+            },
+            itemBuilder:(_)=>[
+              PopupMenuItem(value:'payment',child:Text(paidFor(a)?
+                'Reabrir cobrança':'Registrar pagamento')),
+              const PopupMenuItem(value:'absence',child:Text('Férias / ausência')),
+            ],
+            icon:const Icon(Icons.more_horiz,color:_gold)),
+        ]),
+      ])));
+
+  Widget metric(String label,double value,IconData icon)=>Container(
+    padding:const EdgeInsets.all(14),
+    decoration:BoxDecoration(color:_surface,borderRadius:BorderRadius.circular(14),
+      border:Border.all(color:const Color(0xFF36383E))),
+    child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+      mainAxisSize:MainAxisSize.min,children:[
+        Icon(icon,color:_gold,size:20),
         const SizedBox(height:8),
-        Row(children:[Expanded(child:Text(DemoData.currency(a.total),
-          style:const TextStyle(color:_gold,fontSize:20,fontWeight:FontWeight.bold))),
-          actions(a)]),
-      ])));
-  Widget metric(String label,double value,IconData icon)=>Card(
-    color:_surface,child:Padding(padding:const EdgeInsets.all(14),
-      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Icon(icon,color:_gold,size:20),const SizedBox(height:8),
-        Text(label,style:const TextStyle(fontSize:12,color:Colors.white70)),
-        Text(DemoData.currency(value),
-          style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
-      ])));
+        Text(label,maxLines:1,overflow:TextOverflow.ellipsis,
+          style:const TextStyle(fontSize:12,color:Colors.white70)),
+        const SizedBox(height:5),
+        FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+          child:Text(DemoData.currency(value),maxLines:1,
+            style:const TextStyle(fontSize:21,fontWeight:FontWeight.w800))),
+      ]));
+
   @override Widget build(BuildContext context){
     final total=accounts.fold<double>(0,(sum,a)=>sum+totalFor(a));
     final received=accounts.where((a)=>paidFor(a)).fold<double>(0,(sum,a)=>sum+totalFor(a));
@@ -377,14 +447,18 @@ class _DemoBillingState extends State<DemoBilling> {
       const Text('Demonstrativo por atendimento, com cálculo auditável e revisão humana.',
         style:TextStyle(color:Colors.white70)),
       const SizedBox(height:14),
-      LayoutBuilder(builder:(context,box)=>GridView.count(
-        crossAxisCount:box.maxWidth<580?1:3,childAspectRatio:box.maxWidth<580?5:2.1,
-        shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),
-        children:[
-          metric('Total calculado',total,Icons.receipt_long_outlined),
-          metric('Recebido',received,Icons.check_circle_outline),
-          metric('A receber',total-received,Icons.schedule_outlined),
-        ])),
+      LayoutBuilder(builder:(context,box){
+        final wide=box.maxWidth>=670;
+        return Wrap(spacing:10,runSpacing:10,children:[
+          for(final entry in <(String,double,IconData)>[
+            ('Total calculado',total,Icons.receipt_long_outlined),
+            ('Recebido',received,Icons.check_circle_outline),
+            ('A receber',total-received,Icons.schedule_outlined),
+          ])
+            SizedBox(width:wide?(box.maxWidth-20)/3:box.maxWidth,
+              child:metric(entry.$1,entry.$2,entry.$3)),
+        ]);
+      }),
       const SizedBox(height:12),
       Wrap(spacing:12,runSpacing:8,crossAxisAlignment:WrapCrossAlignment.center,
         children:[
@@ -404,9 +478,9 @@ class _DemoBillingState extends State<DemoBilling> {
         Column(children:[for(final a in data)mobileCard(a)]):
         Card(color:_surface,child:desktopTable(data))),
       const SizedBox(height:12),
-      const Text('DADOS FICTÍCIOS • Valores e status não são persistidos. '
-        'O WhatsApp abre uma mensagem para revisão, sem envio automático. '
-        'Este demonstrativo não está sincronizado com a agenda nem com o financeiro.',
+      const Text('DADOS FICTÍCIOS • Alterações de atendimentos atualizam os cálculos '
+        'e a dashboard nesta sessão, sem persistência no banco. '
+        'WhatsApp exige revisão humana antes do envio.',
         style:TextStyle(color:Colors.white60,fontSize:12)),
     ]);
   }
