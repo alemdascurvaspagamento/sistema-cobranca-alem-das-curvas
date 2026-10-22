@@ -12,10 +12,10 @@ class ProfessionalAgenda extends StatefulWidget {
 }
 
 class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
-  static const gold = Color(0xFFD8B56A);
-  static const silver = Color(0xFFCBD0D8);
-  static const surface = Color(0xFF1A1D22);
-  static const border = Color(0xFF44474F);
+  static const gold = Color(0xFF0C213A);
+  static const silver = Color(0xFF64748B);
+  static const surface = Color(0xFFFFFFFF);
+  static const border = Color(0xFFD4E0ED);
   int view = 0;
   late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? selectedDay;
@@ -106,7 +106,7 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
           onSelectionChanged: (selection) => setState(() { view = selection.first; _load(); }),
           style: ButtonStyle(
             foregroundColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected) ? const Color(0xFF101216) : silver,
+              (states) => states.contains(WidgetState.selected) ? const Color(0xFFEDF2F8) : silver,
             ),
             backgroundColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected) ? gold : surface,
@@ -225,7 +225,7 @@ class _ProfessionalAgendaState extends State<ProfessionalAgenda> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('$day', style: TextStyle(
-                  color: chosen ? const Color(0xFF101216) : Colors.white,
+                  color: chosen ? const Color(0xFFEDF2F8) : Colors.white,
                   fontWeight: chosen || isToday ? FontWeight.bold : FontWeight.normal,
                 )),
               ),
@@ -256,10 +256,10 @@ class _EmptyAgenda extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 22),
         child: Column(
           children: [
-            const Icon(Icons.event_available_outlined, color: Color(0xFFD8B56A), size: 38),
+            const Icon(Icons.event_available_outlined, color: Color(0xFF0C213A), size: 38),
             const SizedBox(height: 12),
             Text(label, textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFFCBD0D8))),
+                style: const TextStyle(color: Color(0xFF64748B))),
           ],
         ),
       );
