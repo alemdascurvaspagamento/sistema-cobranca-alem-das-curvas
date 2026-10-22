@@ -149,36 +149,39 @@ class _DemoClientsState extends State<DemoClients> {
             const Divider(height:1,color:Color(0xFFE2E8F0)),
             const SizedBox(height:10),
             LayoutBuilder(builder:(context,box){
-              final compact=box.maxWidth<460;
-              return Wrap(spacing:8,runSpacing:8,children:[
-                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-24)/4,
+              final compact=box.maxWidth<470;
+              return Row(children:[
+                Expanded(child:
                   child:OutlinedButton.icon(onPressed:()=>openWhatsApp(c),
                     icon:const Icon(Icons.chat_outlined,size:17),
-                    label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
+                    label:Text(compact?'':'WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
                     style:OutlinedButton.styleFrom(
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
                       foregroundColor:Colors.white,
-                      backgroundColor:const Color(0xFF0C213A),
-                      side:const BorderSide(color:Color(0xFF0C213A))))),
-                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                      backgroundColor:const Color(0xFF25D366),
+                      side:const BorderSide(color:Color(0xFF25D366))))),
+                const SizedBox(width:6),
+                Expanded(child:
                     child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
                       icon:const Icon(Icons.receipt_long_outlined,size:17),
-                      label:const Text('Cobrar',maxLines:1,overflow:TextOverflow.ellipsis),
+                      label:Text(compact?'':'Cobrar',maxLines:1,overflow:TextOverflow.ellipsis),
                       style:OutlinedButton.styleFrom(
                         padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
                         foregroundColor:Colors.white,
                         backgroundColor:const Color(0xFF0C213A),
                         side:const BorderSide(color:Color(0xFF0C213A))))),
-                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                const SizedBox(width:6),
+                Expanded(child:
                   child:OutlinedButton.icon(onPressed:()=>edit(c),
                     icon:const Icon(Icons.edit_outlined,size:17),
-                    label:const Text('Editar',maxLines:1,overflow:TextOverflow.ellipsis),
+                    label:Text(compact?'':'Editar',maxLines:1,overflow:TextOverflow.ellipsis),
                     style:OutlinedButton.styleFrom(
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12)))),
-                SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
+                const SizedBox(width:6),
+                Expanded(child:
                   child:OutlinedButton.icon(onPressed:()=>deleteClient(c),
                     icon:const Icon(Icons.delete_outline,size:17),
-                    label:const Text('Excluir',maxLines:1,overflow:TextOverflow.ellipsis),
+                    label:Text(compact?'':'Excluir',maxLines:1,overflow:TextOverflow.ellipsis),
                     style:OutlinedButton.styleFrom(
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
                       foregroundColor:const Color(0xFF64748B)))),
