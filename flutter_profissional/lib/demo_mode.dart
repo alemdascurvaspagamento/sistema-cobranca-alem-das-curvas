@@ -95,15 +95,22 @@ class _DemoAgendaState extends State<DemoAgenda> {
                 value: charge,
                 onChanged: (value) => refresh(() => charge = value),
               ),
-              TextField(controller: note, maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Motivo ou observações')),
+              TextField(controller: note, maxLines: 5, minLines: 3,
+                textCapitalization:TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Anotações deste atendimento',
+                  hintText: 'Registre evolução, observações e orientações para o próximo encontro',
+                  alignLabelWithHint:true,border:OutlineInputBorder())),
+              const SizedBox(height:8),
+              const Text('As anotações ficam no histórico do cliente nesta sessão de demonstração.',
+                style:TextStyle(fontSize:11,color:Color(0xFF64748B))),
             ]),
           )),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancelar')),
             FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Salvar')),
+              child: const Text('Salvar atendimento e anotação')),
           ],
         )));
     if (confirmed == true && mounted) setState(() {
