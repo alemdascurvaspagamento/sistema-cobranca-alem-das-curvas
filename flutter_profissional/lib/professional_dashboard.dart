@@ -192,6 +192,12 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   icon:const Icon(Icons.close,color:red),label:const Text('Não realizada')),
               ]),
             ],
+            const SizedBox(height:8),
+            Align(alignment:Alignment.centerLeft,child:OutlinedButton.icon(
+              onPressed:widget.onClients,
+              icon:const Icon(Icons.person_add_alt_1_outlined,size:18),
+              label:const Text('Novo cliente'),
+              style:OutlinedButton.styleFrom(foregroundColor:amber))),
             const Text('Atendimento realizado não confirma pagamento.',
               style:TextStyle(color:muted,fontSize:11)),
           ])),
