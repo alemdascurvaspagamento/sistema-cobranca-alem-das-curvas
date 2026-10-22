@@ -323,42 +323,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                     icon: const Icon(Icons.edit_outlined),
                     label: const Text('Definir meta'))),
               ]));
-            final agenda = panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Agenda de hoje', style: TextStyle(
-                  fontSize: 17, fontWeight: FontWeight.w800, color: ink)),
-                const SizedBox(height: 4),
-                const Text('Atendimentos previstos — não representam receita recebida',
-                  style: TextStyle(fontSize: 12, color: muted)),
-                const SizedBox(height: 13),
-                if (appointments.isEmpty)
-                  const Text('Nenhum atendimento disponível.',
-                    style: TextStyle(color: muted)),
-                for (final a in appointments)
-                  Padding(padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Row(children: [
-                      Container(width: 52, alignment: Alignment.centerLeft,
-                        child: Text(a.hour, style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: green))),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(a.client, style: const TextStyle(
-                            fontWeight: FontWeight.w600, color: ink)),
-                          Text(a.service, style: const TextStyle(
-                            fontSize: 11, color: muted)),
-                        ])),
-                      Text(DemoData.currency(a.amount),
-                        style: const TextStyle(fontSize: 12, color: ink)),
-                    ])),
-                if (widget.demo) Padding(padding: const EdgeInsets.only(top: 10),
-                  child: Text('Total previsto nesta agenda fictícia: ${DemoData.currency(planned)}',
-                    style: const TextStyle(fontSize: 12, color: muted))),
-                const SizedBox(height: 8),
-                Align(alignment: Alignment.centerLeft,
-                  child: TextButton.icon(onPressed: widget.onAgenda,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Abrir calendário'))),
-              ]));
+            const agenda = SizedBox.shrink();
             if (!wide) return Column(children: [
               target, const SizedBox(height: 12), agenda,
             ]);
