@@ -344,7 +344,7 @@ class _DemoBillingState extends State<DemoBilling> {
     OutlinedButton.icon(onPressed:()=>details(a),
       icon:const Icon(Icons.event_note_outlined,size:17),
       label:const Text('Ver atendimentos')),
-    if(!paidFor(a)) FilledButton.icon(onPressed:()=>whatsapp(a),
+    FilledButton.icon(onPressed:()=>whatsapp(a),
       icon:const Icon(Icons.chat_outlined,size:17),
       label:const Text('WhatsApp')),
     PopupMenuButton<String>(
@@ -382,7 +382,8 @@ class _DemoBillingState extends State<DemoBilling> {
         DataCell(Column(mainAxisAlignment:MainAxisAlignment.center,
           crossAxisAlignment:CrossAxisAlignment.start,children:[
           Text(a.name,style:const TextStyle(fontWeight:FontWeight.bold)),
-          Text(a.service,style:const TextStyle(fontSize:11,color:Color(0xFF64748B)))])),
+          Text(a.service,style:const TextStyle(fontSize:11,color:Color(0xFF64748B))),
+          Text(a.phone,style:const TextStyle(fontSize:11,color:Color(0xFF64748B)))])),
         DataCell(Text(DemoData.currency(a.unitPrice))),
         DataCell(Text('${a.scheduled}')),
         DataCell(Text('${a.completed}')),
@@ -410,6 +411,7 @@ class _DemoBillingState extends State<DemoBilling> {
             Text(a.name,maxLines:2,overflow:TextOverflow.ellipsis,
               style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800)),
             const SizedBox(height:3),
+            Text(a.phone,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
             Text(a.service,maxLines:2,overflow:TextOverflow.ellipsis,
               style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
             const SizedBox(height:3),
@@ -461,7 +463,7 @@ class _DemoBillingState extends State<DemoBilling> {
               side:const BorderSide(color:Color(0xFF245A98))))),
           const SizedBox(width:7),
           Expanded(flex:4,child:OutlinedButton.icon(
-            onPressed:paidFor(a)?null:()=>whatsapp(a),
+            onPressed:()=>whatsapp(a),
             icon:const Icon(Icons.chat_outlined,size:16),
             label:const Text('WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
             style:OutlinedButton.styleFrom(
