@@ -180,9 +180,9 @@ class _DemoAgendaState extends State<DemoAgenda> {
         onSelectionChanged: (value) => setState(() => tab = value.first),
         style: ButtonStyle(
           foregroundColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? Colors.black : Colors.white),
+            s.contains(WidgetState.selected) ? Colors.white : const Color(0xFF0C213A)),
           backgroundColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? gold : surface),
+            s.contains(WidgetState.selected) ? const Color(0xFF0C213A) : const Color(0xFFE5EFFA)),
         ),
       ),
       const SizedBox(height: 12),
