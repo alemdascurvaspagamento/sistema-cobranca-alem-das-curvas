@@ -12,45 +12,36 @@ class AgendaAppointment {
   });
 }
 
+/// Usa as mesmas tabelas e a mesma identidade do módulo de clientes.
+/// RLS no banco é obrigatória; o filtro por owner_id não a substitui.
 class AgendaRepository {
   final SupabaseClient client;
   const AgendaRepository(this.client);
 
-  Future<String> workspaceForCurrentUser() async {
-    final user = client.auth.currentUser;
-    if (user == null) throw StateError('Faça login para consultar a agenda.');
-    final member = await client.from('workspace_members')
-        .select('workspace_id')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .limit(1)
-        .maybeSingle();
-    final workspaceId = member?['workspace_id'] as String?;
-    if (workspaceId == null) {
-      throw StateError('Nenhum espaço de trabalho ativo encontrado.');
-    }
-    return workspaceId;
-  }
-
   Future<List<AgendaAppointment>> forPeriod(DateTime start, DateTime end) async {
-    final workspace = await workspaceForCurrentUser();
-    final rows = await client.from('appointments')
-        .select('id,starts_at,ends_at,status,clients(display_name)')
-        .eq('workspace_id', workspace)
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('Faça login para consultar a agenda.');
+    }
+    final rows = await client.from('cf_appointments')
+        .select('id,starts_at,status,cf_clients(name)')
+        .eq('owner_id', userId)
         .gte('starts_at', start.toUtc().toIso8601String())
         .lt('starts_at', end.toUtc().toIso8601String())
         .order('starts_at', ascending: true)
         .limit(1000);
     return (rows as List).map((row) {
-      final r = row as Map<String, dynamic>;
-      final nested = r['clients'];
-      final name = nested is Map ? nested['display_name']?.toString() : null;
+      final r = Map<String, dynamic>.from(row as Map);
+      final nested = r['cf_clients'];
+      final name = nested is Map ? nested['name']?.toString() : null;
+      final startAt = DateTime.parse(r['starts_at'] as String).toLocal();
       return AgendaAppointment(
-        id: r['id'] as String,
+        id: r['id'].toString(),
         clientName: name ?? 'Cliente não vinculado',
-        startsAt: DateTime.parse(r['starts_at'] as String).toLocal(),
-        endsAt: DateTime.parse(r['ends_at'] as String).toLocal(),
-        status: (r['status'] ?? 'Agendado').toString(),
+        startsAt: startAt,
+        // O esquema atual não registra a duração. Não inventar horários.
+        endsAt: startAt,
+        status: (r['status'] ?? 'Agendada').toString(),
       );
     }).toList();
   }
