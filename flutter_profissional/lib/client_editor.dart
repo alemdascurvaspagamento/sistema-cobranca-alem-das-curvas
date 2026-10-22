@@ -97,7 +97,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
             style:Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height:5),
           const Text('Cadastro adaptável por profissão • demonstração sem dados persistentes',
-            style:TextStyle(color:Colors.white60,fontSize:12)),
+            style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
           const SizedBox(height:14),
           TabBar(controller:tabs,isScrollable:true,tabs:const [
             Tab(icon:Icon(Icons.person_outline),text:'Dados'),
@@ -144,7 +144,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
 
               field('duration','Duração em minutos',type:TextInputType.number),
               const Text('Datas, recorrências e remarcações serão integradas à agenda real em etapa posterior.',
-                style:TextStyle(color:Colors.white60)),
+                style:TextStyle(color:Color(0xFF64748B))),
             ]),
             section([
               field('plan','Plano',hint:'Ex.: 2x por semana'),
@@ -154,7 +154,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
               dropdown('Forma de pagamento',method,['Pix','Transferência','Dinheiro','Cartão','Boleto','Outro'],(v)=>method=v),
               field('pixKey','Chave Pix'),
               const Text('Valores informativos. Nenhuma cobrança ou pagamento é executado.',
-                style:TextStyle(color:Colors.white60)),
+                style:TextStyle(color:Color(0xFF64748B))),
             ]),
             section([
               const ListTile(leading:Icon(Icons.history),
