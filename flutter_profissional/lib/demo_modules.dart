@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
 import 'client_editor.dart';
+import 'demo_ledger.dart';
 
 const demoGold = Color(0xFFD8B56A);
 const demoSurface = Color(0xFF1A1D22);
@@ -24,6 +25,12 @@ class _DemoClientsState extends State<DemoClients> {
     DemoClient('Fernanda Lima','Acompanhamento','Em dia','(11) 99999-0003'),
     DemoClient('Paulo Martins','Retorno','Em dia','(11) 99999-0004'),
   ];
+  final ledger=DemoLedger.instance;
+  @override void initState(){super.initState();ledger.addListener(_refresh);}
+  void _refresh(){if(mounted)setState((){});}
+  @override void dispose(){ledger.removeListener(_refresh);super.dispose();}
+  String financialStatus(DemoClient c)=>ledger.amounts.containsKey(c.name)?
+    (ledger.isPaid(c.name)?'Em dia':ledger.paymentStatus(c.name)):c.status;
   String search = '';
   String clientFilter = 'Todos';
   Future<void> openBillingWhatsApp(DemoClient client) async {
@@ -87,7 +94,7 @@ class _DemoClientsState extends State<DemoClients> {
   @override Widget build(BuildContext context) {
     final term=search.trim().toLowerCase();
     final shown=clients.where((c) =>
-      (clientFilter=='Todos' || c.status==clientFilter) &&
+      (clientFilter=='Todos' || financialStatus(c)==clientFilter) &&
       (c.name.toLowerCase().contains(term) || c.service.toLowerCase().contains(term) ||
         c.phone.toLowerCase().contains(term))).toList();
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -130,9 +137,9 @@ class _DemoClientsState extends State<DemoClients> {
               const SizedBox(width:8),
               Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
                 decoration:BoxDecoration(
-                  color:c.status=='Em dia'?const Color(0xFF16392D):c.status=='Em atraso'?const Color(0xFF44252B):const Color(0xFF3A2E1D),
+                  color:financialStatus(c)=='Em dia'?const Color(0xFF16392D):financialStatus(c)=='Em atraso'?const Color(0xFF44252B):const Color(0xFF3A2E1D),
                   borderRadius:BorderRadius.circular(9)),
-                child:Text(c.status,maxLines:1,style:TextStyle(
+                child:Text(financialStatus(c),maxLines:1,style:TextStyle(
                   color:c.status=='Em dia'?const Color(0xFF7EE2AD):c.status=='Em atraso'?const Color(0xFFF1767B):demoGold,
                   fontSize:11,fontWeight:FontWeight.w700))),
             ]),
@@ -150,7 +157,7 @@ class _DemoClientsState extends State<DemoClients> {
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
                       foregroundColor:const Color(0xFF6EE2B0),
                       side:const BorderSide(color:Color(0xFF287E61))))),
-                if(c.status=='Pendente'||c.status=='Em atraso')
+                if(financialStatus(c)=='Pendente'||financialStatus(c)=='Em atraso')
                   SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
                     child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
                       icon:const Icon(Icons.receipt_long_outlined,size:17),
