@@ -121,6 +121,46 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       Text(value,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w800)),
     ]));
 
+  Widget _goalChart(String title, double achieved, double goal, String subtitle) {
+    final progress=goal>0?(achieved/goal).clamp(0.0,1.0).toDouble():0.0;
+    final remaining=(goal-achieved).clamp(0.0,double.infinity).toDouble();
+    return Container(
+      padding:const EdgeInsets.all(13),
+      decoration:BoxDecoration(color:const Color(0xFFF3F7FC),
+        borderRadius:BorderRadius.circular(12),
+        border:Border.all(color:const Color(0xFFB9D0EA))),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(title,style:const TextStyle(color:ink,fontWeight:FontWeight.w800,fontSize:14)),
+        const SizedBox(height:4),
+        Text(subtitle,style:const TextStyle(color:muted,fontSize:11)),
+        const SizedBox(height:12),
+        Row(children:[
+          SizedBox(width:72,height:72,child:Stack(alignment:Alignment.center,children:[
+            SizedBox.expand(child:CircularProgressIndicator(value:progress,
+              strokeWidth:9,color:green,backgroundColor:const Color(0xFFD4E2F1))),
+            Text('${(progress*100).toStringAsFixed(0)}%',
+              style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),
+          ])),
+          const SizedBox(width:12),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text('Conquistado: ${DemoData.currency(achieved)}',
+              style:const TextStyle(fontSize:12,color:ink,fontWeight:FontWeight.w700)),
+            const SizedBox(height:5),
+            Text('Faltam: ${DemoData.currency(remaining)}',
+              style:const TextStyle(fontSize:12,color:muted)),
+            const SizedBox(height:5),
+            Text('Meta: ${DemoData.currency(goal)}',
+              style:const TextStyle(fontSize:11,color:muted)),
+          ])),
+        ]),
+        const SizedBox(height:12),
+        ClipRRect(borderRadius:BorderRadius.circular(8),
+          child:LinearProgressIndicator(value:progress,minHeight:8,
+            backgroundColor:const Color(0xFFD4E2F1),color:green)),
+      ]),
+    );
+  }
+
   Widget action(String label, String subtitle, IconData icon, VoidCallback onTap) =>
     Material(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(14),
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
@@ -273,6 +313,26 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             final target=panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               const Text('Meta de receita',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800,color:ink)),
               const Text('Acompanhamento mensal derivado da meta anual.',style:TextStyle(fontSize:12,color:muted)),
+              if(widget.demo) ...[
+                LayoutBuilder(builder:(context,box) {
+                  final annual=ledger.annualGoal;
+                  // O modo demo não possui histórico de recebimentos por mês.
+                  // A projeção anual é apenas um cenário linear, não receita realizada.
+                  final monthlyReference=annual/12;
+                  final projectedYear=ledger.received*12;
+                  final monthly=_goalChart('Meta mensal',ledger.received,monthlyReference,
+                    'Recebido no período demonstrativo');
+                  final yearly=_goalChart('Projeção anual',projectedYear,annual,
+                    'Cenário: mês atual repetido por 12 meses');
+                  return box.maxWidth>=630?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Expanded(child:monthly),const SizedBox(width:12),Expanded(child:yearly),
+                  ]):Column(children:[monthly,const SizedBox(height:12),yearly]);
+                }),
+                const SizedBox(height:12),
+                const Text('Projeção ilustrativa: não representa receita anual recebida. '
+                  'A evolução anual real exige histórico financeiro mensal.',
+                  style:TextStyle(fontSize:11,color:muted)),
+              ],
               const SizedBox(height:18),
               Wrap(alignment:WrapAlignment.spaceBetween,children:[
                 Text(widget.demo?'Meta mensal  ${DemoData.currency(monthlyGoal)}':'Meta mensal  —',style:const TextStyle(fontWeight:FontWeight.w700,color:ink)),
