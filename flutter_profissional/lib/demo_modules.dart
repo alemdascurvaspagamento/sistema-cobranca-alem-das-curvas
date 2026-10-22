@@ -197,6 +197,8 @@ class DemoFinance extends StatefulWidget {
 class _DemoFinanceState extends State<DemoFinance> {
   String filter = 'Todos';
   double annualGoal = 0;
+  bool trackAnnualGoal = false;
+  String balancePeriod = 'Mensal';
   Future<void> editAnnualGoal() async {
     final controller=TextEditingController(text:annualGoal>0?annualGoal.toStringAsFixed(0):'');
     final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
@@ -267,6 +269,58 @@ class _DemoFinanceState extends State<DemoFinance> {
         (filter=='Pendentes' && !e.paid);
     }).toList();
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      Card(color:demoSurface,shape:RoundedRectangleBorder(
+        borderRadius:BorderRadius.circular(16),
+        side:const BorderSide(color:Color(0xFF245A98),width:1.3)),
+        child:Padding(padding:const EdgeInsets.all(18),child:Column(
+          crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          Wrap(alignment:WrapAlignment.spaceBetween,runSpacing:8,crossAxisAlignment:WrapCrossAlignment.center,children:[
+            const Text('Meta anual de recebimentos',
+              style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),
+            TextButton.icon(onPressed:editAnnualGoal,
+              icon:const Icon(Icons.edit_outlined),label:const Text('Definir meta')),
+          ]),
+          const SizedBox(height:8),
+          SwitchListTile.adaptive(contentPadding:EdgeInsets.zero,
+            title:const Text('Acompanhar meta anual'),
+            subtitle:const Text('Ative para consultar o balanço por período.'),
+            value:trackAnnualGoal,
+            onChanged:(v)=>setState(()=>trackAnnualGoal=v)),
+          if(trackAnnualGoal)...[
+            const SizedBox(height:10),
+            Wrap(spacing:8,runSpacing:8,children:[
+              for(final period in ['Mensal','Trimestral','Semestral','Anual'])
+                ChoiceChip(label:Text(period),selected:balancePeriod==period,
+                  onSelected:(_)=>setState(()=>balancePeriod=period)),
+            ]),
+            const SizedBox(height:14),
+            Builder(builder:(context){
+              final divisor=balancePeriod=='Mensal'?12:balancePeriod=='Trimestral'?4:
+                balancePeriod=='Semestral'?2:1;
+              final periodTarget=annualGoal/divisor;
+              final progress=periodTarget>0?(received/periodTarget).clamp(0.0,1.0).toDouble():0.0;
+              return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                Text('Referência $balancePeriod.toLowerCase(): ${DemoData.currency(periodTarget)}',
+                  style:const TextStyle(fontWeight:FontWeight.w700)),
+                const SizedBox(height:8),
+                LinearProgressIndicator(value:progress,minHeight:10,
+                  borderRadius:BorderRadius.circular(8)),
+                const SizedBox(height:9),
+                Wrap(spacing:16,runSpacing:8,children:[
+                  Text('Recebido nos lançamentos: ${DemoData.currency(received)}'),
+                  Text('Diferença: ${DemoData.currency((periodTarget-received).clamp(0.0,double.infinity).toDouble())}'),
+                  Text('Referência anual: ${DemoData.currency(annualGoal)}'),
+                ]),
+                const SizedBox(height:8),
+                const Text('Comparação ilustrativa: os lançamentos não possuem histórico por mês. '
+                  'O recebido da sessão não representa necessariamente o período selecionado.',
+                  style:TextStyle(fontSize:11,color:Color(0xFF64748B))),
+              ]);
+            }),
+          ] else const Text('Acompanhamento desativado. Ative quando quiser visualizar sua meta.',
+            style:TextStyle(fontSize:12,color:Color(0xFF64748B))),
+        ]))),
+      const SizedBox(height:16),
       LayoutBuilder(builder:(context,constraints){
         final width=constraints.maxWidth;
         final columns=width>=760?4:2;
@@ -279,26 +333,6 @@ class _DemoFinanceState extends State<DemoFinance> {
           SizedBox(width:cardWidth,child:_metric('Saldo realizado',received-paidExpenses,Icons.account_balance_wallet_outlined)),
         ]);
       }),
-      const SizedBox(height:16),
-      Card(color:demoSurface,child:Padding(padding:const EdgeInsets.all(18),child:Column(
-        crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Row(children:[const Expanded(child:Text('Meta anual de recebimentos',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),
-          TextButton.icon(onPressed:editAnnualGoal,icon:const Icon(Icons.edit_outlined),label:const Text('Definir meta'))]),
-        if(annualGoal>0) ...[
-          Text('${DemoData.currency(received)} de ${DemoData.currency(annualGoal)}',style:const TextStyle(color:demoGold)),
-          const SizedBox(height:10),
-          LinearProgressIndicator(value:(received/annualGoal).clamp(0.0,1.0),minHeight:9),
-          const SizedBox(height:10),
-          Wrap(spacing:16,runSpacing:8,children:[
-            Text('Realizado: ${(received/annualGoal*100).toStringAsFixed(1)}%'),
-            Text('Faltam: ${DemoData.currency((annualGoal-received).clamp(0.0,double.infinity))}'),
-            Text('Referência mensal: ${DemoData.currency(annualGoal/12)}'),
-            Text('Referência trimestral: ${DemoData.currency(annualGoal/4)}'),
-          ]),
-        ] else const Text('Defina uma meta anual para acompanhar o progresso da demonstração.'),
-        const SizedBox(height:8),
-        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
-      ]))),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
         FilledButton.icon(onPressed:add,icon:const Icon(Icons.add),label:const Text('Adicionar'))]),
