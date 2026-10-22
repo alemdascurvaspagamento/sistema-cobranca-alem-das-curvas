@@ -13,6 +13,8 @@ class ProfessionalSecretary extends StatefulWidget {
 
 class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
   final hidden=<String>{};
+  DateTime? hiddenDay;
+  @override void initState(){super.initState();hiddenDay=DateUtils.dateOnly(DateTime.now());}
   static const gold=Color(0xFFD8B56A);
   static const surface=Color(0xFF202329);
   Widget suggestion(String id,IconData icon,String title,String detail,
@@ -40,11 +42,18 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
   @override Widget build(BuildContext context)=>AnimatedBuilder(
     animation:DemoLedger.instance,builder:(context,_) {
       final ledger=DemoLedger.instance;
+      if(hiddenDay!=DateUtils.dateOnly(DateTime.now())){
+        hidden.clear();hiddenDay=DateUtils.dateOnly(DateTime.now());
+      }
       final now=DateTime.now();
       final overdue=ledger.amounts.keys.where((name)=>ledger.overdue(name)).toList();
       final visits=widget.demo?DemoData.appointments.length:0;
       final completed=widget.demo?DemoData.appointments.where((a)=>
         ledger.visit(a.client,now)?.state=='Realizada').length:0;
+      final unresolved=widget.demo?DemoData.appointments.where((a){
+        final state=ledger.visit(a.client,now)?.state;
+        return state==null||state=='Agendada';
+      }).length:0;
       final month='${now.month.toString().padLeft(2,'0')}/${now.year}';
       return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         const ListTile(contentPadding:EdgeInsets.zero,
@@ -58,7 +67,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
             const Text('Resumo do dia',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
             const SizedBox(height:8),
             Text('${now.day}/$month • $visits atendimentos previstos'),
-            Text('$completed realizados • ${visits-completed} ainda não confirmados'),
+            Text('$completed realizados • $unresolved ainda não confirmados'),
             const SizedBox(height:8),
             TextButton.icon(onPressed:widget.onAgenda,icon:const Icon(Icons.calendar_month),
               label:const Text('Abrir agenda')),
@@ -81,8 +90,8 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
           Icons.warning_amber_rounded,'${overdue.length} cobrança(s) vencida(s)',
           'Verifique os vencimentos e os valores antes de cobrar.',
           'URGENTE',const Color(0xFFF1767B),widget.onBilling),
-        if(widget.demo&&visits>completed)suggestion('attendance',
-          Icons.fact_check_outlined,'${visits-completed} atendimento(s) para conferir',
+        if(widget.demo&&unresolved>0)suggestion('attendance',
+          Icons.fact_check_outlined,'$unresolved atendimento(s) para conferir',
           'Registre presença, falta ou remarcação na agenda.',
           'ATENÇÃO',const Color(0xFFE0BA62),widget.onAgenda),
         if(widget.demo&&ledger.pending>0)suggestion('payments',
