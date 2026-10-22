@@ -110,7 +110,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
               field('name','Nome completo *'),
               dropdown('Área profissional',profession,professions,(v)=>profession=v),
               Text('Neste perfil: $clientLabel • $sessionLabel',
-                style:const TextStyle(color:Color(0xFFD8B56A),fontSize:12)),
+                style:const TextStyle(color:Color(0xFF0C213A),fontSize:12)),
               field('service','Serviço / $sessionLabel',hint:'Descreva o serviço oferecido'),
               field('phone','Telefone / WhatsApp',hint:'(11) 99999-9999',
                 type:TextInputType.phone),
@@ -127,7 +127,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
               Wrap(spacing:7,runSpacing:7,children:[
                 for(final day in days)FilterChip(
                   label:Text(day),selected:selectedDays.contains(day),
-                  selectedColor:const Color(0xFFD8B56A),
+                  selectedColor:const Color(0xFF0C213A),
                   checkmarkColor:Colors.black,
                   onSelected:(active)=>setState((){
                     if(active){selectedDays.add(day);}else{selectedDays.remove(day);dayTimes.remove(day);}
