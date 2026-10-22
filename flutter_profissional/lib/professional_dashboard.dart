@@ -297,7 +297,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 const Text('Acompanhamento mensal e anual',
                   style: TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 22),
-                Text(demo ? '${DemoData.currency(ledger.received)} de ${DemoData.currency(ledger.annualGoal)}' : 'Aguardando dados financeiros',
+                Text(widget.demo ? '${DemoData.currency(ledger.received)} de ${DemoData.currency(ledger.annualGoal)}' : 'Aguardando dados financeiros',
                   style: const TextStyle(color: muted)),
                 const SizedBox(height: 12),
                 ClipRRect(borderRadius: BorderRadius.circular(8),
