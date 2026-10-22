@@ -184,20 +184,20 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           ),
           const SizedBox(height: 12),
           const SizedBox(height:14),
-          Row(children:[
-            Expanded(child:DropdownButtonFormField<int>(
-              value:selectedMonth,decoration:const InputDecoration(labelText:'Mês',
-                border:OutlineInputBorder(),isDense:true),
+          Align(alignment:Alignment.centerLeft,child:Wrap(spacing:10,runSpacing:10,children:[
+            SizedBox(width:170,child:DropdownButtonFormField<int>(
+              value:selectedMonth,isExpanded:true,decoration:const InputDecoration(labelText:'Mês',
+                border:OutlineInputBorder(),isDense:true,contentPadding:EdgeInsets.symmetric(horizontal:10,vertical:10)),
               items:[for(var i=1;i<=12;i++)DropdownMenuItem(value:i,child:Text(months[i-1]))],
               onChanged:(value){if(value!=null)setState(()=>selectedMonth=value);})),
-            const SizedBox(width:10),
-            SizedBox(width:115,child:DropdownButtonFormField<int>(
-              value:selectedYear,decoration:const InputDecoration(labelText:'Ano',
-                border:OutlineInputBorder(),isDense:true),
+
+            SizedBox(width:108,child:DropdownButtonFormField<int>(
+              value:selectedYear,isExpanded:true,decoration:const InputDecoration(labelText:'Ano',
+                border:OutlineInputBorder(),isDense:true,contentPadding:EdgeInsets.symmetric(horizontal:10,vertical:10)),
               items:[for(var i=DateTime.now().year-3;i<=DateTime.now().year+3;i++)
                 DropdownMenuItem(value:i,child:Text('$i'))],
               onChanged:(value){if(value!=null)setState(()=>selectedYear=value);})),
-          ]),
+          ])),
           if(selectedMonth!=today.month||selectedYear!=today.year)
             const Padding(padding:EdgeInsets.only(top:8),
               child:Text('Indicadores demonstrativos exibem o mês atual; histórico mensal ainda não integrado.',
