@@ -3,13 +3,19 @@ import 'demo_mode.dart';
 import 'demo_ledger.dart';
 
 /// Painel visual demonstrativo. Não confundir agenda prevista com receita recebida.
-class ProfessionalDashboard extends StatelessWidget {
+class ProfessionalDashboard extends StatefulWidget {
   const ProfessionalDashboard({super.key, required this.demo,
     required this.onClients, required this.onAgenda, required this.onBilling,
     required this.onFinance});
   final bool demo;
   final VoidCallback onClients, onAgenda, onBilling, onFinance;
 
+  @override State<ProfessionalDashboard> createState()=>_ProfessionalDashboardState();
+}
+
+class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
+  late int selectedMonth=DateTime.now().month;
+  late int selectedYear=DateTime.now().year;
   static const ink = Color(0xFFF5F2EA);
   static const muted = Color(0xFFADB0B8);
   static const border = Color(0xFF383A40);
@@ -74,7 +80,7 @@ class ProfessionalDashboard extends StatelessWidget {
     final today = DateTime.now();
     const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    final appointments = demo ? DemoData.appointments : <DemoAppointment>[];
+    final appointments = widget.demo ? DemoData.appointments : <DemoAppointment>[];
     final planned = appointments.fold<double>(0, (sum, a) => sum + a.amount);
     return AnimatedBuilder(animation:DemoLedger.instance,
       builder:(context,_)=>_buildDashboard(context,today,months,appointments,planned));
@@ -95,26 +101,45 @@ class ProfessionalDashboard extends StatelessWidget {
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Visão geral', style: TextStyle(
                 fontSize: 25, fontWeight: FontWeight.w800, color: ink)),
-              Text('${months[today.month-1]} / ${today.year} • Seu negócio em uma única leitura',
+              Text('${months[selectedMonth-1]} / $selectedYear • Seu negócio em uma única leitura',
                 style: const TextStyle(fontSize: 12, color: muted)),
             ]),
-            FilledButton.icon(onPressed: onClients, icon: const Icon(Icons.person_add_alt_1),
+            FilledButton.icon(onPressed: widget.onClients, icon: const Icon(Icons.person_add_alt_1),
               label: const Text('Novo cliente'),
               style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD6B46B),
                 foregroundColor: const Color(0xFF111317))),
           ]),
+          const SizedBox(height: 12),
+          Row(children:[
+            Expanded(child:DropdownButtonFormField<int>(
+              value:selectedMonth,decoration:const InputDecoration(labelText:'Mês',
+                border:OutlineInputBorder(),isDense:true),
+              items:[for(var i=1;i<=12;i++)DropdownMenuItem(value:i,child:Text(months[i-1]))],
+              onChanged:(value){if(value!=null)setState(()=>selectedMonth=value);})),
+            const SizedBox(width:10),
+            SizedBox(width:115,child:DropdownButtonFormField<int>(
+              value:selectedYear,decoration:const InputDecoration(labelText:'Ano',
+                border:OutlineInputBorder(),isDense:true),
+              items:[for(var i=DateTime.now().year-3;i<=DateTime.now().year+3;i++)
+                DropdownMenuItem(value:i,child:Text('$i'))],
+              onChanged:(value){if(value!=null)setState(()=>selectedYear=value);})),
+          ]),
+          if(selectedMonth!=today.month||selectedYear!=today.year)
+            const Padding(padding:EdgeInsets.only(top:8),
+              child:Text('Indicadores demonstrativos exibem o mês atual; histórico mensal ainda não integrado.',
+                style:TextStyle(color:amber,fontSize:11))),
           const SizedBox(height: 16),
           LayoutBuilder(builder:(context,box){
             final width=(box.maxWidth-10)/2;
             return Wrap(spacing:10,runSpacing:10,children:[
               SizedBox(width:width,child:action('Agenda','Atendimentos',
-                Icons.calendar_month_outlined,onAgenda)),
+                Icons.calendar_month_outlined,widget.onAgenda)),
               SizedBox(width:width,child:action('Cobranças','Pagamentos',
-                Icons.receipt_long_outlined,onBilling)),
+                Icons.receipt_long_outlined,widget.onBilling)),
               SizedBox(width:width,child:action('Financeiro','Receitas e metas',
-                Icons.bar_chart_outlined,onFinance)),
+                Icons.bar_chart_outlined,widget.onFinance)),
               SizedBox(width:width,child:action('Clientes','Cadastros',
-                Icons.groups_outlined,onClients)),
+                Icons.groups_outlined,widget.onClients)),
             ]);
           }),
           const SizedBox(height: 18),
@@ -122,7 +147,7 @@ class ProfessionalDashboard extends StatelessWidget {
             final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
             final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
             final metrics = <Widget>[
-              stat('Receita prevista',demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
+              stat('Receita prevista',widget.demo?DemoData.currency(ledger.projected):'—','Total de cobranças demonstrativas',
                 Icons.insights_outlined, amber),
               stat('Recebido no mês',demo?DemoData.currency(ledger.received):'—','Pagamentos marcados como recebidos',
                 Icons.check_circle_outline, green),
@@ -145,7 +170,7 @@ class ProfessionalDashboard extends StatelessWidget {
             const Text('Recebido e pendente • dados fictícios da Central de Cobranças',
               style:TextStyle(fontSize:12,color:muted)),
             const SizedBox(height:14),
-            if(demo && ledger.projected>0) ...[
+            if(widget.demo && ledger.projected>0) ...[
               ClipRRect(borderRadius:BorderRadius.circular(9),
                 child:Row(children:[
                   Expanded(flex:(ledger.received/ledger.projected*1000).round().clamp(1,1000).toInt(),
@@ -194,7 +219,7 @@ class ProfessionalDashboard extends StatelessWidget {
                           return hour >= slot.$2 && hour < slot.$3;
                         }).length,
                         decoration: BoxDecoration(
-                          color: green.withValues(alpha: demo ? .85 : .18),
+                          color: green.withValues(alpha: widget.demo ? .85 : .18),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(7)))),
                       const SizedBox(height: 7),
@@ -205,7 +230,7 @@ class ProfessionalDashboard extends StatelessWidget {
               ],
             )),
             const SizedBox(height: 10),
-            Text(demo
+            Text(widget.demo
               ? '${appointments.length} atendimentos previstos no exemplo. Acompanhe seu ritmo ao longo do dia.'
               : 'O gráfico será preenchido após a integração com a agenda.',
               style: const TextStyle(fontSize: 12, color: muted)),
@@ -228,11 +253,11 @@ class ProfessionalDashboard extends StatelessWidget {
                   child: LinearProgressIndicator(value:demo && ledger.annualGoal>0 ? (ledger.received/ledger.annualGoal).clamp(0.0,1.0):0, minHeight: 9,
                     color: green, backgroundColor: background)),
                 const SizedBox(height: 15),
-                Text(demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
+                Text(widget.demo && ledger.annualGoal>0 ? '${(ledger.received/ledger.annualGoal*100).toStringAsFixed(1)}% da meta anual • referência mensal ${DemoData.currency(ledger.annualGoal/12)}' : 'Nenhum progresso calculado sem receitas e meta válidas.',
                   style: const TextStyle(fontSize: 12, color: muted)),
                 const SizedBox(height: 12),
                 Align(alignment: Alignment.centerLeft,
-                  child: TextButton.icon(onPressed: demo ? () async {
+                  child: TextButton.icon(onPressed: widget.demo ? () async {
                     final controller=TextEditingController(text:ledger.annualGoal.toStringAsFixed(0));
                     final result=await showDialog<double>(context:context,builder:(ctx)=>AlertDialog(
                       title:const Text('Meta anual demonstrativa'),
@@ -243,7 +268,7 @@ class ProfessionalDashboard extends StatelessWidget {
                         FilledButton(onPressed:()=>Navigator.pop(ctx,double.tryParse(controller.text.replaceAll(',','.'))),child:const Text('Salvar'))]));
                     controller.dispose();
                     if(result!=null&&result>0)ledger.setGoal(result);
-                  } : onFinance,
+                  } : widget.onFinance,
                     icon: const Icon(Icons.edit_outlined),
                     label: const Text('Definir meta'))),
               ]));
@@ -274,12 +299,12 @@ class ProfessionalDashboard extends StatelessWidget {
                       Text(DemoData.currency(a.amount),
                         style: const TextStyle(fontSize: 12, color: ink)),
                     ])),
-                if (demo) Padding(padding: const EdgeInsets.only(top: 10),
+                if (widget.demo) Padding(padding: const EdgeInsets.only(top: 10),
                   child: Text('Total previsto nesta agenda fictícia: ${DemoData.currency(planned)}',
                     style: const TextStyle(fontSize: 12, color: muted))),
                 const SizedBox(height: 8),
                 Align(alignment: Alignment.centerLeft,
-                  child: TextButton.icon(onPressed: onAgenda,
+                  child: TextButton.icon(onPressed: widget.onAgenda,
                     icon: const Icon(Icons.arrow_forward),
                     label: const Text('Abrir calendário'))),
               ]));
