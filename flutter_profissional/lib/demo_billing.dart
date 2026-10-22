@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
 import 'demo_ledger.dart';
 
-const _gold = Color(0xFF244C82);
+const _gold = Color(0xFF0C213A);
 const _surface = Color(0xFFFFFFFF);
 
 class BillingAccount {
@@ -90,11 +90,11 @@ class _DemoBillingState extends State<DemoBilling> {
     return result;
   });
   Color visitColor(String state) => switch(state) {
-    'Realizada' => const Color(0xFF52D69A),
+    'Realizada' => const Color(0xFF20835D),
     'Cancelada' => const Color(0xFFB7A0A0),
-    'Remarcada' => const Color(0xFFE0BA62),
+    'Remarcada' => const Color(0xFFB98522),
     'Crédito' => const Color(0xFF88B6DF),
-    _ => const Color(0xFFE0BA62),
+    _ => const Color(0xFFB98522),
   };
   Future<void> editVisit(_BillingVisit visit, StateSetter refresh) async {
     var state = visit.state;
@@ -421,16 +421,16 @@ class _DemoBillingState extends State<DemoBilling> {
             decoration:BoxDecoration(
               color:paidFor(a)?const Color(0xFFE7F6EF):ledger.overdue(a.name)?const Color(0xFFFCECED):const Color(0xFFFFF4DE),
               borderRadius:BorderRadius.circular(9),
-              border:Border.all(color:paidFor(a)?const Color(0xFF287E61):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold)),
+              border:Border.all(color:paidFor(a)?const Color(0xFF287E61):ledger.overdue(a.name)?const Color(0xFFC34B50):_gold)),
             child:Text(statusFor(a),style:TextStyle(fontSize:11,
               fontWeight:FontWeight.w700,
-              color:paidFor(a)?const Color(0xFF6EE2B0):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold))),
+              color:paidFor(a)?const Color(0xFF20835D):ledger.overdue(a.name)?const Color(0xFFC34B50):_gold))),
         ]),
         const SizedBox(height:7),
         Text('Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).month.toString().padLeft(2,'0')}/${ledger.dueDate(a.name).year}',
           style:const TextStyle(fontSize:11,color:Color(0xFF64748B))),
         if(ledger.paymentDates[a.name]!=null)
-          const Text('Pagamento registrado',style:TextStyle(fontSize:11,color:Color(0xFF6EE2B0))),
+          const Text('Pagamento registrado',style:TextStyle(fontSize:11,color:Color(0xFF20835D))),
         const SizedBox(height:13),
         const Divider(height:1,color:Color(0xFFE2E8F0)),
         const SizedBox(height:10),
@@ -438,7 +438,7 @@ class _DemoBillingState extends State<DemoBilling> {
           final compact=box.maxWidth<340;
           final amount=Text(DemoData.currency(totalFor(a)),maxLines:1,
             overflow:TextOverflow.ellipsis,
-            style:TextStyle(color:paidFor(a)?const Color(0xFF52D69A):_gold,fontSize:17,fontWeight:FontWeight.w800));
+            style:TextStyle(color:paidFor(a)?const Color(0xFF20835D):_gold,fontSize:17,fontWeight:FontWeight.w800));
           final visits=Text(
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??a.completed} realizados  •  '
             '${ledger.visits[a.name]?.values.where((v)=>v.state=='Cancelada').length??a.cancelled} cancelados  •  ${a.credits} créditos',
@@ -518,7 +518,7 @@ class _DemoBillingState extends State<DemoBilling> {
         return Wrap(spacing:gap,runSpacing:gap,children:[
           for(final entry in <(String,double,IconData,Color)>[
             ('Total calculado',total,Icons.receipt_long_outlined,_gold),
-            ('Recebido',received,Icons.check_circle_outline,const Color(0xFF52D69A)),
+            ('Recebido',received,Icons.check_circle_outline,const Color(0xFF20835D)),
             ('A receber',total-received,Icons.schedule_outlined,_gold),
           ])
             SizedBox(width:cardWidth,child:metric(entry.$1,entry.$2,entry.$3,entry.$4)),
