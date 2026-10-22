@@ -15,8 +15,8 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
   final hidden=<String>{};
   DateTime? hiddenDay;
   @override void initState(){super.initState();hiddenDay=DateUtils.dateOnly(DateTime.now());}
-  static const gold=Color(0xFFD8B56A);
-  static const surface=Color(0xFF202329);
+  static const gold=Color(0xFF244C82);
+  static const surface=Color(0xFFFFFFFF);
   Widget suggestion(String id,IconData icon,String title,String detail,
       String priority,Color color,VoidCallback action){
     if(hidden.contains(id))return const SizedBox.shrink();
@@ -30,7 +30,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
             onPressed:()=>setState(()=>hidden.add(id))),
         ]),
         Padding(padding:const EdgeInsets.only(left:34,right:8),
-          child:Text(detail,style:const TextStyle(color:Colors.white70,fontSize:12))),
+          child:Text(detail,style:const TextStyle(color:const Color(0xFF64748B),fontSize:12))),
         Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
           Padding(padding:const EdgeInsets.only(left:34),
             child:Text(priority,style:TextStyle(color:color,fontSize:11))),
@@ -57,7 +57,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
       final month='${now.month.toString().padLeft(2,'0')}/${now.year}';
       return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         const ListTile(contentPadding:EdgeInsets.zero,
-          leading:CircleAvatar(backgroundColor:Color(0xFF403620),
+          leading:CircleAvatar(backgroundColor:Color(0xFFE7EFF9),
             child:Icon(Icons.support_agent,color:gold)),
           title:Text('Secretária Coach Flow',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),
           subtitle:Text('Resumos e próximos passos • assistente demonstrativa')),
@@ -106,7 +106,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
           icon:const Icon(Icons.refresh),label:const Text('Restaurar sugestões')),
         const SizedBox(height:12),
         const Text('Os dados são fictícios e calculados localmente. A secretária não envia mensagens, não agenda sozinha e não utiliza IA generativa nesta versão.',
-          style:TextStyle(color:Colors.white60,fontSize:12)),
+          style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
       ]);
     });
 }
