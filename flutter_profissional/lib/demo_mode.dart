@@ -270,12 +270,12 @@ class _DemoAgendaState extends State<DemoAgenda> {
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: chosen ? gold : Colors.transparent,
-                        border: current ? Border.all(color: gold) : null,
+                        color: chosen ? const Color(0xFF0C213A) : Colors.transparent,
+                        border: current ? Border.all(color: const Color(0xFF245A98), width: 1.5) : null,
                         borderRadius: BorderRadius.circular(9)),
                       child: Text('$number', style: TextStyle(
-                        color: chosen ? Colors.black : Colors.white,
-                        fontWeight: current || chosen ? FontWeight.bold : FontWeight.normal)),
+                        color: chosen ? Colors.white : const Color(0xFF17243A),
+                        fontWeight: current || chosen ? FontWeight.bold : FontWeight.w600)),
                     ),
                   );
                 },
