@@ -4,7 +4,7 @@ import 'demo_mode.dart';
 import 'client_editor.dart';
 import 'demo_ledger.dart';
 
-const demoGold = Color(0xFF244C82);
+const demoGold = Color(0xFF0C213A);
 const demoSurface = Color(0xFFFFFFFF);
 
 class DemoClient {
@@ -142,7 +142,7 @@ class _DemoClientsState extends State<DemoClients> {
                   color:financialStatus(c)=='Em dia'?const Color(0xFFE7F6EF):financialStatus(c)=='Em atraso'?const Color(0xFFFCECED):const Color(0xFFFFF4DE),
                   borderRadius:BorderRadius.circular(9)),
                 child:Text(financialStatus(c),maxLines:1,style:TextStyle(
-                  color:c.status=='Em dia'?const Color(0xFF7EE2AD):c.status=='Em atraso'?const Color(0xFFF1767B):demoGold,
+                  color:c.status=='Em dia'?const Color(0xFF20835D):c.status=='Em atraso'?const Color(0xFFC34B50):demoGold,
                   fontSize:11,fontWeight:FontWeight.w700))),
             ]),
             const SizedBox(height:12),
