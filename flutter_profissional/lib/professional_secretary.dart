@@ -3,11 +3,16 @@ import 'demo_ledger.dart';
 import 'demo_mode.dart';
 
 /// Secretária demonstrativa: regras locais, sem IA remota nem envio automático.
-class ProfessionalSecretary extends StatelessWidget {
+class ProfessionalSecretary extends StatefulWidget {
   const ProfessionalSecretary({super.key,required this.demo,required this.onAgenda,
     required this.onBilling,required this.onClients,required this.onFinance});
   final bool demo;
   final VoidCallback onAgenda,onBilling,onClients,onFinance;
+  @override State<ProfessionalSecretary> createState()=>_ProfessionalSecretaryState();
+}
+
+class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
+  final hidden=<String>{};
   static const gold=Color(0xFFD8B56A);
   static const surface=Color(0xFF202329);
   Widget tile(IconData icon,String title,String subtitle,VoidCallback action)=>Card(
@@ -19,8 +24,8 @@ class ProfessionalSecretary extends StatelessWidget {
       final ledger=DemoLedger.instance;
       final now=DateTime.now();
       final overdue=ledger.amounts.keys.where((name)=>ledger.overdue(name)).toList();
-      final visits=demo?DemoData.appointments.length:0;
-      final completed=demo?DemoData.appointments.where((a)=>
+      final visits=widget.demo?DemoData.appointments.length:0;
+      final completed=widget.demo?DemoData.appointments.where((a)=>
         ledger.visit(a.client,now)?.state=='Realizada').length:0;
       final month='${now.month.toString().padLeft(2,'0')}/${now.year}';
       return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -37,32 +42,32 @@ class ProfessionalSecretary extends StatelessWidget {
             Text('${now.day}/$month • $visits atendimentos previstos'),
             Text('$completed realizados • ${visits-completed} ainda não confirmados'),
             const SizedBox(height:8),
-            TextButton.icon(onPressed:onAgenda,icon:const Icon(Icons.calendar_month),
+            TextButton.icon(onPressed:widget.onAgenda,icon:const Icon(Icons.calendar_month),
               label:const Text('Abrir agenda')),
           ]))),
         Card(color:surface,child:Padding(padding:const EdgeInsets.all(16),
           child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Text('Resumo do mês • $month',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
             const SizedBox(height:8),
-            Text('Receita prevista: ${demo?DemoData.currency(ledger.projected):'Não disponível'}'),
-            Text('Recebido: ${demo?DemoData.currency(ledger.received):'Não disponível'}'),
-            Text('A receber: ${demo?DemoData.currency(ledger.pending):'Não disponível'}'),
-            Text('Cobranças vencidas em aberto: ${demo?overdue.length:0}'),
+            Text('Receita prevista: ${widget.demo?DemoData.currency(ledger.projected):'Não disponível'}'),
+            Text('Recebido: ${widget.demo?DemoData.currency(ledger.received):'Não disponível'}'),
+            Text('A receber: ${widget.demo?DemoData.currency(ledger.pending):'Não disponível'}'),
+            Text('Cobranças vencidas em aberto: ${widget.demo?overdue.length:0}'),
             const SizedBox(height:8),
-            TextButton.icon(onPressed:onFinance,icon:const Icon(Icons.bar_chart),
+            TextButton.icon(onPressed:widget.onFinance,icon:const Icon(Icons.bar_chart),
               label:const Text('Abrir financeiro')),
           ]))),
         const SizedBox(height:12),
         const Text('Sugestões da secretária',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
-        if(demo&&overdue.isNotEmpty)tile(Icons.priority_high,
+        if(widget.demo&&overdue.isNotEmpty)tile(Icons.priority_high,
           'Revisar ${overdue.length} cobrança(s) vencida(s)',
-          'Conferir antes de entrar em contato com clientes.',onBilling),
+          'Conferir antes de entrar em contato com clientes.',widget.onBilling),
         tile(Icons.fact_check_outlined,'Conferir atendimentos do dia',
-          'Registrar realizados, faltas e remarcações.',onAgenda),
+          'Registrar realizados, faltas e remarcações.',widget.onAgenda),
         tile(Icons.receipt_long_outlined,'Revisar pagamentos pendentes',
           'Não confundir valores a vencer com atrasados.',onBilling),
         tile(Icons.person_add_alt_outlined,'Organizar sua carteira de clientes',
-          'Revisar cadastros e horários de atendimento.',onClients),
+          'Revisar cadastros e horários de atendimento.',widget.onClients),
         const SizedBox(height:12),
         const Text('Os dados são fictícios e calculados localmente. A secretária não envia mensagens, não agenda sozinha e não utiliza IA generativa nesta versão.',
           style:TextStyle(color:Colors.white60,fontSize:12)),
