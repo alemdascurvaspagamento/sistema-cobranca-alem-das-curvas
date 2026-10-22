@@ -34,6 +34,14 @@ class CoachFlowApp extends StatelessWidget {
             brightness: Brightness.light,
             surface: const Color(0xFFFFFFFF),
           ),
+          cardTheme: CardThemeData(
+            color: const Color(0xFFFFFFFF),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFF245A98), width: 1.5),
+            ),
+          ),
           filledButtonTheme: FilledButtonThemeData(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF0C213A),
@@ -391,7 +399,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Color(0xFFFFFFFF),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFF245A98), width: 1.5),
               borderRadius: BorderRadius.circular(19),
             ),
             child: Column(
@@ -436,7 +444,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         decoration: BoxDecoration(
           color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFF245A98), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
