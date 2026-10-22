@@ -89,6 +89,8 @@ class _DemoClientsState extends State<DemoClients> {
         current.phone=result.phone;
         current.profile=result;
       }
+      final day=int.tryParse(result.dueDay);
+      if(day!=null&&day>=1&&day<=31)ledger.setDueDay(result.name,day);
     });
   }
   @override Widget build(BuildContext context) {
