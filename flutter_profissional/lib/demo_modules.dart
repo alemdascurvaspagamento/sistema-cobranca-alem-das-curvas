@@ -258,12 +258,18 @@ class _DemoFinanceState extends State<DemoFinance> {
         (filter=='Pendentes' && !e.paid);
     }).toList();
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-      Wrap(spacing:12,runSpacing:12,children:[
-        _metric('Recebido',received,Icons.check_circle_outline),
-        _metric('A receber',pending,Icons.trending_up),
-        _metric('A pagar',expenses,Icons.south_east),
-        _metric('Saldo realizado',received-paidExpenses,Icons.account_balance_wallet_outlined),
-      ]),
+      LayoutBuilder(builder:(context,constraints){
+        final width=constraints.maxWidth;
+        final columns=width>=760?4:2;
+        const gap=12.0;
+        final cardWidth=(width-gap*(columns-1))/columns;
+        return Wrap(spacing:gap,runSpacing:gap,children:[
+          SizedBox(width:cardWidth,child:_metric('Recebido',received,Icons.check_circle_outline)),
+          SizedBox(width:cardWidth,child:_metric('A receber',pending,Icons.trending_up)),
+          SizedBox(width:cardWidth,child:_metric('A pagar',expenses,Icons.south_east)),
+          SizedBox(width:cardWidth,child:_metric('Saldo realizado',received-paidExpenses,Icons.account_balance_wallet_outlined)),
+        ]);
+      }),
       const SizedBox(height:16),
       Card(color:demoSurface,child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -316,11 +322,16 @@ class _DemoFinanceState extends State<DemoFinance> {
     ]);
   }
   Widget _metric(String label,double value,IconData icon)=>Container(
-    width:210,padding:const EdgeInsets.all(18),
+    padding:const EdgeInsets.all(12),
     decoration:BoxDecoration(color:demoSurface,borderRadius:BorderRadius.circular(18),border:Border.all(color:Colors.white24)),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Icon(icon,color:demoGold),const SizedBox(height:12),Text(label),
-      Text(DemoData.currency(value),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),
+      Icon(icon,color:demoGold,size:23),const SizedBox(height:10),
+      Text(label,maxLines:2,overflow:TextOverflow.ellipsis,
+        style:const TextStyle(fontSize:13,color:Colors.white70)),
+      const SizedBox(height:5),
+      FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+        child:Text(DemoData.currency(value),
+          maxLines:1,style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold))),
     ]));
 }
 
