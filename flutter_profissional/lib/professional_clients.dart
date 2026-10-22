@@ -7,7 +7,7 @@ class ProfessionalClients extends StatefulWidget {
   @override State<ProfessionalClients> createState()=>_ProfessionalClientsState();
 }
 class _ProfessionalClientsState extends State<ProfessionalClients> {
-  static const gold=Color(0xFFD8B56A);
+  static const gold=Color(0xFF0C213A);
   late final repository=ProfessionalRepository(Supabase.instance.client);
   late Future<List<Map<String,dynamic>>> future=_load();
   Future<List<Map<String,dynamic>>> _load()=>repository.clients();
@@ -81,12 +81,12 @@ class _ProfessionalClientsState extends State<ProfessionalClients> {
           child:Text('Nenhum cliente cadastrado. Use Novo para começar.'));
         return Column(children:[
           for(final item in clients) Card(
-            color:const Color(0xFF1A1D22),
+            color:const Color(0xFFFFFFFF),
             margin:const EdgeInsets.only(bottom:10),
             child:Padding(padding:const EdgeInsets.all(14),child:Column(
               crossAxisAlignment:CrossAxisAlignment.stretch,children:[
                 Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  const CircleAvatar(backgroundColor:Color(0xFF383124),
+                  const CircleAvatar(backgroundColor:Color(0xFFFFF4DE),
                     child:Icon(Icons.person,color:gold)),
                   const SizedBox(width:10),
                   Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
