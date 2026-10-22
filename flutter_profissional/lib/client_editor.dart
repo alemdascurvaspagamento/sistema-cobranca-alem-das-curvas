@@ -28,6 +28,9 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
   late final Map<String,TextEditingController> fields;
   late String profession, status, cycle, method;
   String? error;
+  static const days=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+  final selectedDays=<String>{};
+  final dayTimes=<String,String>{};
   static const professions=ProfessionTerms.professions;
   static const keys=['name','service','phone','email','plan','goal','notes','pixKey',
     'startDate','birthDate','weekdays','schedule','duration','rate','dueDay'];
@@ -44,6 +47,11 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
       'rate':p?.rate??'', 'dueDay':p?.dueDay??'5',
     };
     fields={for(final key in keys)key:TextEditingController(text:values[key])};
+    selectedDays.addAll((p?.weekdays??'').split(',').map((e)=>e.trim()).where(days.contains));
+    for(final part in (p?.schedule??'').split(';')){
+      final entry=part.trim().split(' ');
+      if(entry.length>=2&&days.contains(entry.first))dayTimes[entry.first]=entry.last;
+    }
     profession=professions.contains(p?.profession)?p!.profession:professions.first;
     status=p?.status??'Em dia';
     cycle=p?.billingCycle??'Mensal';
@@ -65,6 +73,14 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
       isExpanded:true,decoration:InputDecoration(labelText:label,border:const OutlineInputBorder()),
       items:[for(final option in options)DropdownMenuItem(value:option,child:Text(option))],
       onChanged:(next){if(next!=null)setState(()=>onChange(next));});
+  }
+  Future<void> chooseTime(String day) async {
+    final parts=(dayTimes[day]??'09:00').split(':');
+    final initial=TimeOfDay(hour:int.tryParse(parts.first)??9,
+      minute:parts.length>1?(int.tryParse(parts[1])??0):0);
+    final chosen=await showTimePicker(context:context,initialTime:initial,
+      builder:(ctx,child)=>MediaQuery(data:MediaQuery.of(ctx).copyWith(alwaysUse24HourFormat:true),child:child!));
+    if(chosen!=null)setState(()=>dayTimes[day]='${chosen.hour.toString().padLeft(2,'0')}:${chosen.minute.toString().padLeft(2,'0')}');
   }
   Widget section(List<Widget> children)=>SingleChildScrollView(
     padding:const EdgeInsets.symmetric(vertical:18,horizontal:4),
@@ -107,8 +123,25 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
             ]),
             section([
               Text('Agenda • $sessionLabel',style:Theme.of(context).textTheme.titleMedium),
-              field('weekdays','Dias fixos',hint:'Ex.: SEG, QUA, SEX'),
-              field('schedule','Horários por dia',hint:'Ex.: SEG 11:00; QUA 09:45'),
+              const Text('Dias fixos • selecione um ou mais dias'),
+              Wrap(spacing:7,runSpacing:7,children:[
+                for(final day in days)FilterChip(
+                  label:Text(day),selected:selectedDays.contains(day),
+                  selectedColor:const Color(0xFFD8B56A),
+                  checkmarkColor:Colors.black,
+                  onSelected:(active)=>setState((){
+                    if(active){selectedDays.add(day);}else{selectedDays.remove(day);dayTimes.remove(day);}
+                  })),
+              ]),
+              if(selectedDays.isNotEmpty)...[
+                const Text('Horários por dia • toque para escolher'),
+                for(final day in days.where(selectedDays.contains)
+                  OutlinedButton.icon(
+                    onPressed:()=>chooseTime(day),
+                    icon:const Icon(Icons.access_time),
+                    label:Text('$day  •  ${dayTimes[day]??'Selecionar horário'}')),
+              ],
+
               field('duration','Duração em minutos',type:TextInputType.number),
               const Text('Datas, recorrências e remarcações serão integradas à agenda real em etapa posterior.',
                 style:TextStyle(color:Colors.white60)),
@@ -159,7 +192,8 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
                   name:v('name'),service:v('service'),phone:v('phone'),status:status,
                   profession:profession,email:v('email'),plan:v('plan'),goal:v('goal'),
                   notes:v('notes'),pixKey:v('pixKey'),startDate:v('startDate'),
-                  birthDate:v('birthDate'),weekdays:v('weekdays'),schedule:v('schedule'),
+                  birthDate:v('birthDate'),weekdays:days.where(selectedDays.contains).join(', '),
+                  schedule:days.where(selectedDays.contains).map((d)=>'$d ${dayTimes[d]??'09:00'}').join('; '),
                   duration:v('duration'),rate:v('rate'),dueDay:v('dueDay'),
                   billingCycle:cycle,paymentMethod:method,
                 ));
