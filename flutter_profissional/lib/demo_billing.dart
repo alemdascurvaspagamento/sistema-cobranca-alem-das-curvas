@@ -211,30 +211,7 @@ class _DemoBillingState extends State<DemoBilling> {
         const SnackBar(content:Text('WhatsApp inválido: verifique o DDD.')));
       return;
     }
-    final visits=visitsFor(a);
-    final holiday=visits.where((v)=>v.state=='Feriado').toList();
-    final chargeable=visits.where((v)=>v.charge&&
-      (v.state=='Realizada'||v.state=='Cancelada')).length;
     final date=DateTime.now();
-    final days=visits.map((v)=>v.date.weekday).toSet().toList()..sort();
-    const weekday=['seg','ter','qua','qui','sex','sáb','dom'];
-    final schedule=days.map((d)=>weekday[d-1]).join(', ');
-    final hours=visits.map((v)=>v.hour).toSet().join(', ');
-    final holidayText=holiday.isEmpty?'Sem feriados registrados na agenda':
-      holiday.map((v)=>'${v.date.day.toString().padLeft(2,'0')}/${v.date.month.toString().padLeft(2,'0')}').join(', ');
-    final message='Olá, ${a.name}! 😊\\n\\n'
-      'Segue sua programação de ${date.month.toString().padLeft(2,'0')}/${date.year}:\\n'
-      '📅 Dias: ${schedule.isEmpty?'a confirmar':schedule} • ${hours.isEmpty?'horário a confirmar':hours}\\n'
-      '🏫 Atendimentos previstos: ${visits.length}\\n'
-      '🎉 Feriados sem aula: $holidayText\\n'
-      '✔️ Atendimentos cobrados: $chargeable\\n\\n'
-      '💰 Valor por atendimento: ${DemoData.currency(a.unitPrice)}\\n'
-      '🎟️ Créditos: − ${DemoData.currency(a.creditValue)}\\n'
-      '🏷️ Descontos: − ${DemoData.currency(a.discount)}\\n'
-      '*Total: ${DemoData.currency(totalFor(a))}*\\n'
-      '${ledger.professionalPixKey.isEmpty?'':'🔑 Chave Pix: ${ledger.professionalPixKey}\\n'}'
-      '📌 Vencimento: ${ledger.dueDate(a.name).day.toString().padLeft(2,'0')}/${date.month.toString().padLeft(2,'0')}/${date.year}\\n\\n'
-      'Confira a programação e os valores. Obrigado!';
     final due=ledger.dueDate(a.name);
     final replacements=<String,String>{
       '{nome}':a.name,
