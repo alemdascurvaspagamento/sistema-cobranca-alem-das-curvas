@@ -100,7 +100,7 @@ class _DemoClientsState extends State<DemoClients> {
         prefixIcon:Icon(Icons.search),labelText:'Pesquisar nome, serviço ou telefone',border:OutlineInputBorder())),
       const SizedBox(height:12),
       Wrap(spacing:8,runSpacing:8,children:[
-        for(final option in ['Todos','Em dia','Pendente'])
+        for(final option in ['Todos','Em dia','Pendente','Em atraso'])
           ChoiceChip(label:Text(option),selected:clientFilter==option,
             onSelected:(_)=>setState(()=>clientFilter=option)),
       ]),
@@ -130,10 +130,10 @@ class _DemoClientsState extends State<DemoClients> {
               const SizedBox(width:8),
               Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
                 decoration:BoxDecoration(
-                  color:c.status=='Em dia'?const Color(0xFF16392D):const Color(0xFF3A2E1D),
+                  color:c.status=='Em dia'?const Color(0xFF16392D):c.status=='Em atraso'?const Color(0xFF44252B):const Color(0xFF3A2E1D),
                   borderRadius:BorderRadius.circular(9)),
                 child:Text(c.status,maxLines:1,style:TextStyle(
-                  color:c.status=='Em dia'?const Color(0xFF7EE2AD):demoGold,
+                  color:c.status=='Em dia'?const Color(0xFF7EE2AD):c.status=='Em atraso'?const Color(0xFFF1767B):demoGold,
                   fontSize:11,fontWeight:FontWeight.w700))),
             ]),
             const SizedBox(height:12),
@@ -150,7 +150,7 @@ class _DemoClientsState extends State<DemoClients> {
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
                       foregroundColor:const Color(0xFF6EE2B0),
                       side:const BorderSide(color:Color(0xFF287E61))))),
-                if(c.status=='Pendente')
+                if(c.status=='Pendente'||c.status=='Em atraso')
                   SizedBox(width:compact?(box.maxWidth-8)/2:(box.maxWidth-16)/3,
                     child:OutlinedButton.icon(onPressed:()=>openBillingWhatsApp(c),
                       icon:const Icon(Icons.receipt_long_outlined,size:17),
