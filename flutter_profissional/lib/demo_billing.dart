@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
+import 'demo_ledger.dart';
 
 const _gold = Color(0xFFD8B56A);
 const _surface = Color(0xFF1A1D22);
@@ -37,6 +38,18 @@ class DemoBilling extends StatefulWidget {
 
 class _DemoBillingState extends State<DemoBilling> {
   String search='',filter='Todos';
+  final ledger=DemoLedger.instance;
+  @override void initState(){super.initState(); ledger.addListener(_refresh);}
+  void _refresh(){if(mounted)setState((){});}
+  @override void dispose(){ledger.removeListener(_refresh);super.dispose();}
+  double totalFor(BillingAccount a)=>ledger.amounts[a.name] ?? a.total;
+  bool paidFor(BillingAccount a)=>ledger.isPaid(a.name);
+  String statusFor(BillingAccount a)=>paidFor(a)?'Recebido':'Pendente';
+  void recalculate(BillingAccount a){
+    final visits=visitsFor(a);
+    final gross=visits.where((v)=>v.state=='Realizada'&&v.charge).length*a.unitPrice;
+    ledger.setAmount(a.name,(gross-a.creditValue-a.discount).clamp(0.0,double.infinity).toDouble());
+  }
   final accounts=<BillingAccount>[
     BillingAccount('Mariana Costa','Consultoria individual','(11) 99999-0001',
       180,8,7,1,0,0,0,paid:true),
@@ -48,7 +61,7 @@ class _DemoBillingState extends State<DemoBilling> {
       180,5,4,1,0,0,90),
   ];
   List<BillingAccount> get shown => accounts.where((a)=>
-    (filter=='Todos'||a.status==filter) &&
+    (filter=='Todos'||statusFor(a)==filter) &&
     (a.name.toLowerCase().contains(search.toLowerCase())||
      a.service.toLowerCase().contains(search.toLowerCase()))).toList();
   // Registros sintéticos apenas para demonstrar a consulta detalhada.
@@ -116,6 +129,7 @@ class _DemoBillingState extends State<DemoBilling> {
         )));
     if (ok == true && mounted) {
       refresh(() { visit.state = state; visit.charge = charge; visit.note = notes.text.trim(); });
+      for(final account in accounts){if(visitsFor(account).contains(visit)){recalculate(account);break;}}
     }
     notes.dispose();
   }
@@ -165,11 +179,9 @@ class _DemoBillingState extends State<DemoBilling> {
               _line('Créditos (${a.credits})', '− ${DemoData.currency(a.creditValue)}'),
               _line('Descontos', '− ${DemoData.currency(a.discount)}'),
               const Divider(),
-              _line('Total a cobrar', DemoData.currency(a.total)),
+              _line('Total a cobrar', DemoData.currency(totalFor(a))),
               const SizedBox(height: 12),
-              const Text('Os registros acima são fictícios e independentes '
-                'do cálculo demonstrativo. Alterações não recalculam cobranças, '
-                'não são persistidas e não modificam a agenda.',
+              const Text('Alterações recalculam esta cobrança e os indicadores da dashboard nesta sessão. Não são persistidas em banco nem alteram a agenda independente.',
                 style: TextStyle(fontSize: 12, color: Colors.white70)),
             ]))),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx),
@@ -181,7 +193,7 @@ class _DemoBillingState extends State<DemoBilling> {
     child:Row(children:[Expanded(child:Text(label)),Text(value,
       style:const TextStyle(fontWeight:FontWeight.w600))]));
   Future<void> whatsapp(BillingAccount a) async {
-    if(a.paid||a.total<=0)return;
+    if(paidFor(a)||totalFor(a)<=0)return;
     var phone=a.phone.replaceAll(RegExp(r'[^0-9]'),'');
     if(phone.length==10||phone.length==11)phone='55$phone';
     if(phone.length<12||phone.length>13){
@@ -191,7 +203,7 @@ class _DemoBillingState extends State<DemoBilling> {
     }
     final message='Olá, ${a.name}! Segue o resumo demonstrativo dos atendimentos '
       'de ${a.service}: ${a.completed} realizados, '
-      '${a.credits} crédito(s), total de ${DemoData.currency(a.total)}. '
+      '${a.credits} crédito(s), total de ${DemoData.currency(totalFor(a))}. '
       'Por favor, confira os valores antes do pagamento. Obrigado!';
     final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
     if(!await launchUrl(url,mode:LaunchMode.externalApplication)&&mounted){
@@ -201,20 +213,20 @@ class _DemoBillingState extends State<DemoBilling> {
   }
   Future<void> changePaid(BillingAccount a) async {
     final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
-      title:Text(a.paid?'Reabrir cobrança?':'Marcar como recebida?'),
+      title:Text(paidFor(a)?'Reabrir cobrança?':'Marcar como recebida?'),
       content:Text('Alterar apenas o estado fictício da cobrança de ${a.name}?'),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancelar')),
         FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Confirmar'))],
     ));
-    if(confirmed==true&&mounted)setState(()=>a.paid=!a.paid);
+    if(confirmed==true&&mounted)ledger.setPaid(a.name,!paidFor(a));
   }
   Widget actions(BillingAccount a)=>Wrap(spacing:2,children:[
     IconButton(tooltip:'Ver atendimentos e memória de cálculo',icon:const Icon(Icons.receipt_long_outlined),
       onPressed:()=>details(a)),
     IconButton(tooltip:'Preparar WhatsApp',icon:const Icon(Icons.chat_outlined,
       color:Color(0xFF25D366)),onPressed:()=>whatsapp(a)),
-    IconButton(tooltip:a.paid?'Reabrir cobrança':'Marcar recebida',
-      icon:Icon(a.paid?Icons.undo:Icons.check_circle_outline,color:_gold),
+    IconButton(tooltip:paidFor(a)?'Reabrir cobrança':'Marcar recebida',
+      icon:Icon(paidFor(a)?Icons.undo:Icons.check_circle_outline,color:_gold),
       onPressed:()=>changePaid(a)),
   ]);
   Widget desktopTable(List<BillingAccount> data)=>SingleChildScrollView(
@@ -247,7 +259,7 @@ class _DemoBillingState extends State<DemoBilling> {
         DataCell(Text(DemoData.currency(a.discount))),
         DataCell(Text(DemoData.currency(a.total),
           style:const TextStyle(color:_gold,fontWeight:FontWeight.bold))),
-        DataCell(Text(a.status)),
+        DataCell(Text(statusFor(a))),
         DataCell(actions(a)),
       ])]));
   Widget mobileCard(BillingAccount a)=>Card(color:_surface,child:Padding(
@@ -255,7 +267,7 @@ class _DemoBillingState extends State<DemoBilling> {
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(children:[Expanded(child:Text(a.name,
           style:const TextStyle(fontSize:16,fontWeight:FontWeight.bold))),
-          Chip(label:Text(a.status))]),
+          Chip(label:Text(statusFor(a)))]),
         Text(a.service,style:const TextStyle(color:Colors.white70)),
         const SizedBox(height:8),
         Text('${a.completed} realizados · ${a.cancelled} cancelados · '
@@ -274,8 +286,8 @@ class _DemoBillingState extends State<DemoBilling> {
           style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ])));
   @override Widget build(BuildContext context){
-    final total=accounts.fold<double>(0,(sum,a)=>sum+a.total);
-    final received=accounts.where((a)=>a.paid).fold<double>(0,(sum,a)=>sum+a.total);
+    final total=accounts.fold<double>(0,(sum,a)=>sum+totalFor(a));
+    final received=accounts.where((a)=>paidFor(a)).fold<double>(0,(sum,a)=>sum+totalFor(a));
     final data=shown;
     return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       Text('Central de cobranças',style:Theme.of(context).textTheme.titleLarge),
