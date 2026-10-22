@@ -108,7 +108,6 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
           Expanded(child:TabBarView(controller:tabs,children:[
             section([
               field('name','Nome completo *'),
-              dropdown('Área profissional',profession,professions,(v)=>profession=v),
               Text('Neste perfil: $clientLabel • $sessionLabel',
                 style:const TextStyle(color:Color(0xFF0C213A),fontSize:12)),
               field('service','Serviço / $sessionLabel',hint:'Descreva o serviço oferecido'),
