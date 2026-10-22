@@ -72,7 +72,7 @@ class DemoLedger extends ChangeNotifier {
     for(final name in sessionCounts.keys){_recalculate(name);}
   }
   void _recalculate(String name){
-    final completed=visits[name]?.values.where((v)=>v.state=='Realizada'&&v.charge).length??0;
+    final completed=visits[name]?.values.where((v)=>(v.state=='Realizada'||v.state=='Cancelada')&&v.charge).length??0;
     final gross=completed*(prices[name]??0);
     amounts[name]=(gross-(credits[name]??0)*(prices[name]??0)-
       (discounts[name]??0)).clamp(0.0,double.infinity).toDouble();
