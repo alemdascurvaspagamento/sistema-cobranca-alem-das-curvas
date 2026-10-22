@@ -398,7 +398,7 @@ class _DemoBillingState extends State<DemoBilling> {
   Widget mobileCard(BillingAccount a)=>Card(
     color:_surface,margin:const EdgeInsets.only(bottom:12),
     shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
-      side:const BorderSide(color:Color(0xFFE2E8F0))),
+      side:const BorderSide(color:Color(0xFF245A98),width:1.5)),
     child:Padding(padding:const EdgeInsets.all(14),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -488,7 +488,7 @@ class _DemoBillingState extends State<DemoBilling> {
   Widget metric(String label,double value,IconData icon,Color accent)=>Container(
     padding:const EdgeInsets.all(14),
     decoration:BoxDecoration(color:_surface,borderRadius:BorderRadius.circular(14),
-      border:Border.all(color:Color(0xFFE2E8F0))),
+      border:Border.all(color:const Color(0xFF245A98),width:1.5)),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,
       mainAxisSize:MainAxisSize.min,children:[
         Icon(icon,color:accent,size:20),
