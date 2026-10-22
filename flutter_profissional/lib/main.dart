@@ -274,7 +274,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               children: [
                 if (desktop)
                   NavigationRail(
-                    backgroundColor: const Color(0xFFEAF0F7),
+                    backgroundColor: const Color(0xFFDCE8F7),
                     selectedIndex: selected.index,
                     onDestinationSelected: (index) =>
                         setState(() => selected = Section.values[index]),
