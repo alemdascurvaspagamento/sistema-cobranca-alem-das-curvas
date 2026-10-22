@@ -47,7 +47,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: Color(0xFFFFFFFF),
-      border: Border.all(color: border),
+      border: Border.all(color: const Color(0xFF245A98), width: 1.5),
       borderRadius: BorderRadius.circular(17)),
     child: child);
 
@@ -75,7 +75,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
         child:Container(
           padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
-          decoration:BoxDecoration(border:Border.all(color:border),
+          decoration:BoxDecoration(border:Border.all(color:const Color(0xFF245A98),width:1.5),
             borderRadius:BorderRadius.circular(14)),
           child:Row(children:[
             Container(width:38,height:38,alignment:Alignment.center,
