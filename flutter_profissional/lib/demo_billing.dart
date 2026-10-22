@@ -375,7 +375,7 @@ class _DemoBillingState extends State<DemoBilling> {
               border:Border.all(color:paidFor(a)?const Color(0xFF287E61):_gold)),
             child:Text(statusFor(a),style:TextStyle(fontSize:11,
               fontWeight:FontWeight.w700,
-              color:paidFor(a)?const Color(0xFF6EE2B0):_gold))),
+              color:paidFor(a)?const Color(0xFF6EE2B0):ledger.overdue(a.name)?const Color(0xFFF1767B):_gold))),
         ]),
         const SizedBox(height:13),
         const Divider(height:1,color:Color(0xFF383A40)),
