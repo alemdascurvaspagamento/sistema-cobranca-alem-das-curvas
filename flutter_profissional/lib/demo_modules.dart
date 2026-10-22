@@ -151,6 +151,12 @@ class _DemoClientsState extends State<DemoClients> {
             LayoutBuilder(builder:(context,box){
               final compact=box.maxWidth<470;
               return Row(children:[
+                Expanded(child:OutlinedButton.icon(onPressed:()=>edit(c),
+                    icon:const Icon(Icons.edit_outlined,size:17),
+                    label:Text(compact?'':'Editar',maxLines:1,overflow:TextOverflow.ellipsis),
+                    style:OutlinedButton.styleFrom(
+                      padding:const EdgeInsets.symmetric(horizontal:6,vertical:12)))),
+                const SizedBox(width:6),
                 Expanded(child:OutlinedButton.icon(onPressed:()=>openWhatsApp(c),
                     icon:const Icon(Icons.chat_outlined,size:17),
                     label:Text(compact?'':'WhatsApp',maxLines:1,overflow:TextOverflow.ellipsis),
@@ -168,12 +174,6 @@ class _DemoClientsState extends State<DemoClients> {
                         foregroundColor:Colors.white,
                         backgroundColor:const Color(0xFF0C213A),
                         side:const BorderSide(color:Color(0xFF0C213A))))),
-                const SizedBox(width:6),
-                Expanded(child:OutlinedButton.icon(onPressed:()=>edit(c),
-                    icon:const Icon(Icons.edit_outlined,size:17),
-                    label:Text(compact?'':'Editar',maxLines:1,overflow:TextOverflow.ellipsis),
-                    style:OutlinedButton.styleFrom(
-                      padding:const EdgeInsets.symmetric(horizontal:6,vertical:12)))),
                 const SizedBox(width:6),
                 Expanded(child:OutlinedButton.icon(onPressed:()=>deleteClient(c),
                     icon:const Icon(Icons.delete_outline,size:17),
