@@ -4,8 +4,8 @@ import 'demo_mode.dart';
 import 'client_editor.dart';
 import 'demo_ledger.dart';
 
-const demoGold = Color(0xFFD8B56A);
-const demoSurface = Color(0xFF1A1D22);
+const demoGold = Color(0xFF244C82);
+const demoSurface = Color(0xFFFFFFFF);
 
 class DemoClient {
   DemoClient(this.name, this.service, this.status, this.phone);
@@ -119,11 +119,11 @@ class _DemoClientsState extends State<DemoClients> {
         color:demoSurface,
         margin:const EdgeInsets.only(bottom:12),
         shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),
-          side:const BorderSide(color:Color(0xFF373940))),
+          side:const BorderSide(color:Color(0xFFE2E8F0))),
         child:Padding(padding:const EdgeInsets.all(15),
           child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              const CircleAvatar(radius:22,backgroundColor:Color(0xFF383124),
+              const CircleAvatar(radius:22,backgroundColor:Color(0xFFFFF4DE),
                 child:Icon(Icons.person,color:demoGold)),
               const SizedBox(width:12),
               Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -131,22 +131,22 @@ class _DemoClientsState extends State<DemoClients> {
                   style:const TextStyle(fontSize:17,fontWeight:FontWeight.w800)),
                 const SizedBox(height:4),
                 Text(c.service,maxLines:2,overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:13,color:Colors.white70)),
+                  style:const TextStyle(fontSize:13,color:const Color(0xFF64748B))),
                 const SizedBox(height:3),
                 Text(c.phone,maxLines:1,overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:12,color:Colors.white60)),
+                  style:const TextStyle(fontSize:12,color:const Color(0xFF64748B))),
               ])),
               const SizedBox(width:8),
               Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
                 decoration:BoxDecoration(
-                  color:financialStatus(c)=='Em dia'?const Color(0xFF16392D):financialStatus(c)=='Em atraso'?const Color(0xFF44252B):const Color(0xFF3A2E1D),
+                  color:financialStatus(c)=='Em dia'?const Color(0xFFE7F6EF):financialStatus(c)=='Em atraso'?const Color(0xFFFCECED):const Color(0xFFFFF4DE),
                   borderRadius:BorderRadius.circular(9)),
                 child:Text(financialStatus(c),maxLines:1,style:TextStyle(
                   color:c.status=='Em dia'?const Color(0xFF7EE2AD):c.status=='Em atraso'?const Color(0xFFF1767B):demoGold,
                   fontSize:11,fontWeight:FontWeight.w700))),
             ]),
             const SizedBox(height:12),
-            const Divider(height:1,color:Color(0xFF373940)),
+            const Divider(height:1,color:Color(0xFFE2E8F0)),
             const SizedBox(height:10),
             LayoutBuilder(builder:(context,box){
               final compact=box.maxWidth<360;
@@ -180,12 +180,12 @@ class _DemoClientsState extends State<DemoClients> {
                     label:const Text('Excluir',maxLines:1,overflow:TextOverflow.ellipsis),
                     style:OutlinedButton.styleFrom(
                       padding:const EdgeInsets.symmetric(horizontal:6,vertical:12),
-                      foregroundColor:Colors.white70))),
+                      foregroundColor:const Color(0xFF64748B)))),
               ]);
             }),
           ]))),
       const SizedBox(height:12),
-      const Text('Os cadastros são temporários: serão descartados ao atualizar a página.',style:TextStyle(color:Colors.white60,fontSize:12)),
+      const Text('Os cadastros são temporários: serão descartados ao atualizar a página.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
     ]);
   }
 }
@@ -297,7 +297,7 @@ class _DemoFinanceState extends State<DemoFinance> {
           ]),
         ] else const Text('Defina uma meta anual para acompanhar o progresso da demonstração.'),
         const SizedBox(height:8),
-        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:Colors.white60,fontSize:12)),
+        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
       ]))),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
@@ -327,7 +327,7 @@ class _DemoFinanceState extends State<DemoFinance> {
       );
       })),
       const SizedBox(height:10),
-      const Text('Demonstração: lançamentos não são cobrados nem salvos em banco.',style:TextStyle(color:Colors.white60,fontSize:12)),
+      const Text('Demonstração: lançamentos não são cobrados nem salvos em banco.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
     ]);
   }
   Widget _metric(String label,double value,IconData icon)=>Container(
@@ -336,7 +336,7 @@ class _DemoFinanceState extends State<DemoFinance> {
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Icon(icon,color:demoGold,size:23),const SizedBox(height:10),
       Text(label,maxLines:2,overflow:TextOverflow.ellipsis,
-        style:const TextStyle(fontSize:13,color:Colors.white70)),
+        style:const TextStyle(fontSize:13,color:const Color(0xFF64748B))),
       const SizedBox(height:5),
       FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
         child:Text(DemoData.currency(value),
@@ -367,13 +367,13 @@ class _DemoMoreState extends State<DemoMore> {
             const SnackBar(content:Text('Chave Pix salva na demonstração.')));
         },child:const Text('Salvar chave Pix')),
         const Text('A chave só aparece na cobrança quando preenchida. Dados temporários.',
-          style:TextStyle(color:Colors.white60,fontSize:12)),
+          style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
       ]))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.settings_outlined,color:demoGold),
       title:Text('Configurações'),subtitle:Text('A personalização por profissional será conectada ao backend isolado.'))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.summarize_outlined,color:demoGold),
       title:Text('Relatórios'),subtitle:Text('Indicadores demonstrativos disponíveis em Financeiro.'))),
     const SizedBox(height:12),
-    const Text('Coach Flow Profissional • Protótipo Flutter para validação visual e funcional.',style:TextStyle(color:Colors.white60)),
+    const Text('Coach Flow Profissional • Protótipo Flutter para validação visual e funcional.',style:TextStyle(color:const Color(0xFF64748B))),
   ]);
 }
