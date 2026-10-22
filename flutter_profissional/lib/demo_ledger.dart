@@ -5,6 +5,23 @@ class DemoLedger extends ChangeNotifier {
   DemoLedger._(){seedVisits();}
   static final DemoLedger instance = DemoLedger._();
   final Map<String, bool> payments = {'Mariana Costa': true};
+  final Map<String,int> dueDays={'Mariana Costa':5,'Ricardo Almeida':28,'Fernanda Lima':15,'Paulo Martins':28};
+  final Map<String,DateTime> paymentDates={};
+  DateTime dueDate(String name,{DateTime? at}){
+    final now=at??DateTime.now();
+    final last=DateTime(now.year,now.month+1,0).day;
+    return DateTime(now.year,now.month,(dueDays[name]??last).clamp(1,last));
+  }
+  bool overdue(String name,{DateTime? at}){
+    if(isPaid(name)||(amounts[name]??0)<=0||!dueDays.containsKey(name))return false;
+    final now=at??DateTime.now();
+    return DateTime(now.year,now.month,now.day).isAfter(dueDate(name,at:now));
+  }
+  String paymentStatus(String name,{DateTime? at})=>isPaid(name)?'Recebido':overdue(name,at:at)?'Em atraso':'Pendente';
+  void setDueDay(String name,int day){
+    if(day<1||day>31)throw ArgumentError('Dia inválido');
+    dueDays[name]=day;notifyListeners();
+  }
   final Map<String, Map<int, String>> absences = {};
   final Map<String, Map<int, ({String state, bool charge, String note})>> visits = {};
   int dateKey(DateTime date)=>DateTime(date.year,date.month,date.day).millisecondsSinceEpoch;
@@ -65,7 +82,7 @@ class DemoLedger extends ChangeNotifier {
     notifyListeners();
   }
   bool isPaid(String name) => payments[name] ?? false;
-  void setPaid(String name, bool paid) { payments[name] = paid; notifyListeners(); }
+  void setPaid(String name, bool paid) { payments[name] = paid; if(paid){paymentDates[name]=DateTime.now();}else{paymentDates.remove(name);} notifyListeners(); }
   void setAmount(String name, double amount) { amounts[name] = amount; notifyListeners(); }
   String? absence(String name, DateTime date) =>
     absences[name]?[DateTime(date.year,date.month,date.day).millisecondsSinceEpoch];
