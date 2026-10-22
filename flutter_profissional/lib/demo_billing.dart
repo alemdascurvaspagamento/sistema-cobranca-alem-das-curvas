@@ -90,11 +90,11 @@ class _DemoBillingState extends State<DemoBilling> {
     return result;
   });
   Color visitColor(String state) => switch(state) {
-    'Realizada' => const Color(0xFF42BA83),
-    'Cancelada' => const Color(0xFFE96767),
-    'Remarcada' => const Color(0xFFF4A15A),
-    'Crédito' => const Color(0xFFA47DE1),
-    _ => const Color(0xFF4B91F1),
+    'Realizada' => const Color(0xFF52D69A),
+    'Cancelada' => const Color(0xFFB7A0A0),
+    'Remarcada' => const Color(0xFFE0BA62),
+    'Crédito' => const Color(0xFF88B6DF),
+    _ => const Color(0xFFE0BA62),
   };
   Future<void> editVisit(_BillingVisit visit, StateSetter refresh) async {
     var state = visit.state;
@@ -158,6 +158,8 @@ class _DemoBillingState extends State<DemoBilling> {
               Wrap(spacing: 7, runSpacing: 8, children: [
                 for (final visit in visits)
                   ActionChip(
+                    backgroundColor:visitColor(visit.state).withValues(alpha:.13),
+                    side:BorderSide(color:visitColor(visit.state).withValues(alpha:.65)),
                     avatar: Icon(Icons.circle, size: 9, color: visitColor(visit.state)),
                     label: Text('${visit.date.day.toString().padLeft(2, '0')}/'
                       '${visit.date.month.toString().padLeft(2, '0')} '
@@ -170,7 +172,7 @@ class _DemoBillingState extends State<DemoBilling> {
                   Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.circle, size: 10, color: visitColor(state)),
                     const SizedBox(width: 4),
-                    Text(state, style: const TextStyle(fontSize: 11)),
+                    Text(state, style: TextStyle(fontSize: 11,color:visitColor(state))),
                   ]),
               ]),
               const Divider(height: 30),
