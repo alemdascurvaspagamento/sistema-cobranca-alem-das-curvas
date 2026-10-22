@@ -455,7 +455,7 @@ class _DemoBillingState extends State<DemoBilling> {
         style:TextStyle(color:Colors.white70)),
       const SizedBox(height:14),
       LayoutBuilder(builder:(context,box){
-        final columns=box.maxWidth>=900?4:2;
+        final columns=box.maxWidth>=900?3:2;
         const gap=10.0;
         final cardWidth=(box.maxWidth-(columns-1)*gap)/columns;
         return Wrap(spacing:gap,runSpacing:gap,children:[
@@ -463,7 +463,6 @@ class _DemoBillingState extends State<DemoBilling> {
             ('Total calculado',total,Icons.receipt_long_outlined,_gold),
             ('Recebido',received,Icons.check_circle_outline,const Color(0xFF52D69A)),
             ('A receber',total-received,Icons.schedule_outlined,_gold),
-            ('A pagar',120,Icons.south_east_outlined,const Color(0xFFF1767B)),
           ])
             SizedBox(width:cardWidth,child:metric(entry.$1,entry.$2,entry.$3,entry.$4)),
         ]);
