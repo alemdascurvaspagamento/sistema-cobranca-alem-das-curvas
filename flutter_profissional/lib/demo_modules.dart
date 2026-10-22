@@ -131,10 +131,10 @@ class _DemoClientsState extends State<DemoClients> {
                   style:const TextStyle(fontSize:17,fontWeight:FontWeight.w800)),
                 const SizedBox(height:4),
                 Text(c.service,maxLines:2,overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:13,color:const Color(0xFF64748B))),
+                  style:const TextStyle(fontSize:13,color:Color(0xFF64748B))),
                 const SizedBox(height:3),
                 Text(c.phone,maxLines:1,overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:12,color:const Color(0xFF64748B))),
+                  style:const TextStyle(fontSize:12,color:Color(0xFF64748B))),
               ])),
               const SizedBox(width:8),
               Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:7),
@@ -185,7 +185,7 @@ class _DemoClientsState extends State<DemoClients> {
             }),
           ]))),
       const SizedBox(height:12),
-      const Text('Os cadastros são temporários: serão descartados ao atualizar a página.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+      const Text('Os cadastros são temporários: serão descartados ao atualizar a página.',style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
     ]);
   }
 }
@@ -297,7 +297,7 @@ class _DemoFinanceState extends State<DemoFinance> {
           ]),
         ] else const Text('Defina uma meta anual para acompanhar o progresso da demonstração.'),
         const SizedBox(height:8),
-        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+        const Text('Indicadores calculados somente com os lançamentos fictícios desta sessão, não com o histórico do ano.',style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
       ]))),
       const SizedBox(height:20),
       Row(children:[const Expanded(child:Text('Lançamentos e cobranças',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
@@ -327,7 +327,7 @@ class _DemoFinanceState extends State<DemoFinance> {
       );
       })),
       const SizedBox(height:10),
-      const Text('Demonstração: lançamentos não são cobrados nem salvos em banco.',style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+      const Text('Demonstração: lançamentos não são cobrados nem salvos em banco.',style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
     ]);
   }
   Widget _metric(String label,double value,IconData icon)=>Container(
@@ -336,7 +336,7 @@ class _DemoFinanceState extends State<DemoFinance> {
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Icon(icon,color:demoGold,size:23),const SizedBox(height:10),
       Text(label,maxLines:2,overflow:TextOverflow.ellipsis,
-        style:const TextStyle(fontSize:13,color:const Color(0xFF64748B))),
+        style:const TextStyle(fontSize:13,color:Color(0xFF64748B))),
       const SizedBox(height:5),
       FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
         child:Text(DemoData.currency(value),
@@ -367,13 +367,13 @@ class _DemoMoreState extends State<DemoMore> {
             const SnackBar(content:Text('Chave Pix salva na demonstração.')));
         },child:const Text('Salvar chave Pix')),
         const Text('A chave só aparece na cobrança quando preenchida. Dados temporários.',
-          style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+          style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
       ]))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.settings_outlined,color:demoGold),
       title:Text('Configurações'),subtitle:Text('A personalização por profissional será conectada ao backend isolado.'))),
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.summarize_outlined,color:demoGold),
       title:Text('Relatórios'),subtitle:Text('Indicadores demonstrativos disponíveis em Financeiro.'))),
     const SizedBox(height:12),
-    const Text('Coach Flow Profissional • Protótipo Flutter para validação visual e funcional.',style:TextStyle(color:const Color(0xFF64748B))),
+    const Text('Coach Flow Profissional • Protótipo Flutter para validação visual e funcional.',style:TextStyle(color:Color(0xFF64748B))),
   ]);
 }
