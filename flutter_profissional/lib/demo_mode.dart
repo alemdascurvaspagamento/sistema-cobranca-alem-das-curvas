@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'demo_ledger.dart';
 
 /// Dados exclusivamente fictícios, armazenados no código e nunca enviados à rede.
 class DemoAppointment {
@@ -37,6 +38,9 @@ class _DemoAgendaState extends State<DemoAgenda> {
   DateTime? selectedWeek;
 
   final Map<String, String> appointmentStates = {};
+  @override void initState(){super.initState();DemoLedger.instance.addListener(_refresh);}
+  void _refresh(){if(mounted)setState((){});}
+  @override void dispose(){DemoLedger.instance.removeListener(_refresh);super.dispose();}
 
   late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? selectedDay;
@@ -46,6 +50,7 @@ class _DemoAgendaState extends State<DemoAgenda> {
   String appointmentKey(DateTime date, String client) =>
       '${date.year}-${date.month}-${date.day}-$client';
   String appointmentState(DateTime date, String client) =>
+      DemoLedger.instance.absence(client,date)!=null ? 'Cancelada' :
       appointmentStates[appointmentKey(date, client)] ?? 'Agendada';
   Color appointmentColor(String state) {
     switch (state) {
@@ -99,6 +104,8 @@ class _DemoAgendaState extends State<DemoAgenda> {
           ],
         )));
     if (confirmed == true && mounted) setState(() {
+      if(DemoLedger.instance.absence(appointment.client,date)!=null)
+        DemoLedger.instance.setAbsence(appointment.client,date,null);
       appointmentStates[key] = state;
       chargeOverrides[key] = charge;
       appointmentNotes[key] = note.text.trim();
