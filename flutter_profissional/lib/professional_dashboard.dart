@@ -357,6 +357,27 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                 _miniMetric('ATENDIMENTOS',widget.demo?'${appointments.length}':'—'),
                 _miniMetric('TICKET MÉDIO',widget.demo&&appointments.isNotEmpty?DemoData.currency(planned/appointments.length):'—'),
               ]),
+              const SizedBox(height:18),
+              const Divider(color:border),
+              const SizedBox(height:12),
+              const Text('Situação dos recebimentos',
+                style:TextStyle(fontSize:14,fontWeight:FontWeight.w800,color:ink)),
+              const SizedBox(height:5),
+              Text(widget.demo?'Do total previsto, ${ledger.projected>0?(ledger.received/ledger.projected*100).toStringAsFixed(0):'0'}% já foi recebido.':
+                'Os indicadores serão exibidos quando houver dados conectados.',
+                style:const TextStyle(fontSize:12,color:muted)),
+              const SizedBox(height:12),
+              ClipRRect(borderRadius:BorderRadius.circular(9),
+                child:LinearProgressIndicator(value:widget.demo&&ledger.projected>0?
+                  (ledger.received/ledger.projected).clamp(0.0,1.0).toDouble():0,
+                  minHeight:12,color:green,backgroundColor:const Color(0xFFDCE8F7))),
+              const SizedBox(height:10),
+              Wrap(spacing:16,runSpacing:6,children:[
+                Text(widget.demo?'Recebido: ${DemoData.currency(ledger.received)}':'Recebido: —',
+                  style:const TextStyle(color:green,fontSize:12,fontWeight:FontWeight.w700)),
+                Text(widget.demo?'Pendente: ${DemoData.currency(ledger.pending)}':'Pendente: —',
+                  style:const TextStyle(color:muted,fontSize:12)),
+              ]),
             ]));
             return wide?IntrinsicHeight(child:Row(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               Expanded(child:target),const SizedBox(width:16),Expanded(child:financial),
