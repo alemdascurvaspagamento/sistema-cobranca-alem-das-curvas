@@ -124,6 +124,12 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       padding: const EdgeInsets.all(18),
       child: DefaultTextStyle.merge(style: const TextStyle(color: ink),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Text('Boa tarde, Prof. 👋',style:TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
+            Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
+              style:const TextStyle(fontSize:12,color:muted)),
+          ])),
+          const SizedBox(height: 14),
           Wrap(alignment: WrapAlignment.spaceBetween, spacing: 12, runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center, children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -220,12 +226,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             ]):Column(children:[target,const SizedBox(height:14),financial]);
           }),
           const SizedBox(height: 16),
-          panel(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            const Text('Boa tarde, Prof. 👋',style:TextStyle(fontSize:22,fontWeight:FontWeight.w800,color:ink)),
-            Text('Painel de ${months[selectedMonth-1]}/$selectedYear • Seu dia em uma única leitura.',
-              style:const TextStyle(fontSize:12,color:muted)),
-          ])),
-          const SizedBox(height: 14),
           LayoutBuilder(builder:(context,size) {
             final columns=size.maxWidth>=950?4:size.maxWidth>=500?2:1;
             final w=(size.maxWidth-(columns-1)*10)/columns;
