@@ -30,7 +30,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
             onPressed:()=>setState(()=>hidden.add(id))),
         ]),
         Padding(padding:const EdgeInsets.only(left:34,right:8),
-          child:Text(detail,style:const TextStyle(color:const Color(0xFF64748B),fontSize:12))),
+          child:Text(detail,style:const TextStyle(color:Color(0xFF64748B),fontSize:12))),
         Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
           Padding(padding:const EdgeInsets.only(left:34),
             child:Text(priority,style:TextStyle(color:color,fontSize:11))),
@@ -106,7 +106,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
           icon:const Icon(Icons.refresh),label:const Text('Restaurar sugestões')),
         const SizedBox(height:12),
         const Text('Os dados são fictícios e calculados localmente. A secretária não envia mensagens, não agenda sozinha e não utiliza IA generativa nesta versão.',
-          style:TextStyle(color:const Color(0xFF64748B),fontSize:12)),
+          style:TextStyle(color:Color(0xFF64748B),fontSize:12)),
       ]);
     });
 }
