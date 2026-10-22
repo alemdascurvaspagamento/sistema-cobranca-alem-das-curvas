@@ -135,7 +135,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
               ]),
               if(selectedDays.isNotEmpty)...[
                 const Text('Horários por dia • toque para escolher'),
-                for(final day in days.where(selectedDays.contains)
+                for(final day in days.where(selectedDays.contains))
                   OutlinedButton.icon(
                     onPressed:()=>chooseTime(day),
                     icon:const Icon(Icons.access_time),
