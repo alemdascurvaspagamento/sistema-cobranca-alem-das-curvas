@@ -46,7 +46,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
   }
   Widget panel(Widget child) => Container(
     padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(color: const Color(0xFFFFFFFF),
+    decoration: BoxDecoration(color: Color(0xFFFFFFFF),
       border: Border.all(color: border),
       borderRadius: BorderRadius.circular(17)),
     child: child);
@@ -71,7 +71,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
       ]));
 
   Widget action(String label, String subtitle, IconData icon, VoidCallback onTap) =>
-    Material(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(14),
+    Material(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(14),
       child: InkWell(onTap:onTap, borderRadius:BorderRadius.circular(14),
         child:Container(
           padding:const EdgeInsets.symmetric(horizontal:12,vertical:13),
@@ -109,7 +109,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
     List<String> months, List<DemoAppointment> appointments, double planned) {
     final ledger=DemoLedger.instance;
     return Theme(data: ThemeData(useMaterial3: true, brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.dark),
+      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light),
       scaffoldBackgroundColor: background), child: Container(
       decoration: BoxDecoration(color: background,
         borderRadius: BorderRadius.circular(20)),
