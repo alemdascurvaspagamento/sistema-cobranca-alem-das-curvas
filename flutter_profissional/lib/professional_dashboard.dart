@@ -124,10 +124,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               Text('${months[selectedMonth-1]} / $selectedYear • Seu negócio em uma única leitura',
                 style: const TextStyle(fontSize: 12, color: muted)),
             ]),
-            FilledButton.icon(onPressed: widget.onClients, icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Novo cliente'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD6B46B),
-                foregroundColor: const Color(0xFF111317))),
           ]),
           const SizedBox(height: 12),
           Row(children:[
@@ -149,20 +145,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
               child:Text('Indicadores demonstrativos exibem o mês atual; histórico mensal ainda não integrado.',
                 style:TextStyle(color:amber,fontSize:11))),
           const SizedBox(height: 16),
-          LayoutBuilder(builder:(context,box){
-            final width=(box.maxWidth-10)/2;
-            return Wrap(spacing:10,runSpacing:10,children:[
-              SizedBox(width:width,child:action('Agenda','Atendimentos',
-                Icons.calendar_month_outlined,widget.onAgenda)),
-              SizedBox(width:width,child:action('Cobranças','Pagamentos',
-                Icons.receipt_long_outlined,widget.onBilling)),
-              SizedBox(width:width,child:action('Financeiro','Receitas e metas',
-                Icons.bar_chart_outlined,widget.onFinance)),
-              SizedBox(width:width,child:action('Clientes','Cadastros',
-                Icons.groups_outlined,widget.onClients)),
-            ]);
-          }),
-          const SizedBox(height: 18),
           LayoutBuilder(builder: (context, size) {
             final columns = size.maxWidth >= 1020 ? 5 : size.maxWidth >= 600 ? 3 : 2;
             final cardWidth = (size.maxWidth - (columns - 1) * 10) / columns;
