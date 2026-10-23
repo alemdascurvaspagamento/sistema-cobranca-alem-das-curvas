@@ -256,7 +256,9 @@ class _ModelTile extends StatelessWidget {
         'Ex.: ${moneyCompact(round10(r * 60 / profile.duration))} a hora; ${t.g('uma', 'um')} ${t.session} de '
             '${durationText(profile.duration)} sai por ${moneyCompact(round10(r * 60 / profile.duration) * profile.duration / 60)}',
       BillingModel.monthly =>
-        'Ex.: ${moneyCompact(round10(r * profile.perWeek * 4.3))} por mês, ${profile.perWeek}x por semana',
+        profile.fixedRoutine
+            ? 'Ex.: ${moneyCompact(round10(r * profile.perWeek * 4.3))} por mês, ${profile.perWeek}x por semana'
+            : 'Ex.: ${moneyCompact(round10(r * profile.perWeek * 4.3))} por mês, com ${t.sessions} à vontade',
       BillingModel.package => 'Ex.: pacote de 10 ${t.sessions} por ${moneyCompact(round10(r * 9))}',
     };
   }

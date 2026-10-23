@@ -40,7 +40,7 @@ class RulesScreen extends StatelessWidget {
               const SizedBox(height: 18),
               _RuleCard(
                 icon: Icons.person_off_rounded,
-                title: 'Quando ${t.g('a', 'o')} ${t.client} falta ou cancela',
+                title: 'Quando ${t.clients} faltam ou cancelam',
                 options: [
                   _Option(
                     title: 'Cobrar e descontar no mês seguinte',
