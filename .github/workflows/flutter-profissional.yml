@@ -4,7 +4,9 @@
 #   1. instala o Flutter;
 #   2. roda os testes automáticos (contas de cobrança, dados de exemplo, telas);
 #   3. procura erros no código;
-#   4. monta a versão web, como a Vercel faz.
+#   4. monta a versão web, como a Vercel faz;
+#   5. se tudo passou, gera o app de teste para Android e publica em
+#      Releases > "Android - versão de teste" (link fixo, substituído a cada versão).
 # Se algo falhar, aparece um X vermelho na mudança. Não mexe no Coach Flow Pessoal.
 
 name: Coach Flow Profissional
@@ -87,3 +89,73 @@ jobs:
             echo ""
             echo "Se todos os passos acima estão verdes, as contas de cobrança passaram nos testes e o app montou sem erros."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  android:
+    name: App de teste para Android
+    needs: verificar
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar o Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar o projeto Android
+        run: |
+          # A pasta android é gerada aqui, só para montar o app de teste.
+          flutter create --platforms=android --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
+          manifest=android/app/src/main/AndroidManifest.xml
+          # Nome que aparece no celular.
+          sed -i 's/android:label="[^"]*"/android:label="Coach Flow"/' "$manifest"
+          # Acesso à internet (fontes, WhatsApp) e permissão para abrir links.
+          grep -q 'android.permission.INTERNET' "$manifest" || \
+            sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$manifest"
+          grep -q '<queries>' "$manifest" && \
+            sed -i 's#<queries>#<queries>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>#' "$manifest"
+          cat "$manifest"
+
+      - name: Montar o app
+        run: |
+          flutter pub get
+          flutter build apk --release --build-number=${{ github.run_number }}
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/coach-flow-profissional.apk"
+          ls -lh "$RUNNER_TEMP/coach-flow-profissional.apk"
+
+      - name: Publicar o link de download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=android-teste
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$tag" "$RUNNER_TEMP/coach-flow-profissional.apk" \
+            --target "${GITHUB_SHA}" \
+            --prerelease \
+            --title "Android - versão de teste" \
+            --notes "App de teste do Coach Flow Profissional, gerado automaticamente.
+
+          Ramo: ${GITHUB_REF_NAME} · versão ${GITHUB_RUN_NUMBER} · ${GITHUB_SHA::7}
+
+          Como instalar no celular Android:
+          1. Toque em coach-flow-profissional.apk abaixo para baixar.
+          2. Abra o arquivo. Se o Android pedir, permita instalar apps desta origem.
+          3. Toque em Instalar.
+
+          Usa dados de exemplo (demonstração). Nada é enviado de verdade."
+
