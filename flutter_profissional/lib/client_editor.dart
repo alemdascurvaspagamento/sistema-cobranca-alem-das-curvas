@@ -90,8 +90,14 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
   @override Widget build(BuildContext context){
     final sessionLabel=ProfessionTerms.appointment(profession);
     final clientLabel=ProfessionTerms.client(profession);
-    return Dialog(child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:740,maxHeight:740),
-      child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,
+    final screen=MediaQuery.sizeOf(context);
+    final compact=screen.width<600;
+    final availableHeight=screen.height-MediaQuery.paddingOf(context).vertical-MediaQuery.viewInsetsOf(context).bottom;
+    return Dialog(
+      insetPadding:EdgeInsets.symmetric(horizontal:compact?8:24,vertical:compact?8:24),
+      child:SizedBox(width:compact?screen.width-16:740,
+        height:(availableHeight-(compact?16:48)).clamp(280.0,740.0),
+      child:Padding(padding:EdgeInsets.all(compact?12:20),child:Column(mainAxisSize:MainAxisSize.min,
         crossAxisAlignment:CrossAxisAlignment.stretch,children:[
           Text(widget.initial==null?'Novo cliente':'Editar cliente',
             style:Theme.of(context).textTheme.headlineSmall),
