@@ -38,8 +38,28 @@ class CF {
 
   static const whatsapp = Color(0xFF1FA855);
 
+  /// Desligado nos testes automáticos, que não têm internet para baixar fontes.
+  static bool useGoogleFonts = true;
+
+  static TextStyle _barlow({double? fontSize, FontWeight? fontWeight, Color? color, double? height}) =>
+      useGoogleFonts
+          ? GoogleFonts.barlow(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height)
+          : TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height);
+
+  static TextStyle _condensed({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    double? height,
+    List<FontFeature>? fontFeatures,
+  }) =>
+      useGoogleFonts
+          ? GoogleFonts.barlowCondensed(
+              fontSize: fontSize, fontWeight: fontWeight, color: color, height: height, fontFeatures: fontFeatures)
+          : TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height, fontFeatures: fontFeatures);
+
   static TextStyle score(double size, {Color color = text, FontWeight weight = FontWeight.w700}) =>
-      GoogleFonts.barlowCondensed(
+      _condensed(
         fontSize: size,
         fontWeight: weight,
         color: color,
@@ -49,7 +69,7 @@ class CF {
 
   static TextStyle body(double size,
           {Color color = text, FontWeight weight = FontWeight.w400, double? height}) =>
-      GoogleFonts.barlow(fontSize: size, fontWeight: weight, color: color, height: height);
+      _barlow(fontSize: size, fontWeight: weight, color: color, height: height);
 
   static (Color fg, Color bg) forStatus(BillStatus s) => switch (s) {
         BillStatus.paid => (green, greenBg),
@@ -84,12 +104,12 @@ class CF {
       ),
       scaffoldBackgroundColor: bg,
     );
-    final textTheme = GoogleFonts.barlowTextTheme(base.textTheme).copyWith(
-      headlineMedium: GoogleFonts.barlow(fontWeight: FontWeight.w700, color: text),
-      titleLarge: GoogleFonts.barlow(fontWeight: FontWeight.w700, color: text),
-      titleMedium: GoogleFonts.barlow(fontWeight: FontWeight.w600, color: text),
-      bodyMedium: GoogleFonts.barlow(color: muted, fontSize: 15),
-      bodyLarge: GoogleFonts.barlow(color: text, fontSize: 16),
+    final textTheme = (useGoogleFonts ? GoogleFonts.barlowTextTheme(base.textTheme) : base.textTheme).copyWith(
+      headlineMedium: _barlow(fontWeight: FontWeight.w700, color: text),
+      titleLarge: _barlow(fontWeight: FontWeight.w700, color: text),
+      titleMedium: _barlow(fontWeight: FontWeight.w600, color: text),
+      bodyMedium: _barlow(color: muted, fontSize: 15),
+      bodyLarge: _barlow(color: text, fontSize: 16),
     );
     final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
     return base.copyWith(
@@ -112,7 +132,7 @@ class CF {
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: shape,
-          textStyle: GoogleFonts.barlow(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: _barlow(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -123,13 +143,13 @@ class CF {
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: shape,
-          textStyle: GoogleFonts.barlow(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: _barlow(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: blue,
-          textStyle: GoogleFonts.barlow(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: _barlow(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -142,7 +162,7 @@ class CF {
       chipTheme: base.chipTheme.copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         side: const BorderSide(color: line),
-        labelStyle: GoogleFonts.barlow(fontSize: 15, fontWeight: FontWeight.w600, color: text),
+        labelStyle: _barlow(fontSize: 15, fontWeight: FontWeight.w600, color: text),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: bg,
@@ -152,7 +172,7 @@ class CF {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: ink,
         behavior: SnackBarBehavior.floating,
-        contentTextStyle: GoogleFonts.barlow(color: Colors.white, fontSize: 15),
+        contentTextStyle: _barlow(color: Colors.white, fontSize: 15),
         actionTextColor: lap,
         shape: shape,
       ),

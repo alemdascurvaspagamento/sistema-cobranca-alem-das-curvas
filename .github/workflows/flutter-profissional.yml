@@ -1,0 +1,73 @@
+# Verificação automática do Coach Flow Profissional (Flutter).
+#
+# A cada mudança na pasta flutter_profissional, o GitHub:
+#   1. instala o Flutter;
+#   2. roda os testes automáticos (contas de cobrança, dados de exemplo, telas);
+#   3. procura erros no código;
+#   4. monta a versão web, como a Vercel faz.
+# Se algo falhar, aparece um X vermelho na mudança. Não mexe no Coach Flow Pessoal.
+
+name: Coach Flow Profissional
+
+on:
+  push:
+    paths:
+      - 'flutter_profissional/**'
+      - '.github/workflows/flutter-profissional.yml'
+  pull_request:
+    paths:
+      - 'flutter_profissional/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-profissional-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Testes e montagem
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Versão do Flutter
+        run: flutter --version
+
+      - name: Baixar pacotes
+        run: flutter pub get
+
+      - name: Rodar os testes automáticos
+        run: flutter test --reporter expanded
+
+      - name: Procurar erros no código
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Montar a versão web
+        run: |
+          flutter create --platforms=web --project-name coachflow_profissional . >/dev/null
+          flutter build web --release
+
+      - name: Resumo
+        if: always()
+        run: |
+          {
+            echo "## Coach Flow Profissional"
+            echo ""
+            echo "Ramo: \`${GITHUB_REF_NAME}\` · versão: \`${GITHUB_SHA::7}\`"
+            echo ""
+            echo "Se todos os passos acima estão verdes, as contas de cobrança passaram nos testes e o app montou sem erros."
+          } >> "$GITHUB_STEP_SUMMARY"
