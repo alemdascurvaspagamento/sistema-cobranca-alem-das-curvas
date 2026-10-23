@@ -691,6 +691,8 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   style:const TextStyle(color:Color(0xFF06427C),fontSize:12))),
             ])),
           SizedBox(height:gap),
+          secretary,
+          SizedBox(height:gap),
           _dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             const Text('Visão geral financeira',style:TextStyle(
               fontSize:19,fontWeight:FontWeight.w800,color:ink)),
@@ -737,14 +739,13 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             }),
           ])),
           SizedBox(height:gap),
-          secretary,
-          SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
-            if(c.maxWidth>=1050)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Expanded(flex:11,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:450),child:goal)),
+            if(c.maxWidth>=1050)return IntrinsicHeight(child:Row(
+              crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              Expanded(child:goal),
               SizedBox(width:gap),
-              Expanded(flex:10,child:ConstrainedBox(constraints:const BoxConstraints(minHeight:450),child:finance)),
-            ]);
+              Expanded(child:finance),
+            ]));
             return Column(children:[goal,SizedBox(height:gap),finance]);
           }),
           SizedBox(height:gap),
