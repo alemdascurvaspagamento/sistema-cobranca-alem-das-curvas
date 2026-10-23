@@ -759,12 +759,14 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           }),
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
-            if(c.maxWidth>=1050)return IntrinsicHeight(child:Row(
-              crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            // Altura natural: evita sobreposição dos painéis com os atalhos abaixo.
+            // IntrinsicHeight não é confiável com gráficos e LayoutBuilder aninhados.
+            if(c.maxWidth>=1050)return Row(
+              crossAxisAlignment:CrossAxisAlignment.start,children:[
               Expanded(child:goal),
               SizedBox(width:gap),
               Expanded(child:finance),
-            ]));
+            ]);
             return Column(children:[goal,SizedBox(height:gap),finance]);
           }),
           SizedBox(height:gap),
