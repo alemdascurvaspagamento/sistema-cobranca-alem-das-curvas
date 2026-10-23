@@ -531,23 +531,30 @@ class _BillDetail extends StatelessWidget {
                 }),
               ),
               const SizedBox(height: 14),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => openVacationSheet(context, plan),
-                    icon: const Icon(Icons.beach_access_rounded, size: 18),
-                    label: const Text('Férias ou ausência'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: status == BillStatus.paid ? null : () => openPaymentSheet(context, plan),
-                    icon: const Icon(Icons.payments_rounded, size: 18),
-                    label: const Text('Registrar pagamento'),
-                  ),
-                ),
-              ]),
+              LayoutBuilder(builder: (context, box) {
+                final vacation = OutlinedButton.icon(
+                  onPressed: () => openVacationSheet(context, plan),
+                  icon: const Icon(Icons.beach_access_rounded, size: 18),
+                  label: const Text('Férias ou ausência'),
+                );
+                final pay = FilledButton.icon(
+                  onPressed: status == BillStatus.paid ? null : () => openPaymentSheet(context, plan),
+                  icon: const Icon(Icons.payments_rounded, size: 18),
+                  label: const Text('Registrar pagamento'),
+                );
+                if (box.maxWidth < 440) {
+                  return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    pay,
+                    const SizedBox(height: 8),
+                    vacation,
+                  ]);
+                }
+                return Row(children: [
+                  Expanded(child: vacation),
+                  const SizedBox(width: 10),
+                  Expanded(child: pay),
+                ]);
+              }),
               if (payments.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 _Section(
@@ -643,6 +650,13 @@ class _StepRow extends StatelessWidget {
   }
 }
 
+String _tileLabel(LessonLine line) {
+  final note = line.record?.note ?? '';
+  if (line.outcome == LessonOutcome.cancelledWaived && (note == 'Férias' || note == 'Viagem')) return note;
+  if (line.outcome == LessonOutcome.cancelledWaived) return 'Cancelada';
+  return line.outcome.label;
+}
+
 class _LessonTile extends StatelessWidget {
   const _LessonTile({required this.line, required this.onTap});
   final LessonLine line;
@@ -672,8 +686,12 @@ class _LessonTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(line.outcome.label,
-                maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(12, color: fg, weight: FontWeight.w600)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(_tileLabel(line),
+                  maxLines: 1, style: CF.body(12, color: fg, weight: FontWeight.w600)),
+            ),
           ]),
         ),
       ),
