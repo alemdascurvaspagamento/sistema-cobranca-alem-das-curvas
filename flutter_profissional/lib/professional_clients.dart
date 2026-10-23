@@ -8,6 +8,7 @@ class ProfessionalClients extends StatefulWidget {
 }
 class _ProfessionalClientsState extends State<ProfessionalClients> {
   static const gold=Color(0xFF0C213A);
+  String search='';
   late final repository=ProfessionalRepository(Supabase.instance.client);
   late Future<List<Map<String,dynamic>>> future=_load();
   Future<List<Map<String,dynamic>>> _load()=>repository.clients();
@@ -69,6 +70,12 @@ class _ProfessionalClientsState extends State<ProfessionalClients> {
           label:const Text('Novo')),
       ]),
       const SizedBox(height:12),
+      TextField(onChanged:(value)=>setState(()=>search=value.trim().toLowerCase()),
+        decoration:InputDecoration(prefixIcon:const Icon(Icons.search),
+          hintText:'Buscar cliente pelo nome ou telefone',
+          filled:true,fillColor:Colors.white,
+          border:OutlineInputBorder(borderRadius:BorderRadius.circular(14)))),
+      const SizedBox(height:12),
       FutureBuilder<List<Map<String,dynamic>>>(future:future,builder:(context,snapshot){
         if(snapshot.connectionState!=ConnectionState.done)
           return const Center(child:CircularProgressIndicator());
@@ -76,18 +83,26 @@ class _ProfessionalClientsState extends State<ProfessionalClients> {
           const Text('Não foi possível carregar os clientes. Verifique a configuração do banco exclusivo.'),
           TextButton(onPressed:refresh,child:const Text('Tentar novamente')),
         ]);
-        final clients=snapshot.data??[];
+        final allClients=snapshot.data??[];
+        final clients=allClients.where((item)=>search.isEmpty ||
+          (item['name']?.toString().toLowerCase()??'').contains(search) ||
+          (item['phone']?.toString().toLowerCase()??'').contains(search)).toList();
         if(clients.isEmpty)return const Padding(padding:EdgeInsets.all(24),
           child:Text('Nenhum cliente cadastrado. Use Novo para começar.'));
-        return Column(children:[
+        return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          Padding(padding:const EdgeInsets.only(bottom:12),
+            child:Text('${clients.length} de ${allClients.length} clientes',
+              style:const TextStyle(color:Color(0xFF64748B),fontWeight:FontWeight.w600))),
           for(final item in clients) Card(
             color:const Color(0xFFFFFFFF),
             margin:const EdgeInsets.only(bottom:10),
             child:Padding(padding:const EdgeInsets.all(14),child:Column(
               crossAxisAlignment:CrossAxisAlignment.stretch,children:[
                 Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  const CircleAvatar(backgroundColor:Color(0xFFFFF4DE),
-                    child:Icon(Icons.person,color:gold)),
+                  CircleAvatar(backgroundColor:const Color(0xFFE5EEFC),
+                    child:Text((item['name']?.toString().trim().isNotEmpty??false)
+                      ?item['name'].toString().trim().substring(0,1).toUpperCase():'?',
+                      style:const TextStyle(color:gold,fontWeight:FontWeight.bold))),
                   const SizedBox(width:10),
                   Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
                     children:[
@@ -100,8 +115,11 @@ class _ProfessionalClientsState extends State<ProfessionalClients> {
                         maxLines:1,overflow:TextOverflow.ellipsis),
                     ])),
                   const SizedBox(width:8),
-                  Text(item['status']?.toString()??'',style:const TextStyle(
-                    color:gold,fontSize:11)),
+                  Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:6),
+                    decoration:BoxDecoration(color:const Color(0xFFE5F7EF),
+                      borderRadius:BorderRadius.circular(16)),
+                    child:Text(item['status']?.toString()??'',style:const TextStyle(
+                      color:Color(0xFF177A55),fontSize:11,fontWeight:FontWeight.w700))),
                 ]),
                 const Divider(height:22),
                 Row(children:[
