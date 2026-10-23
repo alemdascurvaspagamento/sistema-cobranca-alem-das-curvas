@@ -250,6 +250,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 900;
+          final narrowPhone = constraints.maxWidth < 380;
           return Scaffold(
             appBar: AppBar(
               backgroundColor: const Color(0xFF0C213A),
@@ -298,8 +299,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   child: SafeArea(
                     child: ListView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: desktop ? 16 : 8,
-                        vertical: desktop ? 12 : 8,
+                        horizontal: desktop ? 20 : (narrowPhone ? 10 : 16),
+                        vertical: desktop ? 16 : 12,
                       ),
                       children: [
                         if (widget.demo) const Padding(
@@ -357,8 +358,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               ],
             ),
             bottomNavigationBar: desktop ? null : NavigationBar(
-              height: 72,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              height: narrowPhone ? 66 : 72,
+              labelBehavior: narrowPhone
+                ? NavigationDestinationLabelBehavior.onlyShowSelected
+                : NavigationDestinationLabelBehavior.alwaysShow,
               backgroundColor: const Color(0xFFFFFFFF),
               indicatorColor: gold.withValues(alpha: .18),
               selectedIndex: switch (selected) {
