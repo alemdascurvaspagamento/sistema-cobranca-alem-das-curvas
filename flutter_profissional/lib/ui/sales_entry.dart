@@ -100,11 +100,11 @@ class _Pitch extends StatelessWidget {
             textStyle: CF.body(18, weight: FontWeight.w700),
           ),
           icon: const Icon(Icons.play_arrow_rounded),
-          label: const Text('Experimentar com dados de exemplo'),
+          label: const Text('Experimentar agora'),
         ),
       ]),
       const SizedBox(height: 12),
-      Text('Sem cadastro. Os alunos são fictícios e nada é enviado de verdade.',
+      Text('Sem cadastro. Você entra numa conta de exemplo, com alunos fictícios.',
           style: CF.body(14, color: Colors.white54)),
     ]);
   }

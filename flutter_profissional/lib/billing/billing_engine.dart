@@ -514,6 +514,12 @@ String money(num value) {
   return '${negative ? '−' : ''}R\$ $buffer,$rest';
 }
 
+/// Valor sem os centavos quando forem zero (R\$ 1.560 em vez de R\$ 1.560,00).
+String moneyCompact(num value) {
+  final full = money(value);
+  return full.endsWith(',00') ? full.substring(0, full.length - 3) : full;
+}
+
 String lessonsText(int n) => n == 1 ? '1 aula' : '$n aulas';
 
 /// Passo a passo do valor, em linguagem simples.

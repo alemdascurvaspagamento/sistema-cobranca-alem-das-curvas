@@ -169,7 +169,7 @@ class _Scoreboard extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(money(received), style: CF.score(40, color: Colors.white)),
+                child: Text(moneyCompact(received), style: CF.score(40, color: Colors.white)),
               ),
             ]),
           ),
@@ -181,7 +181,7 @@ class _Scoreboard extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(money(remaining), style: CF.score(40, color: CF.lap)),
+                child: Text(moneyCompact(remaining), style: CF.score(40, color: CF.lap)),
               ),
             ]),
           ),
@@ -357,28 +357,35 @@ class StudentBillCard extends StatelessWidget {
               const SizedBox(height: 10),
               _PartialBar(received: received, total: bill.total, remaining: remaining),
             ],
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(children: [
-              Expanded(
-                child: Text('Ver aulas e cálculo',
-                    style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
-              ),
-              if (unpaid) ...[
-                OutlinedButton(
-                  onPressed: () => openPaymentSheet(context, plan),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
-                  child: const Text('Recebi'),
+              Text('Ver aulas e cálculo', style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
+              const Icon(Icons.chevron_right_rounded, size: 20, color: CF.blue),
+              const Spacer(),
+              if (!unpaid) _MoreMenu(plan: plan),
+            ]),
+            if (unpaid) ...[
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => openPaymentSheet(context, plan),
+                    icon: const Icon(Icons.payments_rounded, size: 18),
+                    label: const Text('Recebi'),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: () => openWhatsAppBilling(context, plan),
-                  style: FilledButton.styleFrom(backgroundColor: CF.whatsapp, minimumSize: const Size(0, 44)),
-                  icon: const Icon(Icons.chat_rounded, size: 18),
-                  label: const Text('Cobrar'),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => openWhatsAppBilling(context, plan),
+                    style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
+                    icon: const Icon(Icons.chat_rounded, size: 18),
+                    label: const Text('Cobrar'),
+                  ),
                 ),
-              ],
-              _MoreMenu(plan: plan),
-            ]),
+                _MoreMenu(plan: plan),
+              ]),
+            ],
           ]),
         ),
       ),
