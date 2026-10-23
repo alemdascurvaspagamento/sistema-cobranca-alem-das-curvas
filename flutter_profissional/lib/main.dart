@@ -227,6 +227,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 14),
             for (final entry in <(Section, String, IconData)>[
+              (Section.inicio, 'Início', Icons.home_outlined),
+              (Section.clientes, 'Clientes', Icons.groups_outlined),
+              (Section.cobrancas, 'Cobranças', Icons.receipt_long_outlined),
+              (Section.financeiro, 'Financeiro', Icons.bar_chart_outlined),
               (Section.agenda, 'Calendário e atendimentos', Icons.calendar_month_outlined),
               (Section.secretaria, 'Secretária inteligente', Icons.support_agent_outlined),
               (Section.mais, 'Configurações e relatórios', Icons.tune_outlined),
