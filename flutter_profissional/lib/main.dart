@@ -5,7 +5,11 @@ import 'booking_requests.dart';
 import 'calendar_connections.dart';
 import 'demo_mode.dart';
 import 'demo_modules.dart';
-import 'demo_billing.dart';
+import 'billing/billing_screen.dart';
+import 'billing/billing_store.dart';
+import 'billing/rules_screen.dart';
+import 'ui/cf_theme.dart';
+import 'ui/sales_entry.dart';
 import 'professional_dashboard.dart';
 import 'professional_secretary.dart';
 import 'professional_clients.dart';
@@ -28,59 +32,7 @@ class CoachFlowApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Coach Flow Profissional',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFEDF2F8),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF245A98),
-            brightness: Brightness.light,
-            surface: const Color(0xFFFFFFFF),
-          ),
-          cardTheme: CardThemeData(
-            color: const Color(0xFFFFFFFF),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: Color(0xFF245A98), width: 1.5),
-            ),
-          ),
-          filledButtonTheme: FilledButtonThemeData(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF0C213A),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFDCE4EF),
-              disabledForegroundColor: const Color(0xFF718096),
-              minimumSize: const Size(0, 46),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF0C213A),
-              backgroundColor: const Color(0xFFE5EFFA),
-              side: const BorderSide(color: Color(0xFF245A98), width: 1.25),
-              minimumSize: const Size(0, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0C213A),
-              textStyle: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          iconButtonTheme: IconButtonThemeData(
-            style: IconButton.styleFrom(foregroundColor: const Color(0xFF174D85)),
-          ),
-          textTheme: const TextTheme(
-            headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF17243A)),
-            titleLarge: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF17243A)),
-            bodyMedium: TextStyle(color: Color(0xFF64748B)),
-          ),
-        ),
+        theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, GlobalWidgetsLocalizations.delegate],
@@ -108,27 +60,10 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     if (demo) return const CoachFlowShell(demo: true);
     if (const String.fromEnvironment('SUPABASE_URL').isEmpty ||
         const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY').isEmpty) {
-      return Scaffold(body: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 450),
-        child: Padding(padding: const EdgeInsets.all(24), child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.workspace_premium_outlined, size: 64, color: Color(0xFF0C213A)),
-            const SizedBox(height: 18),
-            const Text('Coach Flow Profissional', textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            const Text('Explore o dashboard e a agenda com dados fictícios, sem conectar nenhum banco.',
-              textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            FilledButton.icon(onPressed: () => setState(() => demo = true),
-              icon: const Icon(Icons.play_arrow), label: const Text('Entrar na demonstração')),
-            const SizedBox(height: 16),
-            const Text('MODO DEMONSTRAÇÃO • Nenhum dado real será alterado',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Color(0xFF0C213A))),
-          ],
-        )),
-      )));
+      return SalesEntry(onStart: () {
+        BillingStore.instance.attach();
+        setState(() => demo = true);
+      });
     }
     final auth = Supabase.instance.client.auth;
     return StreamBuilder<AuthState>(
@@ -168,13 +103,14 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   }
 }
 
-enum Section { inicio, clientes, cobrancas, financeiro, agenda, secretaria, mais }
+enum Section { inicio, clientes, cobrancas, financeiro, agenda, secretaria, regras, mais }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
         Section.inicio => 'Início',
         Section.agenda => 'Agenda',
         Section.secretaria => 'Secretária',
+        Section.regras => 'Regras',
         Section.clientes => 'Clientes',
         Section.cobrancas => 'Cobranças',
         Section.financeiro => 'Financeiro',
@@ -184,6 +120,7 @@ extension SectionDetails on Section {
         Section.inicio => Icons.home_outlined,
         Section.agenda => Icons.calendar_month_outlined,
         Section.secretaria => Icons.support_agent_outlined,
+        Section.regras => Icons.rule_rounded,
         Section.clientes => Icons.groups_outlined,
         Section.cobrancas => Icons.receipt_long_outlined,
         Section.financeiro => Icons.account_balance_wallet_outlined,
@@ -234,6 +171,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               (Section.financeiro, 'Financeiro', Icons.bar_chart_outlined),
               (Section.agenda, 'Calendário e atendimentos', Icons.calendar_month_outlined),
               (Section.secretaria, 'Secretária inteligente', Icons.support_agent_outlined),
+              (Section.regras, 'Regras de cobrança e feriados', Icons.rule_rounded),
               (Section.mais, 'Configurações e relatórios', Icons.tune_outlined),
             ])
               ListTile(
@@ -310,15 +248,18 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                       children: [
                         if (widget.demo) const Padding(
                           padding: EdgeInsets.only(bottom: 10),
-                          child: Text('DEMONSTRAÇÃO • DADOS FICTÍCIOS',
+                          child: Text('Demonstração com dados fictícios',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: gold,fontSize: 10,letterSpacing: 1))),
                         if (selected == Section.inicio) ...[
                           ProfessionalDashboard(demo: widget.demo, onClients: newClient, onAgenda: () => setState(() => selected = Section.agenda), onBilling: () => setState(() => selected = Section.cobrancas), onFinance: () => setState(() => selected = Section.financeiro), onSecretary: () => setState(() => selected = Section.secretaria)),
                         ],
                         if (selected == Section.cobrancas)
-                          widget.demo ? const DemoBilling() :
+                          widget.demo ? BillingScreen(onOpenRules: () => setState(() => selected = Section.regras)) :
                             _panel('Cobranças', 'Cobranças reais disponíveis após integração segura com o banco.'),
+                        if (selected == Section.regras)
+                          widget.demo ? const RulesScreen() :
+                            _panel('Regras de cobrança', 'Disponível após conectar o banco de dados.'),
                         if (selected == Section.financeiro)
                           widget.demo ? const DemoFinance() :
                             _panel('Visão financeira', 'Recebimentos, despesas, cobranças e metas.'),

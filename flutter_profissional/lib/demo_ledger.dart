@@ -96,7 +96,22 @@ class DemoLedger extends ChangeNotifier {
     }
     for(final name in sessionCounts.keys){_recalculate(name);}
   }
+  /// Quando verdadeiro, os valores vêm da tela de Cobranças (motor de cobrança)
+  /// e as edições da agenda não recalculam mais estes números.
+  bool externalBilling=false;
+  final Map<String,double> receivedAmounts={};
+  void syncFromBilling({required Map<String,double> amounts,
+      required Map<String,double> received,required Map<String,bool> paid,
+      required Map<String,int> dueDays}){
+    externalBilling=true;
+    this.amounts..clear()..addAll(amounts);
+    receivedAmounts..clear()..addAll(received);
+    payments..clear()..addAll(paid);
+    this.dueDays..clear()..addAll(dueDays);
+    notifyListeners();
+  }
   void _recalculate(String name){
+    if(externalBilling)return;
     final completed=visits[name]?.values.where((v)=>(v.state=='Realizada'||v.state=='Cancelada')&&v.charge).length??0;
     final gross=completed*(prices[name]??0);
     amounts[name]=(gross-(credits[name]??0)*(prices[name]??0)-
@@ -120,8 +135,9 @@ class DemoLedger extends ChangeNotifier {
   }
   void setGoal(double value) { annualGoal=value; notifyListeners(); }
   double get projected => amounts.values.fold(0,(a,b)=>a+b);
-  double get received => amounts.entries.where((e)=>isPaid(e.key))
-    .fold(0,(sum,e)=>sum+e.value);
+  double get received => externalBilling
+    ? receivedAmounts.values.fold(0.0,(a,b)=>a+b)
+    : amounts.entries.where((e)=>isPaid(e.key)).fold(0,(sum,e)=>sum+e.value);
   double get pending => projected-received;
   // Despesa fictícia separada, não misturada com o recebimento.
   double get paidExpenses => 120;
