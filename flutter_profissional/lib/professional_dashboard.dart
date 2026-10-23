@@ -691,6 +691,52 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
                   style:const TextStyle(color:Color(0xFF06427C),fontSize:12))),
             ])),
           SizedBox(height:gap),
+          _dashboardCard(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            const Text('Visão geral financeira',style:TextStyle(
+              fontSize:19,fontWeight:FontWeight.w800,color:ink)),
+            const SizedBox(height:5),
+            Text(isDemo?'Valores ilustrativos da demonstração':
+              'Dados financeiros indisponíveis até a sincronização.',
+              style:const TextStyle(fontSize:12,color:muted)),
+            const SizedBox(height:14),
+            LayoutBuilder(builder:(context,c){
+              final values=<({String label,String value,Color color})>[
+                (label:'RECEITA PREVISTA',value:isDemo?
+                  DemoData.currency(ledger.received+ledger.pending):'—',
+                  color:const Color(0xFF245A98)),
+                (label:'RECEBIDO NO MÊS',value:isDemo?
+                  DemoData.currency(ledger.received):'—',color:green),
+                (label:'A RECEBER',value:isDemo?
+                  DemoData.currency(ledger.pending):'—',color:amber),
+                (label:'RESULTADO DE CAIXA',value:isDemo?
+                  DemoData.currency(ledger.received-ledger.paidExpenses):'—',
+                  color:const Color(0xFF28796E)),
+              ];
+              final columns=c.maxWidth<310?1:2;
+              final tileWidth=(c.maxWidth-gap*(columns-1))/columns;
+              return Wrap(spacing:gap,runSpacing:gap,children:[
+                for(final item in values)
+                  SizedBox(width:tileWidth,child:Container(
+                    padding:const EdgeInsets.all(14),
+                    decoration:BoxDecoration(color:Colors.white,
+                      border:Border.all(color:const Color(0xFFDCE4EF)),
+                      borderRadius:BorderRadius.circular(15)),
+                    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      Container(height:4,width:38,decoration:BoxDecoration(
+                        color:item.color,borderRadius:BorderRadius.circular(4))),
+                      const SizedBox(height:10),
+                      Text(item.label,maxLines:2,style:const TextStyle(
+                        color:muted,fontSize:11,fontWeight:FontWeight.w800)),
+                      const SizedBox(height:8),
+                      FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,
+                        child:Text(item.value,style:const TextStyle(
+                          color:ink,fontSize:23,fontWeight:FontWeight.w800))),
+                    ]),
+                  )),
+              ]);
+            }),
+          ])),
+          SizedBox(height:gap),
           secretary,
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
