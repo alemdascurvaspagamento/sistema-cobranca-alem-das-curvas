@@ -16,6 +16,8 @@ void main() {
   testWidgets('experimentar leva à escolha de profissão', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     await tester.pumpWidget(const CoachFlowApp());
+    await tester.ensureVisible(find.text('Experimentar agora'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Experimentar agora'));
     await tester.pumpAndSettle();
     expect(find.text('Qual é a sua profissão?'), findsOneWidget);

@@ -58,9 +58,16 @@ class _Pitch extends StatelessWidget {
           child: Text('cf', style: CF.score(22, color: CF.ink)),
         ),
         const SizedBox(width: 10),
-        Text('Coach Flow', style: CF.body(20, color: Colors.white, weight: FontWeight.w700)),
-        const SizedBox(width: 8),
-        Text('Profissional', style: CF.body(20, color: Colors.white60)),
+        Flexible(
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(text: 'Coach Flow ', style: CF.body(20, color: Colors.white, weight: FontWeight.w700)),
+              TextSpan(text: 'Profissional', style: CF.body(20, color: Colors.white60)),
+            ]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ]),
       SizedBox(height: wide ? 40 : 28),
       Text(
@@ -146,13 +153,24 @@ class _ScoreboardPreview extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Recebido', style: CF.body(14, color: Colors.white70)),
-              Text('R\$ 2.340', style: CF.score(40, color: Colors.white)),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text('R\$ 2.340', style: CF.score(40, color: Colors.white)),
+              ),
             ]),
           ),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('Falta receber', style: CF.body(14, color: Colors.white70)),
-            Text('R\$ 1.180', style: CF.score(40, color: CF.lap)),
-          ]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text('Falta receber', style: CF.body(14, color: Colors.white70)),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text('R\$ 1.180', style: CF.score(40, color: CF.lap)),
+              ),
+            ]),
+          ),
         ]),
         const SizedBox(height: 16),
         const LaneTrack(progress: .66),
