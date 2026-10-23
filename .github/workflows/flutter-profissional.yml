@@ -134,9 +134,12 @@ jobs:
       - name: Montar o app
         run: |
           flutter pub get
-          flutter build apk --release --build-number=${{ github.run_number }}
-          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/coach-flow-profissional.apk"
-          ls -lh "$RUNNER_TEMP/coach-flow-profissional.apk"
+          # Só a versão para celulares atuais (64 bits): arquivo bem menor.
+          flutter build apk --release --split-per-abi --target-platform android-arm64 --build-number=${{ github.run_number }}
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$RUNNER_TEMP/coach-flow-profissional.apk"
+          size=$(du -m "$RUNNER_TEMP/coach-flow-profissional.apk" | cut -f1)
+          internet=$(grep -c 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml || true)
+          echo "::notice title=App Android::Tamanho ${size} MB; permissão de internet: ${internet}"
 
       - name: Publicar o link de download
         env:
