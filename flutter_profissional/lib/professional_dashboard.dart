@@ -740,16 +740,6 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
           ])),
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
-            if(c.maxWidth>=1050)return IntrinsicHeight(child:Row(
-              crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              Expanded(child:goal),
-              SizedBox(width:gap),
-              Expanded(child:finance),
-            ]));
-            return Column(children:[goal,SizedBox(height:gap),finance]);
-          }),
-          SizedBox(height:gap),
-          LayoutBuilder(builder:(context,c){
             final count=c.maxWidth>=1000?4:c.maxWidth>=530?2:1;
             final w=(c.maxWidth-gap*(count-1))/count;
             final items=[
@@ -766,6 +756,16 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             return Wrap(spacing:gap,runSpacing:gap,children:[
               for(final item in items)SizedBox(width:w,child:item),
             ]);
+          }),
+          SizedBox(height:gap),
+          LayoutBuilder(builder:(context,c){
+            if(c.maxWidth>=1050)return IntrinsicHeight(child:Row(
+              crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              Expanded(child:goal),
+              SizedBox(width:gap),
+              Expanded(child:finance),
+            ]));
+            return Column(children:[goal,SizedBox(height:gap),finance]);
           }),
           SizedBox(height:gap),
           LayoutBuilder(builder:(context,c){
