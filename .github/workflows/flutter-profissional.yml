@@ -36,7 +36,7 @@ jobs:
         working-directory: flutter_profissional
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Instalar o Flutter
         uses: subosito/flutter-action@v2
@@ -51,7 +51,23 @@ jobs:
         run: flutter pub get
 
       - name: Rodar os testes automáticos
-        run: flutter test --reporter expanded
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded 2>&1 | tee "$RUNNER_TEMP/testes.txt"
+
+      - name: Explicar os testes que falharam
+        if: failure()
+        run: |
+          # Junta as linhas importantes em um aviso só, visível na página da verificação.
+          detalhe=$(grep -n -E "\[E\]|Expected:|Actual:|Which:|reason:|Exception|Error:|FAILED|overflowed|^test/|\.dart:[0-9]+" "$RUNNER_TEMP/testes.txt" \
+            | head -60 | sed -e 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Testes que falharam::${detalhe}"
+          {
+            echo "### Testes que falharam"
+            echo '```'
+            tail -120 "$RUNNER_TEMP/testes.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Procurar erros no código
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
