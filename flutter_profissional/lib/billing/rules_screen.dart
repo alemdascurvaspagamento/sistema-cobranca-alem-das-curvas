@@ -1,51 +1,70 @@
 import 'package:flutter/material.dart';
 
+import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
 
 /// Regras de cobrança e calendário de feriados do profissional.
 class RulesScreen extends StatelessWidget {
-  const RulesScreen({super.key});
+  const RulesScreen({super.key, this.onChangeProfession});
+
+  /// Abre a escolha de profissão e forma de cobrança.
+  final VoidCallback? onChangeProfession;
 
   @override
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
+    final profile = ProfessionalProfile.instance;
     return AnimatedBuilder(
       animation: store,
       builder: (context, _) {
         final r = store.rules;
+        final t = store.terms;
+        final now = monthNames[store.today.month - 1];
         final nextMonth = monthNames[DateTime(store.today.year, store.today.month + 1).month - 1];
+        final s = t.session, ss = t.sessions;
         return Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _ProfileCard(profile: profile, onChange: onChangeProfession),
+              const SizedBox(height: 22),
               Text('Regras de cobrança', style: CF.body(28, weight: FontWeight.w700)),
               const SizedBox(height: 4),
               Text(
                 'Escolha uma vez e o Coach Flow aplica em todas as contas. '
-                'Você ainda pode mudar qualquer aula, uma a uma.',
+                'Você ainda pode ajustar cada $s, ${t.g('uma', 'um')} a ${t.g('uma', 'um')}.',
                 style: CF.body(16, color: CF.muted),
               ),
               const SizedBox(height: 18),
               _RuleCard(
                 icon: Icons.person_off_rounded,
-                title: 'Quando o aluno cancela',
+                title: 'Quando ${t.g('a', 'o')} ${t.client} falta ou cancela',
                 options: [
                   _Option(
-                    title: 'Cobrar a aula',
-                    detail: 'A falta entra na conta e vira 1 aula de desconto no mês seguinte. '
-                        'Ex.: faltou em ${monthNames[store.today.month - 1]}, desconta em $nextMonth.',
+                    title: 'Cobrar e descontar no mês seguinte',
+                    detail: 'A falta entra na conta e vira 1 $s de desconto no mês seguinte. '
+                        'Ex.: faltou em $now, desconta em $nextMonth.',
+                    selected: r.cancel == CancelRule.compensate,
+                    onTap: () => store.setRules(r.copyWith(cancel: CancelRule.compensate)),
+                  ),
+                  _Option(
+                    title: 'Cobrar normalmente',
+                    detail: 'A falta é cobrada como ${t.g('uma', 'um')} $s comum, sem desconto depois.',
                     selected: r.cancel == CancelRule.charge,
                     onTap: () => store.setRules(r.copyWith(cancel: CancelRule.charge)),
                   ),
                   _Option(
                     title: 'Não cobrar',
-                    detail: 'A aula cancelada simplesmente sai da conta do mês.',
+                    detail: '${t.sessionTitle} ${t.g('cancelada', 'cancelado')} sai da conta do mês.',
                     selected: r.cancel == CancelRule.waive,
                     onTap: () => store.setRules(r.copyWith(cancel: CancelRule.waive)),
                   ),
                 ],
+                footnote: profile.model == BillingModel.monthly
+                    ? 'Na mensalidade fixa, faltas não mudam o valor do mês.'
+                    : null,
               ),
               const SizedBox(height: 12),
               _RuleCard(
@@ -53,14 +72,14 @@ class RulesScreen extends StatelessWidget {
                 title: 'Em feriados',
                 options: [
                   _Option(
-                    title: 'Não há aula, não cobrar',
-                    detail: 'Feriados marcados como "sem aula" na lista abaixo saem da conta.',
+                    title: 'Não atendo, não cobrar',
+                    detail: 'Feriados marcados como "sem atendimento" na lista abaixo saem da conta.',
                     selected: r.holiday == HolidayRule.noCharge,
                     onTap: () => store.setRules(r.copyWith(holiday: HolidayRule.noCharge)),
                   ),
                   _Option(
                     title: 'Cobrar normalmente',
-                    detail: 'O feriado conta como um dia de aula comum.',
+                    detail: 'O feriado conta como um dia comum de $ss.',
                     selected: r.holiday == HolidayRule.charge,
                     onTap: () => store.setRules(r.copyWith(holiday: HolidayRule.charge)),
                   ),
@@ -69,17 +88,17 @@ class RulesScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _RuleCard(
                 icon: Icons.swap_horiz_rounded,
-                title: 'Aula remarcada para outro mês',
+                title: '${t.sessionTitle} ${t.g('remarcada', 'remarcado')} para outro mês',
                 options: [
                   _Option(
                     title: 'Cobrar no mês da nova data',
-                    detail: 'A aula sai da conta do mês original e entra na conta do mês em que for dada.',
+                    detail: '${t.sessionTitle} sai da conta do mês original e entra na conta do mês em que acontecer.',
                     selected: r.move == MoveRule.chargeNewMonth,
                     onTap: () => store.setRules(r.copyWith(move: MoveRule.chargeNewMonth)),
                   ),
                   _Option(
                     title: 'Cobrar no mês original',
-                    detail: 'A aula continua na conta do mês original e a reposição não é cobrada de novo.',
+                    detail: '${t.sessionTitle} continua na conta do mês original e a reposição não é cobrada de novo.',
                     selected: r.move == MoveRule.chargeOriginalMonth,
                     onTap: () => store.setRules(r.copyWith(move: MoveRule.chargeOriginalMonth)),
                   ),
@@ -95,6 +114,42 @@ class RulesScreen extends StatelessWidget {
   }
 }
 
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({required this.profile, this.onChange});
+  final ProfessionalProfile profile;
+  final VoidCallback? onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = profile.profession;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: CF.ink, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        Container(
+          width: 46, height: 46,
+          decoration: BoxDecoration(color: CF.inkSoft, borderRadius: BorderRadius.circular(14)),
+          child: Icon(p.icon, color: CF.lap),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(p.name, style: CF.body(18, color: Colors.white, weight: FontWeight.w700)),
+            Text('Cobrança: ${profile.model.title.toLowerCase()}',
+                style: CF.body(14, color: Colors.white70)),
+          ]),
+        ),
+        if (onChange != null)
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: CF.lap),
+            onPressed: onChange,
+            child: const Text('Mudar'),
+          ),
+      ]),
+    );
+  }
+}
+
 class _Option {
   const _Option({required this.title, required this.detail, required this.selected, required this.onTap});
   final String title, detail;
@@ -103,10 +158,11 @@ class _Option {
 }
 
 class _RuleCard extends StatelessWidget {
-  const _RuleCard({required this.icon, required this.title, required this.options});
+  const _RuleCard({required this.icon, required this.title, required this.options, this.footnote});
   final IconData icon;
   final String title;
   final List<_Option> options;
+  final String? footnote;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -126,6 +182,10 @@ class _RuleCard extends StatelessWidget {
           for (final o in options) ...[
             _OptionTile(option: o),
             if (o != options.last) const SizedBox(height: 8),
+          ],
+          if (footnote != null) ...[
+            const SizedBox(height: 10),
+            Text(footnote!, style: CF.body(14, color: CF.muted)),
           ],
         ]),
       );
@@ -191,7 +251,7 @@ class _HolidayList extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 4),
-      Text('Já vêm os feriados nacionais. Inclua os da sua cidade e escolha em quais não há aula.',
+      Text('Já vêm os feriados nacionais. Inclua os da sua cidade e escolha em quais você não atende.',
           style: CF.body(15, color: CF.muted)),
       const SizedBox(height: 12),
       Container(
@@ -241,7 +301,7 @@ class _HolidayRow extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(holiday.name, style: CF.body(16, weight: FontWeight.w600, color: past ? CF.muted : CF.text)),
               Text(
-                '${weekdayLong[d.weekday - 1]} · ${holiday.noClass ? 'sem aula' : 'aula normal'}',
+                '${weekdayLong[d.weekday - 1]} · ${holiday.noClass ? 'sem atendimento' : 'dia normal'}',
                 style: CF.body(14, color: CF.muted),
               ),
             ]),
@@ -296,7 +356,7 @@ Future<void> _editHoliday(BuildContext context, Holiday? holiday) async {
               value: noClass,
               activeTrackColor: CF.ink,
               onChanged: (v) => refresh(() => noClass = v),
-              title: const Text('Sem aula neste dia'),
+              title: const Text('Não atendo neste dia'),
             ),
           ]),
         ),
@@ -331,7 +391,7 @@ Future<void> _editHoliday(BuildContext context, Holiday? holiday) async {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir feriado?'),
-        content: Text('${holiday.name} sai da lista e as aulas deste dia voltam a ser cobradas.'),
+        content: Text('${holiday.name} sai da lista e os atendimentos deste dia voltam a ser cobrados.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Manter')),
           FilledButton(

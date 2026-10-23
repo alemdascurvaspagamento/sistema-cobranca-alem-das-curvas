@@ -7,9 +7,12 @@ import '../ui/cf_theme.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
 
+/// Vocabulário da profissão escolhida (aula, sessão, consulta...).
+Terms get _t => BillingStore.instance.terms;
+
 enum _Filter { all, open, overdue, paid }
 
-/// Tela de Cobranças: placar do mês e a conta de cada aluno.
+/// Tela de Cobranças: placar do mês e a conta de cada cliente.
 class BillingScreen extends StatefulWidget {
   const BillingScreen({super.key, this.onOpenRules});
   final VoidCallback? onOpenRules;
@@ -232,12 +235,12 @@ class _EmptyState extends StatelessWidget {
               size: 36, color: CF.muted),
           const SizedBox(height: 10),
           Text(
-            filter == _Filter.overdue ? 'Ninguém atrasado neste mês.' : 'Nenhum aluno nesta lista.',
+            filter == _Filter.overdue ? 'Ninguém atrasado neste mês.' : 'Nenhum ${_t.client} nesta lista.',
             textAlign: TextAlign.center,
             style: CF.body(17, weight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          TextButton(onPressed: onShowAll, child: const Text('Ver todos os alunos')),
+          TextButton(onPressed: onShowAll, child: Text('Ver todos os ${_t.clients}')),
         ]),
       );
 }
@@ -251,7 +254,11 @@ class _RulesHint extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = store.rules;
     final parts = [
-      r.cancel == CancelRule.charge ? 'cancelamento é cobrado' : 'cancelamento não é cobrado',
+      switch (r.cancel) {
+        CancelRule.compensate => 'falta é cobrada e descontada no mês seguinte',
+        CancelRule.charge => 'falta é cobrada',
+        CancelRule.waive => 'cancelamento não é cobrado',
+      },
       r.holiday == HolidayRule.noCharge ? 'feriado não é cobrado' : 'feriado é cobrado',
     ];
     return Row(children: [
@@ -285,12 +292,7 @@ class StudentBillCard extends StatelessWidget {
     final (fg, bg) = CF.forStatus(status);
     final unpaid = status != BillStatus.paid && status != BillStatus.nothing;
 
-    final detail = StringBuffer('${lessonsText(bill.billedLessons)} × ${money(bill.rate)}');
-    if (bill.discountLessons > 0) {
-      detail.write(bill.discountLessons == 1
-          ? ' · 1 falta compensada'
-          : ' · ${bill.discountLessons} faltas compensadas');
-    }
+    final detail = billSummary(bill, _t);
 
     return Material(
       color: CF.surface,
@@ -317,7 +319,7 @@ class StudentBillCard extends StatelessWidget {
                   Text(plan.name,
                       maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(18, weight: FontWeight.w700)),
                   const SizedBox(height: 2),
-                  Text('${plan.service} · ${routineText(plan)}',
+                  Text('${plan.service} · ${plan.hasRoutine ? routineText(plan) : '${_t.sessionsTitle} avuls${_t.g('as', 'os')}'}',
                       maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(14, color: CF.muted)),
                 ]),
               ),
@@ -340,9 +342,10 @@ class StudentBillCard extends StatelessWidget {
                     Text('no mês', style: CF.body(14, color: CF.muted)),
                   ]),
                   const SizedBox(height: 4),
-                  Text(detail.toString(), style: CF.body(14, color: CF.muted)),
+                  Text(detail, style: CF.body(14, color: CF.muted)),
                 ]),
               ),
+              if (status != BillStatus.nothing)
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(status == BillStatus.paid ? 'Pago' : 'Vence', style: CF.body(13, color: CF.muted)),
                 Text(
@@ -359,7 +362,7 @@ class StudentBillCard extends StatelessWidget {
             ],
             const SizedBox(height: 12),
             Row(children: [
-              Text('Ver aulas e cálculo', style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
+              Text('Ver ${_t.sessions} e cálculo', style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
               const Icon(Icons.chevron_right_rounded, size: 20, color: CF.blue),
               const Spacer(),
               if (!unpaid) _MoreMenu(plan: plan),
@@ -483,7 +486,7 @@ class _BillDetail extends StatelessWidget {
         final status = store.status(plan);
         final received = store.received(plan.id);
         final payments = store.payments(plan.id);
-        final steps = explainBill(bill);
+        final steps = explainBill(bill, _t);
         final month = monthNames[bill.month - 1];
         return Center(
           child: ConstrainedBox(
@@ -515,18 +518,39 @@ class _BillDetail extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               _Section(
-                title: 'Aulas de $month',
-                subtitle: 'Toque em uma aula para marcar falta, remarcação ou crédito.',
+                title: '${_t.sessionsTitle} de $month',
+                subtitle: 'Toque em ${_t.g('uma', 'um')} ${_t.session} para marcar falta, remarcação ou crédito.',
                 child: LayoutBuilder(builder: (context, box) {
                   final columns = box.maxWidth >= 560 ? 6 : 4;
                   const gap = 8.0;
                   final w = (box.maxWidth - gap * (columns - 1)) / columns;
-                  return Wrap(spacing: gap, runSpacing: gap, children: [
-                    for (final line in bill.lines)
-                      SizedBox(
-                        width: w,
-                        child: _LessonTile(line: line, onTap: () => openLessonEditor(context, plan, line)),
+                  return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    if (bill.lines.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          'Nenhum${_t.g('a', '')} ${_t.session} marcad${_t.g('a', 'o')} em $month.',
+                          style: CF.body(15, color: CF.muted),
+                        ),
                       ),
+                    Wrap(spacing: gap, runSpacing: gap, children: [
+                      for (final line in bill.lines)
+                        SizedBox(
+                          width: w,
+                          child: _LessonTile(line: line, onTap: () => openLessonEditor(context, plan, line)),
+                        ),
+                    ]),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => _addExtra(context, plan, bill),
+                        icon: const Icon(Icons.add_rounded, size: 20),
+                        label: Text(plan.hasRoutine
+                            ? 'Marcar ${_t.session} avuls${_t.g('a', 'o')}'
+                            : 'Marcar ${_t.session}'),
+                      ),
+                    ),
                   ]);
                 }),
               ),
@@ -586,6 +610,27 @@ class _BillDetail extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> _addExtra(BuildContext context, StudentPlan plan, MonthBill bill) async {
+  final store = BillingStore.instance;
+  final first = DateTime(bill.year, bill.month, 1);
+  final last = DateTime(bill.year, bill.month + 1, 0);
+  final today = store.today;
+  final initial = today.isBefore(first) || today.isAfter(last) ? first : today;
+  final picked = await showDatePicker(
+    context: context,
+    initialDate: initial,
+    firstDate: DateTime(bill.year - 1, 1, 1),
+    lastDate: DateTime(bill.year + 1, 12, 31),
+    helpText: 'Data ${_t.ofSession}',
+  );
+  if (picked == null || !context.mounted) return;
+  final error = store.addExtra(plan.id, picked);
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    content: Text(error ??
+        '${_t.sessionTitle} de ${ddmm(picked)} marcad${_t.g('a', 'o')}. A conta já foi refeita.'),
+  ));
 }
 
 class _Section extends StatelessWidget {
@@ -651,10 +696,10 @@ class _StepRow extends StatelessWidget {
 }
 
 String _tileLabel(LessonLine line) {
+  if (line.isExtra && line.outcome == LessonOutcome.charged) return _t.g('Marcada', 'Marcado');
   final note = line.record?.note ?? '';
   if (line.outcome == LessonOutcome.cancelledWaived && (note == 'Férias' || note == 'Viagem')) return note;
-  if (line.outcome == LessonOutcome.cancelledWaived) return 'Cancelada';
-  return line.outcome.label;
+  return line.outcome.label(_t);
 }
 
 class _LessonTile extends StatelessWidget {
@@ -743,7 +788,20 @@ class _LessonEditorState extends State<_LessonEditor> {
     super.dispose();
   }
 
-  bool get _cancelChargeValue => charge ?? store.rules.cancel == CancelRule.charge;
+  bool get _cancelChargeValue => charge ?? store.rules.cancel != CancelRule.waive;
+
+  static bool _isPlainExtra(LessonRecord r) =>
+      r.extra && r.status == LessonStatus.scheduled && !r.credit && r.charge == null;
+
+  String get _chargeNote {
+    final model = widget.plan.model;
+    if (model == BillingModel.monthly) return 'Na mensalidade, o valor do mês não muda.';
+    if (model == BillingModel.package) return 'Conta como ${_t.session} usad${_t.g('a', 'o')} do pacote.';
+    if (store.rules.cancel == CancelRule.compensate) {
+      return 'Entra na conta deste mês e vira 1 ${_t.session} de desconto em $_nextMonthName.';
+    }
+    return 'Entra na conta deste mês normalmente.';
+  }
 
   String get _nextMonthName {
     final d = widget.line.date;
@@ -757,7 +815,7 @@ class _LessonEditorState extends State<_LessonEditor> {
       initialDate: newDate ?? d.add(const Duration(days: 1)),
       firstDate: DateTime(d.year, d.month - 2),
       lastDate: DateTime(d.year, d.month + 3, 0),
-      helpText: 'Nova data da aula',
+      helpText: 'Nova data',
     );
     if (picked != null) setState(() => newDate = picked);
   }
@@ -779,7 +837,7 @@ class _LessonEditorState extends State<_LessonEditor> {
     }
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Aula de ${ddmm(widget.line.date)} atualizada. A conta já foi refeita.')),
+      SnackBar(content: Text('${_t.sessionTitle} de ${ddmm(widget.line.date)} ${_t.g('atualizada', 'atualizado')}. A conta já foi refeita.')),
     );
   }
 
@@ -787,7 +845,7 @@ class _LessonEditorState extends State<_LessonEditor> {
     store.clearLesson(widget.plan.id, widget.line.date);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Aula de ${ddmm(widget.line.date)} voltou ao normal.')),
+      SnackBar(content: Text('${_t.sessionTitle} de ${ddmm(widget.line.date)} voltou ao normal.')),
     );
   }
 
@@ -812,7 +870,7 @@ class _LessonEditorState extends State<_LessonEditor> {
               const SizedBox(height: 12),
               _InfoBox(
                 icon: Icons.event_busy_rounded,
-                text: '${holiday.name}: pela sua regra, não há aula nem cobrança neste dia.',
+                text: '${holiday.name}: pela sua regra, não há ${_t.session} nem cobrança neste dia.',
               ),
             ],
             const SizedBox(height: 16),
@@ -826,7 +884,7 @@ class _LessonEditorState extends State<_LessonEditor> {
                 LessonStatus.moved,
               ])
                 ChoiceChip(
-                  label: Text(s.label),
+                  label: Text(s.label(_t)),
                   selected: status == s,
                   showCheckmark: false,
                   selectedColor: CF.ink,
@@ -840,9 +898,9 @@ class _LessonEditorState extends State<_LessonEditor> {
             const SizedBox(height: 12),
             if (status == LessonStatus.cancelled)
               _SwitchBox(
-                title: 'Cobrar esta aula',
+                title: 'Cobrar ${_t.g('esta', 'este')} ${_t.session}',
                 subtitle: _cancelChargeValue
-                    ? 'Entra na conta deste mês e vira 1 aula de desconto em $_nextMonthName.'
+                    ? _chargeNote
                     : 'Não entra na conta deste mês.',
                 value: _cancelChargeValue,
                 onChanged: (v) => setState(() => charge = v),
@@ -857,9 +915,9 @@ class _LessonEditorState extends State<_LessonEditor> {
               Text(
                 newDate != null && (newDate!.month != d.month || newDate!.year != d.year)
                     ? (store.rules.move == MoveRule.chargeNewMonth
-                        ? 'A aula sai da conta deste mês e entra na conta de ${monthNames[newDate!.month - 1]}.'
-                        : 'A aula continua na conta deste mês; a reposição não é cobrada de novo.')
-                    : 'A aula sai desta data e é cobrada na nova data.',
+                        ? '${_t.sessionTitle} sai da conta deste mês e entra na conta de ${monthNames[newDate!.month - 1]}.'
+                        : '${_t.sessionTitle} continua na conta deste mês; a reposição não é cobrada de novo.')
+                    : '${_t.sessionTitle} sai desta data e entra na nova data.',
                 style: CF.body(14, color: CF.muted),
               ),
             ],
@@ -867,8 +925,8 @@ class _LessonEditorState extends State<_LessonEditor> {
               _SwitchBox(
                 title: 'Transformar em crédito',
                 subtitle: credit
-                    ? 'Esta aula não será cobrada e fica registrada como crédito do aluno.'
-                    : 'Use quando o aluno já pagou esta aula antes.',
+                    ? '${_t.g('Esta', 'Este')} ${_t.session} não será ${_t.g('cobrada', 'cobrado')} e fica registrad${_t.g('a', 'o')} como crédito.'
+                    : 'Use quando ${_t.theSession} já foi ${_t.g('paga', 'pago')} antes.',
                 value: credit,
                 onChanged: (v) => setState(() => credit = v),
               ),
@@ -886,10 +944,22 @@ class _LessonEditorState extends State<_LessonEditor> {
             ],
             const SizedBox(height: 18),
             Row(children: [
-              if (line.record != null)
+              if (line.record != null && !_isPlainExtra(line.record!))
                 TextButton(onPressed: _clear, child: const Text('Voltar ao normal')),
+              if (line.isExtra)
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: CF.red),
+                  onPressed: () {
+                    store.removeExtra(widget.plan.id, line.date);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('${_t.sessionTitle} de ${ddmm(line.date)} desmarcad${_t.g('a', 'o')}.'),
+                    ));
+                  },
+                  child: const Text('Desmarcar'),
+                ),
               const Spacer(),
-              FilledButton(onPressed: _save, child: const Text('Salvar aula')),
+              FilledButton(onPressed: _save, child: Text('Salvar ${_t.session}')),
             ]),
           ]),
         ),
@@ -909,8 +979,8 @@ class _LessonEditorState extends State<_LessonEditor> {
         _InfoBox(
           icon: Icons.swap_horiz_rounded,
           text: origin == null
-              ? 'Esta é uma aula de reposição.'
-              : 'Reposição da aula de ${ddmm(origin)}. ${line.outcome.isCharged ? 'É cobrada nesta data.' : 'Já foi cobrada no mês original.'}',
+              ? 'Reposição de ${_t.theSession} remarcad${_t.g('a', 'o')}.'
+              : 'Reposição ${_t.ofSession} de ${ddmm(origin)}. ${line.outcome.isCharged ? 'É cobrada nesta data.' : 'Já foi cobrada no mês original.'}',
         ),
         const SizedBox(height: 18),
         Row(children: [
@@ -919,7 +989,7 @@ class _LessonEditorState extends State<_LessonEditor> {
               store.clearLesson(widget.plan.id, line.date);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Remarcação desfeita. A aula voltou para a data original.')),
+                SnackBar(content: Text('Remarcação desfeita. ${_t.sessionTitle} voltou para a data original.')),
               );
             },
             child: const Text('Desfazer remarcação'),
@@ -1022,8 +1092,8 @@ class _VacationSheetState extends State<_VacationSheet> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text('Férias ou ausência', style: CF.body(22, weight: FontWeight.w700)),
             Text(
-              'As aulas de ${widget.plan.name.split(' ').first} no período são canceladas sem cobrança, '
-              'sem precisar mexer aula por aula.',
+              '${_t.g('As', 'Os')} ${_t.sessions} de ${widget.plan.name.split(' ').first} no período '
+              'são ${_t.g('canceladas', 'cancelados')} sem cobrança, de uma vez só.',
               style: CF.body(15, color: CF.muted),
             ),
             const SizedBox(height: 16),
@@ -1051,8 +1121,8 @@ class _VacationSheetState extends State<_VacationSheet> {
               _InfoBox(
                 icon: dates.isEmpty ? Icons.info_outline_rounded : Icons.event_busy_rounded,
                 text: dates.isEmpty
-                    ? 'Nenhuma aula da rotina cai nesse período. Nada vai mudar.'
-                    : '${lessonsText(dates.length)} sem cobrança: ${dates.map(ddmm).join(', ')}.',
+                    ? 'Nenhum${_t.g('a', '')} ${_t.session} cai nesse período. Nada vai mudar.'
+                    : '${_t.count(dates.length)} sem cobrança: ${dates.map(ddmm).join(', ')}.',
               ),
             const SizedBox(height: 18),
             FilledButton(
@@ -1063,14 +1133,14 @@ class _VacationSheetState extends State<_VacationSheet> {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(widget.messengerContext).showSnackBar(SnackBar(
                         duration: const Duration(seconds: 8),
-                        content: Text('${lessonsText(dates.length)} marcadas como $reason.'),
+                        content: Text('${_t.count(dates.length)} marcad${_t.g('as', 'os')} como $reason.'),
                         action: SnackBarAction(
                           label: 'Desfazer',
                           onPressed: () => store.restore(widget.plan.id, before),
                         ),
                       ));
                     },
-              child: Text(dates.isEmpty ? 'Aplicar' : 'Cancelar ${lessonsText(dates.length)} sem cobrança'),
+              child: Text(dates.isEmpty ? 'Aplicar' : 'Cancelar ${_t.count(dates.length)} sem cobrança'),
             ),
           ]),
         ),
@@ -1281,8 +1351,20 @@ String billingMessage(StudentPlan plan) {
   final b = StringBuffer()
     ..writeln('Olá, $first! Tudo bem?')
     ..writeln()
-    ..writeln('Segue o resumo de ${monthNames[bill.month - 1]}:')
-    ..writeln('• ${lessonsText(bill.chargedLessons)} × ${money(bill.rate)}');
+    ..writeln('Segue o resumo de ${monthNames[bill.month - 1]}:');
+  switch (bill.model) {
+    case BillingModel.perSession:
+      b.writeln('• ${_t.count(bill.chargedLessons)} × ${money(bill.unitPrice)}');
+    case BillingModel.hourly:
+      b.writeln('• ${_t.count(bill.chargedLessons)} de ${durationText(plan.durationMinutes)} '
+          '(${money(plan.rate)} por hora)');
+    case BillingModel.monthly:
+      b.writeln('• Mensalidade: ${money(plan.rate)}');
+    case BillingModel.package:
+      b.writeln(bill.packagesCharged > 0
+          ? '• Novo pacote de ${_t.count(plan.packageSize)}: ${money(plan.rate)}'
+          : '• Pacote em uso: restam ${_t.count(bill.packageRemaining)}');
+  }
   if (bill.discountLessons > 0) {
     final prev = previousMonth(bill.year, bill.month);
     b.writeln('• Desconto da falta de ${monthNames[prev.month - 1]}: −${money(bill.discountValue).replaceFirst('−', '')}');

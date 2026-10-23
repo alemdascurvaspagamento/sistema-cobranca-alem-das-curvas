@@ -242,7 +242,6 @@ class LaneTrack extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: CF.ink, width: 3),
               ),
-              child: const Icon(Icons.directions_run_rounded, size: 14, color: CF.ink),
             ),
           ),
         ]),

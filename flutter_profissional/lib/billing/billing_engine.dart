@@ -1,34 +1,44 @@
 /// Motor de cobrança do Coach Flow Profissional.
 ///
-/// Reproduz as regras do Coach Flow Pessoal em código puro (sem telas), para
-/// que o mesmo cálculo sirva à demonstração e, depois, aos dados reais.
+/// Código puro (sem telas), para que o mesmo cálculo sirva à demonstração e,
+/// depois, aos dados reais. Funciona para qualquer profissional liberal: o
+/// vocabulário (aula, sessão, consulta...) vem de [Terms].
 ///
-/// Regras herdadas do Pessoal:
-/// * As aulas do mês vêm da rotina do aluno (dias fixos da semana).
-/// * Feriado marcado como "sem aula" não é cobrado (se a regra de feriado mandar).
-/// * Aula cancelada é cobrada ou não conforme a escolha feita na própria aula;
-///   quando nada foi escolhido, vale a regra padrão de cancelamento.
-/// * Aula cancelada E cobrada vira 1 aula de desconto no mês seguinte.
-/// * Aula com crédito não é cobrada.
-/// * Aula remarcada não é cobrada na data original; a nova data é cobrada.
-///   Se a nova data cair em outro mês e a regra for "cobrar no mês original",
-///   a aula é cobrada na data original e a nova data não é cobrada.
-/// * Férias: um período de aulas canceladas sem cobrança (não gera desconto).
+/// Formas de cobrança ([BillingModel]):
+/// * Por atendimento: valor de cada atendimento × atendimentos cobrados no mês.
+/// * Por hora: valor da hora × duração de cada atendimento.
+/// * Mensalidade fixa: o mesmo valor todo mês, não importa quantos atendimentos.
+/// * Pacote: o cliente paga um pacote de N atendimentos; um novo pacote é
+///   cobrado no mês em que o anterior acaba.
+///
+/// Regras herdadas do Coach Flow Pessoal:
+/// * Os atendimentos do mês vêm da rotina (dias fixos) e dos avulsos marcados.
+/// * Feriado marcado como "sem atendimento" não é cobrado (se a regra mandar).
+/// * Cancelamento: cobrar e descontar no mês seguinte (jeito do Pessoal),
+///   cobrar sem desconto, ou não cobrar. Cada atendimento pode ser ajustado.
+/// * Crédito não é cobrado. Remarcação sai da data original e entra na nova.
+/// * Férias: um período de atendimentos cancelados sem cobrança.
 library;
+
+import 'terms.dart';
+
+export 'terms.dart';
+
+enum BillingModel { perSession, hourly, monthly, package }
 
 enum LessonStatus { scheduled, completed, cancelled, moved, rescheduled }
 
 extension LessonStatusLabel on LessonStatus {
-  String get label => switch (this) {
-        LessonStatus.scheduled => 'Agendada',
-        LessonStatus.completed => 'Realizada',
-        LessonStatus.cancelled => 'Cancelada',
-        LessonStatus.moved => 'Remarcada',
+  String label(Terms t) => switch (this) {
+        LessonStatus.scheduled => t.g('Agendada', 'Agendado'),
+        LessonStatus.completed => t.g('Realizada', 'Realizado'),
+        LessonStatus.cancelled => t.g('Cancelada', 'Cancelado'),
+        LessonStatus.moved => t.g('Remarcada', 'Remarcado'),
         LessonStatus.rescheduled => 'Reposição',
       };
 }
 
-/// Registro de uma alteração feita em uma aula.
+/// Registro de uma alteração feita em um atendimento.
 class LessonRecord {
   const LessonRecord({
     this.status = LessonStatus.scheduled,
@@ -36,6 +46,7 @@ class LessonRecord {
     this.credit = false,
     this.newDate,
     this.originDate,
+    this.extra = false,
     this.note = '',
   });
 
@@ -45,34 +56,28 @@ class LessonRecord {
   final bool? charge;
   final bool credit;
 
-  /// Para aulas remarcadas: a nova data.
+  /// Para remarcações: a nova data.
   final DateTime? newDate;
 
-  /// Para reposições: a data original de onde a aula veio.
+  /// Para reposições: a data original de onde o atendimento veio.
   final DateTime? originDate;
-  final String note;
 
-  LessonRecord copyWith({
-    LessonStatus? status,
-    bool? charge,
-    bool clearCharge = false,
-    bool? credit,
-    DateTime? newDate,
-    bool clearNewDate = false,
-    DateTime? originDate,
-    String? note,
-  }) =>
-      LessonRecord(
-        status: status ?? this.status,
-        charge: clearCharge ? null : (charge ?? this.charge),
-        credit: credit ?? this.credit,
-        newDate: clearNewDate ? null : (newDate ?? this.newDate),
-        originDate: originDate ?? this.originDate,
-        note: note ?? this.note,
-      );
+  /// Atendimento avulso, marcado fora da rotina.
+  final bool extra;
+  final String note;
 }
 
-enum CancelRule { charge, waive }
+/// O que fazer quando o cliente cancela.
+enum CancelRule {
+  /// Cobra e desconta 1 atendimento no mês seguinte (jeito do Coach Flow Pessoal).
+  compensate,
+
+  /// Cobra normalmente, sem desconto depois.
+  charge,
+
+  /// Não cobra.
+  waive,
+}
 
 enum HolidayRule { noCharge, charge }
 
@@ -80,7 +85,7 @@ enum MoveRule { chargeNewMonth, chargeOriginalMonth }
 
 class BillingRules {
   const BillingRules({
-    this.cancel = CancelRule.charge,
+    this.cancel = CancelRule.compensate,
     this.holiday = HolidayRule.noCharge,
     this.move = MoveRule.chargeNewMonth,
   });
@@ -89,8 +94,7 @@ class BillingRules {
   final HolidayRule holiday;
   final MoveRule move;
 
-  BillingRules copyWith({CancelRule? cancel, HolidayRule? holiday, MoveRule? move}) =>
-      BillingRules(
+  BillingRules copyWith({CancelRule? cancel, HolidayRule? holiday, MoveRule? move}) => BillingRules(
         cancel: cancel ?? this.cancel,
         holiday: holiday ?? this.holiday,
         move: move ?? this.move,
@@ -103,7 +107,7 @@ class Holiday {
   final DateTime date;
   final String name;
 
-  /// Verdadeiro quando não há aula neste dia.
+  /// Verdadeiro quando não há atendimento neste dia.
   final bool noClass;
 
   Holiday copyWith({DateTime? date, String? name, bool? noClass}) => Holiday(
@@ -114,29 +118,36 @@ class Holiday {
       );
 }
 
-/// Plano de um aluno: valor por aula e dias fixos da semana.
+/// Plano de um cliente: forma de cobrança, valor e dias fixos.
 class StudentPlan {
   const StudentPlan({
     required this.id,
     required this.name,
     required this.rate,
-    required this.weekdays,
+    this.weekdays = const {},
     this.times = const {},
     this.service = '',
     this.phone = '',
     this.dueDay = 5,
     this.active = true,
+    this.model = BillingModel.perSession,
+    this.durationMinutes = 60,
+    this.packageSize = 10,
+    this.packageStart,
   });
 
   final String id;
   final String name;
   final String service;
   final String phone;
+  final BillingModel model;
 
-  /// Valor de cada aula.
+  /// Depende da forma de cobrança: valor do atendimento, da hora,
+  /// da mensalidade ou do pacote.
   final double rate;
 
-  /// Dias da semana no padrão do Dart: 1 = segunda ... 7 = domingo.
+  /// Dias fixos no padrão do Dart: 1 = segunda ... 7 = domingo.
+  /// Vazio = sem rotina fixa (só atendimentos avulsos).
   final Set<int> weekdays;
 
   /// Horário por dia da semana, ex.: {1: '07:00'}.
@@ -144,7 +155,21 @@ class StudentPlan {
   final int dueDay;
   final bool active;
 
-  StudentPlan copyWith({int? dueDay, double? rate}) => StudentPlan(
+  /// Duração de cada atendimento (usada na cobrança por hora).
+  final int durationMinutes;
+
+  /// Quantidade de atendimentos do pacote.
+  final int packageSize;
+
+  /// Mês em que o primeiro pacote foi comprado.
+  final DateTime? packageStart;
+
+  bool get hasRoutine => weekdays.isNotEmpty;
+
+  /// Valor de cada atendimento (por atendimento ou por hora).
+  double get unitPrice => model == BillingModel.hourly ? rate * durationMinutes / 60 : rate;
+
+  StudentPlan copyWith({int? dueDay, double? rate, BillingModel? model}) => StudentPlan(
         id: id,
         name: name,
         rate: rate ?? this.rate,
@@ -154,10 +179,14 @@ class StudentPlan {
         phone: phone,
         dueDay: dueDay ?? this.dueDay,
         active: active,
+        model: model ?? this.model,
+        durationMinutes: durationMinutes,
+        packageSize: packageSize,
+        packageStart: packageStart,
       );
 }
 
-/// O que aconteceu com cada aula na conta do mês.
+/// O que aconteceu com cada atendimento na conta do mês.
 enum LessonOutcome {
   charged,
   waived,
@@ -178,17 +207,17 @@ extension LessonOutcomeInfo on LessonOutcome {
       this == LessonOutcome.movedChargedHere ||
       this == LessonOutcome.makeUpCharged;
 
-  String get label => switch (this) {
-        LessonOutcome.charged => 'Aula',
-        LessonOutcome.waived => 'Não cobrada',
+  String label(Terms t) => switch (this) {
+        LessonOutcome.charged => t.sessionTitle,
+        LessonOutcome.waived => t.g('Não cobrada', 'Não cobrado'),
         LessonOutcome.holiday => 'Feriado',
         LessonOutcome.cancelledCharged => 'Falta cobrada',
-        LessonOutcome.cancelledWaived => 'Cancelada',
-        LessonOutcome.movedOut => 'Remarcada',
-        LessonOutcome.movedChargedHere => 'Remarcada (cobrada aqui)',
+        LessonOutcome.cancelledWaived => t.g('Cancelada', 'Cancelado'),
+        LessonOutcome.movedOut => t.g('Remarcada', 'Remarcado'),
+        LessonOutcome.movedChargedHere => t.g('Remarcada', 'Remarcado'),
         LessonOutcome.credit => 'Crédito',
         LessonOutcome.makeUpCharged => 'Reposição',
-        LessonOutcome.makeUpNotCharged => 'Reposição sem cobrança',
+        LessonOutcome.makeUpNotCharged => 'Reposição',
       };
 }
 
@@ -200,6 +229,7 @@ class LessonLine {
     required this.record,
     this.holidayName,
     this.isMakeUp = false,
+    this.isExtra = false,
   });
 
   final DateTime date;
@@ -208,6 +238,7 @@ class LessonLine {
   final LessonRecord? record;
   final String? holidayName;
   final bool isMakeUp;
+  final bool isExtra;
 }
 
 /// Uma linha do "como chegamos a esse valor".
@@ -227,6 +258,7 @@ class MonthBill {
     required this.month,
     required this.lines,
     required this.routineCount,
+    required this.extras,
     required this.holidays,
     required this.cancelledCharged,
     required this.cancelledWaived,
@@ -236,6 +268,9 @@ class MonthBill {
     required this.credits,
     required this.chargedLessons,
     required this.discountLessons,
+    this.packagesCharged = 0,
+    this.packageUsedBefore = 0,
+    this.packageRemaining = 0,
   });
 
   final StudentPlan plan;
@@ -243,8 +278,11 @@ class MonthBill {
   final int month;
   final List<LessonLine> lines;
 
-  /// Aulas que a rotina do aluno prevê no mês.
+  /// Atendimentos que a rotina prevê no mês.
   final int routineCount;
+
+  /// Atendimentos avulsos marcados no mês.
+  final int extras;
   final int holidays;
   final int cancelledCharged;
   final int cancelledWaived;
@@ -255,17 +293,31 @@ class MonthBill {
   final int makeUps;
   final int credits;
 
-  /// Aulas cobradas antes do desconto.
+  /// Atendimentos cobrados (ou usados, no pacote) antes do desconto.
   final int chargedLessons;
 
   /// Faltas cobradas no mês anterior que viram desconto agora.
   final int discountLessons;
 
-  double get rate => plan.rate;
+  /// Pacote: quantos pacotes novos são cobrados neste mês.
+  final int packagesCharged;
+
+  /// Pacote: atendimentos usados antes deste mês.
+  final int packageUsedBefore;
+
+  /// Pacote: atendimentos que sobram no pacote atual ao fim do mês.
+  final int packageRemaining;
+
+  BillingModel get model => plan.model;
+  double get unitPrice => plan.unitPrice;
   int get billedLessons => chargedLessons - discountLessons;
-  double get gross => chargedLessons * rate;
-  double get discountValue => discountLessons * rate;
-  double get total => billedLessons * rate;
+  double get discountValue => discountLessons * unitPrice;
+
+  double get total => switch (model) {
+        BillingModel.perSession || BillingModel.hourly => billedLessons * unitPrice,
+        BillingModel.monthly => plan.rate,
+        BillingModel.package => packagesCharged * plan.rate,
+      };
 }
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -273,18 +325,26 @@ DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 String dateKey(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+DateTime? parseDateKey(String key) {
+  final parts = key.split('-');
+  if (parts.length != 3) return null;
+  final y = int.tryParse(parts[0]), m = int.tryParse(parts[1]), d = int.tryParse(parts[2]);
+  if (y == null || m == null || d == null) return null;
+  return DateTime(y, m, d);
+}
+
 DateTime previousMonth(int year, int month) =>
     month == 1 ? DateTime(year - 1, 12) : DateTime(year, month - 1);
 
 int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
 
-/// Datas da rotina do aluno dentro do mês.
+/// Datas da rotina dentro do mês.
 List<DateTime> routineDates(StudentPlan plan, int year, int month) => [
       for (var d = 1; d <= daysInMonth(year, month); d++)
         if (plan.weekdays.contains(DateTime(year, month, d).weekday)) DateTime(year, month, d),
     ];
 
-/// Datas da rotina do aluno dentro de um período (usado em férias).
+/// Datas da rotina dentro de um período (usado em férias).
 List<DateTime> routineDatesInRange(StudentPlan plan, DateTime start, DateTime end) {
   final out = <DateTime>[];
   var d = dateOnly(start);
@@ -305,30 +365,21 @@ Holiday? _holidayOn(List<Holiday> holidays, DateTime d) {
   return null;
 }
 
-bool _cancelCharged(LessonRecord r, BillingRules rules) =>
-    r.charge ?? (rules.cancel == CancelRule.charge);
+bool _cancelCharged(LessonRecord r, BillingRules rules) => r.charge ?? (rules.cancel != CancelRule.waive);
 
 /// Conta faltas cobradas em um mês (viram desconto no mês seguinte).
-int countChargedCancels(
-  StudentPlan plan,
-  Map<String, LessonRecord> events,
-  int year,
-  int month,
-  BillingRules rules,
-) {
+int countChargedCancels(Map<String, LessonRecord> events, int year, int month, BillingRules rules) {
   var n = 0;
   events.forEach((key, record) {
     if (record.status != LessonStatus.cancelled || record.credit) return;
-    final parts = key.split('-');
-    if (parts.length != 3) return;
-    final y = int.tryParse(parts[0]), m = int.tryParse(parts[1]);
-    if (y != year || m != month) return;
+    final d = parseDateKey(key);
+    if (d == null || !_sameMonth(d, year, month)) return;
     if (_cancelCharged(record, rules)) n++;
   });
   return n;
 }
 
-/// Calcula a cobrança de um aluno em um mês (mês de 1 a 12).
+/// Calcula a cobrança de um cliente em um mês (mês de 1 a 12).
 MonthBill calculateMonth({
   required StudentPlan plan,
   required int year,
@@ -344,90 +395,131 @@ MonthBill calculateMonth({
       waived = 0,
       movedOut = 0,
       makeUps = 0,
-      credits = 0;
+      credits = 0,
+      extras = 0;
 
   final routine = routineDates(plan, year, month);
   final routineKeys = routine.map(dateKey).toSet();
 
+  LessonOutcome classify(LessonRecord? record, DateTime d, {required bool allowHoliday}) {
+    final holiday = allowHoliday && rules.holiday == HolidayRule.noCharge ? _holidayOn(holidays, d) : null;
+    if (holiday != null) {
+      holidaysCount++;
+      return LessonOutcome.holiday;
+    }
+    if (record == null) return LessonOutcome.charged;
+    if (record.credit) {
+      credits++;
+      return LessonOutcome.credit;
+    }
+    switch (record.status) {
+      case LessonStatus.cancelled:
+        if (_cancelCharged(record, rules)) {
+          cancelledCharged++;
+          return LessonOutcome.cancelledCharged;
+        }
+        cancelledWaived++;
+        return LessonOutcome.cancelledWaived;
+      case LessonStatus.moved:
+        final target = record.newDate;
+        final otherMonth = target != null && !_sameMonth(target, year, month);
+        if (otherMonth && rules.move == MoveRule.chargeOriginalMonth) return LessonOutcome.movedChargedHere;
+        movedOut++;
+        return LessonOutcome.movedOut;
+      case LessonStatus.scheduled:
+      case LessonStatus.completed:
+      case LessonStatus.rescheduled:
+        if (record.charge == false) {
+          waived++;
+          return LessonOutcome.waived;
+        }
+        return LessonOutcome.charged;
+    }
+  }
+
   for (final d in routine) {
     final record = events[dateKey(d)];
-    final time = plan.times[d.weekday] ?? '';
-    final holiday = rules.holiday == HolidayRule.noCharge ? _holidayOn(holidays, d) : null;
-    LessonOutcome outcome;
-
-    if (holiday != null) {
-      outcome = LessonOutcome.holiday;
-      holidaysCount++;
-    } else if (record == null) {
-      outcome = LessonOutcome.charged;
-    } else if (record.credit) {
-      outcome = LessonOutcome.credit;
-      credits++;
-    } else {
-      switch (record.status) {
-        case LessonStatus.cancelled:
-          if (_cancelCharged(record, rules)) {
-            outcome = LessonOutcome.cancelledCharged;
-            cancelledCharged++;
-          } else {
-            outcome = LessonOutcome.cancelledWaived;
-            cancelledWaived++;
-          }
-        case LessonStatus.moved:
-          final target = record.newDate;
-          final otherMonth = target != null && !_sameMonth(target, year, month);
-          if (otherMonth && rules.move == MoveRule.chargeOriginalMonth) {
-            outcome = LessonOutcome.movedChargedHere;
-          } else {
-            outcome = LessonOutcome.movedOut;
-            movedOut++;
-          }
-        case LessonStatus.scheduled:
-        case LessonStatus.completed:
-        case LessonStatus.rescheduled:
-          if (record.charge == false) {
-            outcome = LessonOutcome.waived;
-            waived++;
-          } else {
-            outcome = LessonOutcome.charged;
-          }
-      }
-    }
+    final outcome = classify(record, d, allowHoliday: true);
     lines.add(LessonLine(
       date: d,
-      time: time,
+      time: plan.times[d.weekday] ?? '',
       outcome: outcome,
       record: record,
-      holidayName: holiday?.name,
+      holidayName: outcome == LessonOutcome.holiday ? _holidayOn(holidays, d)?.name : null,
     ));
   }
 
-  // Reposições: aulas remarcadas que caem neste mês fora da rotina.
+  // Fora da rotina: avulsos e reposições de remarcações.
   events.forEach((key, record) {
-    if (record.status != LessonStatus.rescheduled || routineKeys.contains(key)) return;
-    final parts = key.split('-');
-    if (parts.length != 3) return;
-    final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-    if (!_sameMonth(d, year, month)) return;
-    final origin = record.originDate;
-    final fromOtherMonth = origin != null && !_sameMonth(origin, year, month);
-    final chargedElsewhere = fromOtherMonth && rules.move == MoveRule.chargeOriginalMonth;
-    final charged = !chargedElsewhere && record.charge != false && !record.credit;
-    if (charged) makeUps++;
-    lines.add(LessonLine(
-      date: d,
-      time: '',
-      outcome: charged ? LessonOutcome.makeUpCharged : LessonOutcome.makeUpNotCharged,
-      record: record,
-      isMakeUp: true,
-    ));
+    if (routineKeys.contains(key)) return;
+    final d = parseDateKey(key);
+    if (d == null || !_sameMonth(d, year, month)) return;
+    if (record.status == LessonStatus.rescheduled) {
+      final origin = record.originDate;
+      final fromOtherMonth = origin != null && !_sameMonth(origin, year, month);
+      final chargedElsewhere = fromOtherMonth && rules.move == MoveRule.chargeOriginalMonth;
+      final charged = !chargedElsewhere && record.charge != false && !record.credit;
+      if (charged) makeUps++;
+      lines.add(LessonLine(
+        date: d,
+        time: '',
+        outcome: charged ? LessonOutcome.makeUpCharged : LessonOutcome.makeUpNotCharged,
+        record: record,
+        isMakeUp: true,
+      ));
+    } else if (record.extra) {
+      extras++;
+      lines.add(LessonLine(
+        date: d,
+        time: '',
+        outcome: classify(record, d, allowHoliday: false),
+        record: record,
+        isExtra: true,
+      ));
+    }
   });
 
   lines.sort((a, b) => a.date.compareTo(b.date));
   final chargedLessons = lines.where((l) => l.outcome.isCharged).length;
-  final prev = previousMonth(year, month);
-  final prevChargedCancels = countChargedCancels(plan, events, prev.year, prev.month, rules);
-  final discount = prevChargedCancels < chargedLessons ? prevChargedCancels : chargedLessons;
+
+  var discount = 0;
+  final compensates = rules.cancel == CancelRule.compensate &&
+      (plan.model == BillingModel.perSession || plan.model == BillingModel.hourly);
+  if (compensates) {
+    final prev = previousMonth(year, month);
+    final prevChargedCancels = countChargedCancels(events, prev.year, prev.month, rules);
+    discount = prevChargedCancels < chargedLessons ? prevChargedCancels : chargedLessons;
+  }
+
+  var packages = 0, usedBefore = 0, remaining = 0;
+  if (plan.model == BillingModel.package) {
+    final size = plan.packageSize < 1 ? 1 : plan.packageSize;
+    final start = plan.packageStart == null
+        ? DateTime(year, month)
+        : DateTime(plan.packageStart!.year, plan.packageStart!.month);
+    final target = DateTime(year, month);
+    if (!target.isBefore(start)) {
+      var cursor = start;
+      var guard = 0;
+      while (cursor.isBefore(target) && guard < 120) {
+        usedBefore += calculateMonth(
+          plan: plan.copyWith(model: BillingModel.perSession),
+          year: cursor.year,
+          month: cursor.month,
+          events: events,
+          holidays: holidays,
+          rules: rules,
+        ).chargedLessons;
+        cursor = DateTime(cursor.year, cursor.month + 1);
+        guard++;
+      }
+      int needed(int used) => used <= 0 ? 1 : (used + size - 1) ~/ size;
+      final isStart = target == start;
+      final total = usedBefore + chargedLessons;
+      packages = needed(total) - (isStart ? 0 : needed(usedBefore));
+      remaining = needed(total) * size - total;
+    }
+  }
 
   return MonthBill(
     plan: plan,
@@ -435,6 +527,7 @@ MonthBill calculateMonth({
     month: month,
     lines: lines,
     routineCount: routine.length,
+    extras: extras,
     holidays: holidaysCount,
     cancelledCharged: cancelledCharged,
     cancelledWaived: cancelledWaived,
@@ -444,6 +537,9 @@ MonthBill calculateMonth({
     credits: credits,
     chargedLessons: chargedLessons,
     discountLessons: discount,
+    packagesCharged: packages,
+    packageUsedBefore: usedBefore,
+    packageRemaining: remaining,
   );
 }
 
@@ -466,7 +562,7 @@ extension BillStatusLabel on BillStatus {
         BillStatus.partial => 'Pago em parte',
         BillStatus.pending => 'A receber',
         BillStatus.overdue => 'Atrasado',
-        BillStatus.nothing => 'Sem cobrança',
+        BillStatus.nothing => 'Nada a cobrar',
       };
 }
 
@@ -475,8 +571,7 @@ DateTime dueDateFor(int dueDay, int year, int month) {
   return DateTime(year, month, dueDay < 1 ? 1 : (dueDay > last ? last : dueDay));
 }
 
-double sumPayments(List<PaymentEntry> entries) =>
-    entries.fold<double>(0, (sum, e) => sum + e.amount);
+double sumPayments(List<PaymentEntry> entries) => entries.fold<double>(0, (sum, e) => sum + e.amount);
 
 BillStatus billStatus({
   required double total,
@@ -492,7 +587,7 @@ BillStatus billStatus({
 }
 
 // ---------------------------------------------------------------------------
-// Explicação do valor
+// Textos
 // ---------------------------------------------------------------------------
 
 const monthNames = [
@@ -514,64 +609,156 @@ String money(num value) {
   return '${negative ? '−' : ''}R\$ $buffer,$rest';
 }
 
-/// Valor sem os centavos quando forem zero (R\$ 1.560 em vez de R\$ 1.560,00).
+/// Valor sem os centavos quando forem zero (R$ 1.560 em vez de R$ 1.560,00).
 String moneyCompact(num value) {
   final full = money(value);
   return full.endsWith(',00') ? full.substring(0, full.length - 3) : full;
 }
 
-String lessonsText(int n) => n == 1 ? '1 aula' : '$n aulas';
+/// "60 min", "1h", "1h30".
+String durationText(int minutes) {
+  if (minutes < 60) return '$minutes min';
+  final h = minutes ~/ 60, m = minutes % 60;
+  return m == 0 ? '${h}h' : '${h}h${m.toString().padLeft(2, '0')}';
+}
+
+extension BillingModelText on BillingModel {
+  String get title => switch (this) {
+        BillingModel.perSession => 'Por atendimento',
+        BillingModel.hourly => 'Por hora',
+        BillingModel.monthly => 'Mensalidade fixa',
+        BillingModel.package => 'Pacote',
+      };
+
+  /// Explicação curta, com o vocabulário da profissão.
+  String describe(Terms t) => switch (this) {
+        BillingModel.perSession =>
+          'Um valor por ${t.session}. No fim do mês, soma ${t.g('as', 'os')} ${t.sessions} que aconteceram.',
+        BillingModel.hourly => 'Um valor por hora. Cada ${t.session} é cobrad${t.g('a', 'o')} pela duração.',
+        BillingModel.monthly => 'O mesmo valor todo mês, não importa quant${t.g('as', 'os')} ${t.sessions}.',
+        BillingModel.package =>
+          '${t.clientTitle} paga um pacote de ${t.sessions}. Quando acaba, um novo pacote é cobrado.',
+      };
+
+  /// Nome do campo de valor no cadastro.
+  String rateLabel(Terms t) => switch (this) {
+        BillingModel.perSession => 'Valor de cada ${t.session}',
+        BillingModel.hourly => 'Valor da hora',
+        BillingModel.monthly => 'Valor da mensalidade',
+        BillingModel.package => 'Valor do pacote',
+      };
+}
+
+/// Resumo de uma linha para o cartão do cliente.
+String billSummary(MonthBill bill, Terms t) {
+  switch (bill.model) {
+    case BillingModel.perSession:
+    case BillingModel.hourly:
+      final b = StringBuffer(bill.model == BillingModel.hourly
+          ? '${t.count(bill.billedLessons)} de ${durationText(bill.plan.durationMinutes)} × ${moneyCompact(bill.plan.rate)}/h'
+          : '${t.count(bill.billedLessons)} × ${moneyCompact(bill.unitPrice)}');
+      if (bill.discountLessons > 0) {
+        b.write(bill.discountLessons == 1 ? ' · 1 falta compensada' : ' · ${bill.discountLessons} faltas compensadas');
+      }
+      return b.toString();
+    case BillingModel.monthly:
+      return 'Mensalidade · ${t.count(bill.chargedLessons)} no mês';
+    case BillingModel.package:
+      final size = bill.plan.packageSize;
+      if (bill.packagesCharged > 0) {
+        return 'Novo pacote de $size · restam ${bill.packageRemaining}';
+      }
+      return 'Pacote de $size em uso · restam ${bill.packageRemaining}';
+  }
+}
 
 /// Passo a passo do valor, em linguagem simples.
-List<BillStep> explainBill(MonthBill bill) {
-  final steps = <BillStep>[
-    BillStep('Aulas da rotina em ${monthNames[bill.month - 1]}', lessonsText(bill.routineCount)),
-  ];
+List<BillStep> explainBill(MonthBill bill, Terms t) {
+  final month = monthNames[bill.month - 1];
+  final steps = <BillStep>[];
+  final hasRoutine = bill.plan.hasRoutine;
+
+  if (hasRoutine) {
+    steps.add(BillStep('${t.sessionsTitle} da rotina em $month', t.count(bill.routineCount)));
+  }
+  if (bill.extras > 0) {
+    steps.add(BillStep(
+      hasRoutine ? '${t.sessionsTitle} avuls${t.g('as', 'os')} marcad${t.g('as', 'os')}' : '${t.sessionsTitle} marcad${t.g('as', 'os')} em $month',
+      hasRoutine ? '+ ${t.count(bill.extras)}' : t.count(bill.extras),
+      kind: hasRoutine ? BillStepKind.plus : BillStepKind.neutral,
+    ));
+  }
   if (bill.holidays > 0) {
-    final names = bill.lines
+    final dates = bill.lines
         .where((l) => l.outcome == LessonOutcome.holiday)
         .map((l) => '${l.date.day.toString().padLeft(2, '0')}/${l.date.month.toString().padLeft(2, '0')}')
         .join(', ');
-    steps.add(BillStep('Feriado sem aula ($names)', '− ${lessonsText(bill.holidays)}',
-        kind: BillStepKind.minus));
+    steps.add(BillStep('Feriado ($dates)', '− ${t.count(bill.holidays)}', kind: BillStepKind.minus));
   }
   if (bill.cancelledWaived > 0) {
-    steps.add(BillStep('Canceladas sem cobrança', '− ${lessonsText(bill.cancelledWaived)}',
+    steps.add(BillStep('${t.g('Canceladas', 'Cancelados')} sem cobrança', '− ${t.count(bill.cancelledWaived)}',
         kind: BillStepKind.minus));
   }
   if (bill.waived > 0) {
-    steps.add(BillStep('Aulas marcadas para não cobrar', '− ${lessonsText(bill.waived)}',
-        kind: BillStepKind.minus));
+    steps.add(BillStep('Marcad${t.g('as', 'os')} para não cobrar', '− ${t.count(bill.waived)}', kind: BillStepKind.minus));
   }
   if (bill.movedOut > 0) {
-    steps.add(BillStep('Remarcadas para outra data', '− ${lessonsText(bill.movedOut)}',
+    steps.add(BillStep('Remarcad${t.g('as', 'os')} para outra data', '− ${t.count(bill.movedOut)}',
         kind: BillStepKind.minus));
   }
   if (bill.credits > 0) {
-    steps.add(BillStep('Viraram crédito', '− ${lessonsText(bill.credits)}', kind: BillStepKind.minus));
+    steps.add(BillStep('Viraram crédito', '− ${t.count(bill.credits)}', kind: BillStepKind.minus));
   }
   if (bill.makeUps > 0) {
-    steps.add(BillStep('Reposições neste mês', '+ ${lessonsText(bill.makeUps)}', kind: BillStepKind.plus));
+    steps.add(BillStep('Reposições neste mês', '+ ${t.count(bill.makeUps)}', kind: BillStepKind.plus));
   }
-  steps.add(BillStep('Aulas cobradas', lessonsText(bill.chargedLessons), kind: BillStepKind.result));
-  if (bill.cancelledCharged > 0) {
-    steps.add(BillStep(
-      'Inclui ${lessonsText(bill.cancelledCharged)} com falta cobrada (vira desconto no mês seguinte)',
-      '',
-    ));
+
+  switch (bill.model) {
+    case BillingModel.perSession:
+    case BillingModel.hourly:
+      steps.add(BillStep('${t.sessionsTitle} ${t.g('cobradas', 'cobrados')}', t.count(bill.chargedLessons),
+          kind: BillStepKind.result));
+      if (bill.cancelledCharged > 0) {
+        steps.add(BillStep('Inclui ${t.count(bill.cancelledCharged)} com falta cobrada', ''));
+      }
+      if (bill.discountLessons > 0) {
+        final prev = previousMonth(bill.year, bill.month);
+        steps.add(BillStep('Desconto da falta cobrada em ${monthNames[prev.month - 1]}',
+            '− ${t.count(bill.discountLessons)}',
+            kind: BillStepKind.minus));
+      }
+      if (bill.model == BillingModel.hourly) {
+        steps.add(BillStep(
+          'Cada ${t.session}: ${durationText(bill.plan.durationMinutes)} × ${money(bill.plan.rate)} por hora',
+          money(bill.unitPrice),
+        ));
+      }
+      steps.add(BillStep(
+        '${t.count(bill.billedLessons)} × ${money(bill.unitPrice)}',
+        money(bill.total),
+        kind: BillStepKind.total,
+      ));
+    case BillingModel.monthly:
+      steps.add(BillStep('${t.sessionsTitle} no mês', t.count(bill.chargedLessons), kind: BillStepKind.result));
+      steps.add(BillStep(
+        'Faltas e feriados não mudam o valor da mensalidade.',
+        '',
+      ));
+      steps.add(BillStep('Mensalidade de $month', money(bill.total), kind: BillStepKind.total));
+    case BillingModel.package:
+      final size = bill.plan.packageSize;
+      steps.add(BillStep('${t.sessionsTitle} usad${t.g('as', 'os')} em $month', t.count(bill.chargedLessons),
+          kind: BillStepKind.result));
+      steps.add(BillStep('Usad${t.g('as', 'os')} antes de $month', t.count(bill.packageUsedBefore)));
+      steps.add(BillStep('Restam no pacote atual', t.count(bill.packageRemaining)));
+      steps.add(BillStep(
+        bill.packagesCharged == 0
+            ? 'Nenhum pacote novo em $month'
+            : '${bill.packagesCharged == 1 ? '1 pacote novo' : '${bill.packagesCharged} pacotes novos'} '
+                'de ${t.count(size)} × ${money(bill.plan.rate)}',
+        money(bill.total),
+        kind: BillStepKind.total,
+      ));
   }
-  if (bill.discountLessons > 0) {
-    final prev = previousMonth(bill.year, bill.month);
-    steps.add(BillStep(
-      'Desconto da falta cobrada em ${monthNames[prev.month - 1]}',
-      '− ${lessonsText(bill.discountLessons)}',
-      kind: BillStepKind.minus,
-    ));
-  }
-  steps.add(BillStep(
-    '${lessonsText(bill.billedLessons)} × ${money(bill.rate)} por aula',
-    money(bill.total),
-    kind: BillStepKind.total,
-  ));
   return steps;
 }

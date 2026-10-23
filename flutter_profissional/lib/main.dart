@@ -10,6 +10,8 @@ import 'billing/billing_store.dart';
 import 'billing/rules_screen.dart';
 import 'ui/cf_theme.dart';
 import 'ui/sales_entry.dart';
+import 'ui/onboarding.dart';
+import 'profile/profession_profile.dart';
 import 'professional_dashboard.dart';
 import 'professional_secretary.dart';
 import 'professional_clients.dart';
@@ -49,6 +51,7 @@ class CoachFlowEntry extends StatefulWidget {
 
 class _CoachFlowEntryState extends State<CoachFlowEntry> {
   bool demo = false;
+  bool onboarding = false;
   final email = TextEditingController();
   final password = TextEditingController();
   bool busy = false;
@@ -60,10 +63,16 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     if (demo) return const CoachFlowShell(demo: true);
     if (const String.fromEnvironment('SUPABASE_URL').isEmpty ||
         const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY').isEmpty) {
-      return SalesEntry(onStart: () {
-        BillingStore.instance.attach();
-        setState(() => demo = true);
-      });
+      if (onboarding) {
+        return Onboarding(
+          onBack: () => setState(() => onboarding = false),
+          onDone: () => setState(() {
+            onboarding = false;
+            demo = true;
+          }),
+        );
+      }
+      return SalesEntry(onStart: () => setState(() => onboarding = true));
     }
     final auth = Supabase.instance.client.auth;
     return StreamBuilder<AuthState>(
@@ -111,7 +120,7 @@ extension SectionDetails on Section {
         Section.agenda => 'Agenda',
         Section.secretaria => 'Secretária',
         Section.regras => 'Regras',
-        Section.clientes => 'Clientes',
+        Section.clientes => ProfessionalProfile.instance.terms.clientsTitle,
         Section.cobrancas => 'Cobranças',
         Section.financeiro => 'Financeiro',
         Section.mais => 'Mais',
@@ -166,7 +175,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             const SizedBox(height: 14),
             for (final entry in <(Section, String, IconData)>[
               (Section.inicio, 'Início', Icons.home_outlined),
-              (Section.clientes, 'Clientes', Icons.groups_outlined),
+              (Section.clientes, ProfessionalProfile.instance.terms.clientsTitle, Icons.groups_outlined),
               (Section.cobrancas, 'Cobranças', Icons.receipt_long_outlined),
               (Section.financeiro, 'Financeiro', Icons.bar_chart_outlined),
               (Section.agenda, 'Calendário e atendimentos', Icons.calendar_month_outlined),
@@ -187,6 +196,19 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         ),
       ),
     );
+  }
+
+  void _changeProfession() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (routeContext) => Onboarding(
+        onBack: () => Navigator.of(routeContext).pop(),
+        onDone: () {
+          Navigator.of(routeContext).pop();
+          if (mounted) setState(() => selected = Section.cobrancas);
+        },
+      ),
+    ));
   }
 
   @override
@@ -258,7 +280,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           widget.demo ? BillingScreen(onOpenRules: () => setState(() => selected = Section.regras)) :
                             _panel('Cobranças', 'Cobranças reais disponíveis após integração segura com o banco.'),
                         if (selected == Section.regras)
-                          widget.demo ? const RulesScreen() :
+                          widget.demo ? RulesScreen(onChangeProfession: _changeProfession) :
                             _panel('Regras de cobrança', 'Disponível após conectar o banco de dados.'),
                         if (selected == Section.financeiro)
                           widget.demo ? const DemoFinance() :
@@ -324,12 +346,15 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   Section.cobrancas, Section.financeiro,
                 ][index]);
               },
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Início'),
-                NavigationDestination(icon: Icon(Icons.groups_outlined), label: 'Clientes'),
-                NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Cobranças'),
-                NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'Financeiro'),
-                NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Mais'),
+              destinations: [
+                const NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Início'),
+                NavigationDestination(
+                  icon: const Icon(Icons.groups_outlined),
+                  label: ProfessionalProfile.instance.terms.clientsTitle,
+                ),
+                const NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Cobranças'),
+                const NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'Financeiro'),
+                const NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Mais'),
               ],
             ),
           );

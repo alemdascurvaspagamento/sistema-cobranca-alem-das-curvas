@@ -54,7 +54,8 @@ class _Pitch extends StatelessWidget {
         Container(
           width: 36, height: 36,
           decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(10)),
-          child: const Icon(Icons.directions_run_rounded, color: CF.ink, size: 22),
+          alignment: Alignment.center,
+          child: Text('cf', style: CF.score(22, color: CF.ink)),
         ),
         const SizedBox(width: 10),
         Text('Coach Flow', style: CF.body(20, color: Colors.white, weight: FontWeight.w700)),
@@ -63,26 +64,26 @@ class _Pitch extends StatelessWidget {
       ]),
       SizedBox(height: wide ? 40 : 28),
       Text(
-        'A cobrança do mês, pronta antes de você terminar o treino.',
+        'A cobrança do mês, pronta antes do último atendimento.',
         style: CF.score(wide ? 64 : 44, color: Colors.white).copyWith(height: 1.02),
       ),
       const SizedBox(height: 16),
       ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: Text(
-          'Faltas, feriados, férias e remarcações entram na conta sozinhos. '
-          'Você confere o valor de cada aluno e envia o resumo pelo WhatsApp.',
+          'Para quem atende com hora marcada. Faltas, feriados, férias e remarcações '
+          'entram na conta sozinhos, e você só confere e envia o resumo pelo WhatsApp.',
           style: CF.body(18, color: Colors.white70, height: 1.45),
         ),
       ),
       const SizedBox(height: 26),
       const _Benefit(
         icon: Icons.calculate_rounded,
-        text: 'Conta explicada aula por aula, para o aluno não questionar.',
+        text: 'Conta explicada atendimento por atendimento, para ninguém questionar o valor.',
       ),
       const _Benefit(
-        icon: Icons.event_busy_rounded,
-        text: 'Falta cobrada vira desconto no mês seguinte, sem anotação à parte.',
+        icon: Icons.tune_rounded,
+        text: 'Por sessão, por hora, mensalidade ou pacote: do jeito que você já cobra.',
       ),
       const _Benefit(
         icon: Icons.chat_rounded,
@@ -104,7 +105,8 @@ class _Pitch extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 12),
-      Text('Sem cadastro. Você entra numa conta de exemplo, com alunos fictícios.',
+      Text('Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros '
+          'profissionais. Sem cadastro: você escolhe a profissão e entra numa conta de exemplo.',
           style: CF.body(14, color: Colors.white54)),
     ]);
   }
@@ -155,9 +157,9 @@ class _ScoreboardPreview extends StatelessWidget {
         const SizedBox(height: 16),
         const LaneTrack(progress: .66),
         const SizedBox(height: 18),
-        const _MiniRow(initials: 'MC', name: 'Mariana', detail: '8 aulas × R\$ 180', value: 'R\$ 1.440', paid: true),
-        const _MiniRow(initials: 'FL', name: 'Fernanda', detail: '1 falta compensada', value: 'R\$ 1.080', paid: false),
-        const _MiniRow(initials: 'PM', name: 'Paulo', detail: 'Férias de 2 aulas', value: 'R\$ 400', paid: false),
+        const _MiniRow(initials: 'MC', name: 'Mariana', detail: 'Psicoterapia · 4 sessões × R\$ 200', value: 'R\$ 800', paid: true),
+        const _MiniRow(initials: 'FL', name: 'Fernanda', detail: 'Fisioterapia · pacote de 10 sessões', value: 'R\$ 1.260', paid: false),
+        const _MiniRow(initials: 'PM', name: 'Paulo', detail: 'Pilates · mensalidade', value: 'R\$ 390', paid: false),
       ]),
     );
   }

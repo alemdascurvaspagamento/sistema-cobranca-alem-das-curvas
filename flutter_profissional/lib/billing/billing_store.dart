@@ -1,30 +1,28 @@
 import 'package:flutter/foundation.dart';
 
 import '../demo_ledger.dart';
+import '../profile/profession_profile.dart';
 import 'billing_engine.dart';
 
-/// Guarda alunos, aulas, feriados, regras e pagamentos da demonstração.
+/// Guarda clientes, atendimentos, feriados, regras e pagamentos da demonstração.
 ///
 /// Tudo fica só na memória desta sessão. Na Etapa 3, esta classe passa a ler e
 /// gravar no banco, mantendo o mesmo motor de cálculo.
 class BillingStore extends ChangeNotifier {
   BillingStore._() {
-    _seed();
+    seed(professionById('personal'), BillingModel.perSession);
   }
-
-  @visibleForTesting
-  BillingStore.empty({DateTime? today}) : _today = today;
 
   static final BillingStore instance = BillingStore._();
 
-  DateTime? _today;
-  DateTime get today => dateOnly(_today ?? DateTime.now());
+  DateTime get today => dateOnly(DateTime.now());
 
   final List<StudentPlan> plans = [];
   final Map<String, Map<String, LessonRecord>> _events = {};
   final List<Holiday> holidays = [];
   final Map<String, List<PaymentEntry>> _payments = {};
   BillingRules rules = const BillingRules();
+  Terms terms = Terms.generic;
 
   late DateTime selectedMonth = DateTime(today.year, today.month);
 
@@ -91,13 +89,12 @@ class BillingStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void shiftMonth(int delta) =>
-      goToMonth(DateTime(selectedMonth.year, selectedMonth.month + delta));
+  void shiftMonth(int delta) => goToMonth(DateTime(selectedMonth.year, selectedMonth.month + delta));
 
-  // ---------------------------------------------------------------- aulas
+  // ---------------------------------------------------------------- atendimentos
 
-  /// Salva a situação de uma aula. Em remarcações, cria a reposição na nova data.
-  /// Retorna uma mensagem de erro, ou `null` quando deu certo.
+  /// Salva a situação de um atendimento. Em remarcações, cria a reposição na
+  /// nova data. Retorna uma mensagem de erro, ou `null` quando deu certo.
   String? saveLesson(String studentId, DateTime date, LessonRecord record) {
     final map = _events.putIfAbsent(studentId, () => {});
     final key = dateKey(date);
@@ -105,40 +102,79 @@ class BillingStore extends ChangeNotifier {
 
     if (record.status == LessonStatus.moved) {
       final target = record.newDate;
-      if (target == null) return 'Escolha a nova data da aula.';
+      if (target == null) return 'Escolha a nova data.';
       if (dateOnly(target) == dateOnly(date)) return 'A nova data precisa ser diferente da original.';
       final existing = map[dateKey(target)];
       final isOwnMakeUp = existing?.originDate != null && dateOnly(existing!.originDate!) == dateOnly(date);
-      if (existing != null && existing.status != LessonStatus.scheduled && !isOwnMakeUp) {
-        return 'Já existe uma alteração nessa data. Escolha outro dia.';
+      final routineDay = plan(studentId).weekdays.contains(target.weekday);
+      if ((existing != null && !isOwnMakeUp) || (routineDay && existing == null)) {
+        return 'Já existe ${terms.theSession} nessa data. Escolha outro dia.';
       }
     }
 
     _removeMakeUpOf(map, previous, date);
-    map[key] = record;
+    map[key] = LessonRecord(
+      status: record.status,
+      charge: record.charge,
+      credit: record.credit,
+      newDate: record.newDate,
+      originDate: record.originDate,
+      extra: previous?.extra ?? record.extra,
+      note: record.note,
+    );
     if (record.status == LessonStatus.moved) {
       map[dateKey(record.newDate!)] = LessonRecord(
         status: LessonStatus.rescheduled,
         originDate: dateOnly(date),
-        note: 'Reposição da aula de ${_short(date)}',
+        note: 'Reposição de ${_short(date)}',
       );
     }
     _changed();
     return null;
   }
 
-  /// Volta a aula ao normal (agendada e cobrada).
+  /// Volta o atendimento ao normal. Se for avulso, ele é desmarcado.
   void clearLesson(String studentId, DateTime date) {
     final map = _events[studentId];
     if (map == null) return;
     final key = dateKey(date);
     final previous = map.remove(key);
     _removeMakeUpOf(map, previous, date);
-    // Se era uma reposição, a aula original volta a ser cobrada normalmente.
     final origin = previous?.originDate;
     if (previous?.status == LessonStatus.rescheduled && origin != null) {
-      map.remove(dateKey(origin));
+      final original = map[dateKey(origin)];
+      // Se a original era avulsa, ela volta como avulsa agendada.
+      if (original != null && original.extra) {
+        map[dateKey(origin)] = const LessonRecord(extra: true);
+      } else {
+        map.remove(dateKey(origin));
+      }
     }
+    if (previous != null && previous.extra && previous.status != LessonStatus.scheduled) {
+      // Avulso alterado: "voltar ao normal" mantém o atendimento marcado.
+      map[key] = const LessonRecord(extra: true);
+    }
+    _changed();
+  }
+
+  /// Marca um atendimento avulso. Retorna erro, ou `null`.
+  String? addExtra(String studentId, DateTime date, {String note = ''}) {
+    final map = _events.putIfAbsent(studentId, () => {});
+    final key = dateKey(date);
+    if (map.containsKey(key) || plan(studentId).weekdays.contains(date.weekday)) {
+      return 'Já existe ${terms.theSession} nessa data.';
+    }
+    map[key] = LessonRecord(extra: true, note: note);
+    _changed();
+    return null;
+  }
+
+  /// Desmarca um atendimento avulso.
+  void removeExtra(String studentId, DateTime date) {
+    final map = _events[studentId];
+    if (map == null) return;
+    final previous = map.remove(dateKey(date));
+    _removeMakeUpOf(map, previous, date);
     _changed();
   }
 
@@ -152,16 +188,25 @@ class BillingStore extends ChangeNotifier {
     }
   }
 
-  /// Datas que serão afetadas por férias no período.
-  List<DateTime> vacationPreview(String studentId, DateTime start, DateTime end) =>
-      routineDatesInRange(plan(studentId), start, end).where((d) {
-        final r = eventsFor(studentId)[dateKey(d)];
-        return r == null ||
-            r.status == LessonStatus.scheduled ||
-            (r.status == LessonStatus.cancelled && r.charge == false);
-      }).toList();
+  /// Datas que serão afetadas por férias no período (rotina e avulsos).
+  List<DateTime> vacationPreview(String studentId, DateTime start, DateTime end) {
+    final events = eventsFor(studentId);
+    bool free(LessonRecord? r) =>
+        r == null ||
+        (r.status == LessonStatus.scheduled && !r.credit) ||
+        (r.status == LessonStatus.cancelled && r.charge == false);
+    final dates = routineDatesInRange(plan(studentId), start, end).where((d) => free(events[dateKey(d)])).toList();
+    events.forEach((key, r) {
+      final d = parseDateKey(key);
+      if (d == null || !r.extra) return;
+      if (d.isBefore(dateOnly(start)) || d.isAfter(dateOnly(end))) return;
+      if (free(r) && !dates.contains(d)) dates.add(d);
+    });
+    dates.sort();
+    return dates;
+  }
 
-  /// Marca férias: cancela as aulas do período sem cobrança.
+  /// Marca férias: cancela os atendimentos do período sem cobrança.
   /// Retorna o estado anterior, para permitir desfazer.
   Map<String, LessonRecord?> applyVacation(String studentId, DateTime start, DateTime end, String reason) {
     final map = _events.putIfAbsent(studentId, () => {});
@@ -169,7 +214,12 @@ class BillingStore extends ChangeNotifier {
     for (final d in vacationPreview(studentId, start, end)) {
       final key = dateKey(d);
       before[key] = map[key];
-      map[key] = LessonRecord(status: LessonStatus.cancelled, charge: false, note: reason);
+      map[key] = LessonRecord(
+        status: LessonStatus.cancelled,
+        charge: false,
+        extra: map[key]?.extra ?? false,
+        note: reason,
+      );
     }
     _changed();
     return before;
@@ -261,109 +311,174 @@ class BillingStore extends ChangeNotifier {
   static String _short(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
 
-  // ---------------------------------------------------------------- dados fictícios
+  // ---------------------------------------------------------------- dados de exemplo
 
-  void _seed() {
+  static double _round10(double v) => (v / 10).round() * 10.0;
+
+  /// Recria os dados de exemplo para a profissão e a forma de cobrança escolhidas.
+  void seed(ProfessionProfile prof, BillingModel model) {
+    plans.clear();
+    _events.clear();
+    holidays.clear();
+    _payments.clear();
+    terms = prof.terms;
+    rules = BillingRules(cancel: prof.cancelRule);
+    selectedMonth = DateTime(today.year, today.month);
+
     final now = today;
     final y = now.year, m = now.month;
     final prev = previousMonth(y, m);
+    final start = DateTime(y, m - 2);
 
-    plans.addAll(const [
-      StudentPlan(
-        id: 'mariana', name: 'Mariana Costa', service: 'Treino funcional',
-        phone: '11999990001', rate: 180, weekdays: {1, 3},
-        times: {1: '07:00', 3: '07:00'}, dueDay: 5,
-      ),
-      StudentPlan(
-        id: 'ricardo', name: 'Ricardo Almeida', service: 'Personal na academia',
-        phone: '11999990002', rate: 150, weekdays: {2, 4},
-        times: {2: '18:30', 4: '18:30'}, dueDay: 10,
-      ),
-      StudentPlan(
-        id: 'fernanda', name: 'Fernanda Lima', service: 'Assessoria de corrida',
-        phone: '11999990003', rate: 120, weekdays: {1, 3, 5},
-        times: {1: '06:00', 3: '06:00', 5: '06:00'}, dueDay: 15,
-      ),
-      StudentPlan(
-        id: 'paulo', name: 'Paulo Martins', service: 'Treino em casa',
-        phone: '11999990004', rate: 200, weekdays: {5},
-        times: {5: '09:00'}, dueDay: 28,
-      ),
-    ]);
+    final base = prof.sampleRate;
+    double rateFor(double factor) => switch (model) {
+          BillingModel.perSession => _round10(base * factor),
+          BillingModel.hourly => _round10(base * factor * 60 / prof.duration),
+          BillingModel.monthly => _round10(base * factor * prof.perWeek * 4.3),
+          BillingModel.package => _round10(base * factor * 10 * .9),
+        };
+
+    // Dias fixos: 2x por semana (seg/qua, ter/qui...) ou 1x por semana.
+    final routines = prof.perWeek >= 2
+        ? const [<int>{1, 3}, <int>{2, 4}, <int>{1, 3, 5}, <int>{5}]
+        : const [<int>{1}, <int>{2}, <int>{3}, <int>{4}];
+    const times = ['07:00', '18:30', '09:00', '14:00'];
+    const people = [
+      ('mariana', 'Mariana Costa', '11999990001', 1.0, 5),
+      ('ricardo', 'Ricardo Almeida', '11999990002', .9, 10),
+      ('fernanda', 'Fernanda Lima', '11999990003', .85, 15),
+      ('paulo', 'Paulo Martins', '11999990004', 1.2, 28),
+    ];
+    for (var i = 0; i < people.length; i++) {
+      final (id, name, phone, factor, due) = people[i];
+      final days = prof.fixedRoutine ? routines[i] : <int>{};
+      plans.add(StudentPlan(
+        id: id,
+        name: name,
+        phone: phone,
+        service: prof.services[i % prof.services.length],
+        rate: rateFor(factor),
+        weekdays: days,
+        times: {for (final d in days) d: times[i]},
+        dueDay: due,
+        model: model,
+        durationMinutes: prof.duration,
+        packageSize: 10,
+        packageStart: start,
+      ));
+    }
 
     holidays.addAll(_nationalHolidays(y));
     if (prev.year != y) holidays.insertAll(0, _nationalHolidays(prev.year));
 
-    List<DateTime> routine(String id) => routineDates(plan(id), y, m);
-    List<DateTime> routinePrev(String id) => routineDates(plan(id), prev.year, prev.month);
+    if (prof.fixedRoutine) {
+      _seedRoutineScenarios(y, m, prev);
+    } else {
+      _seedAppointments(y, m, start);
+    }
 
-    // Mariana: uma aula remarcada para o dia seguinte, no mesmo mês.
+    // Pagamentos: meses anteriores quitados; no mês atual, um em dia e um parcial.
+    for (final p in plans) {
+      for (var k = 2; k >= 1; k--) {
+        final mm = DateTime(y, m - k);
+        final b = bill(p, month: mm);
+        if (b.total > 0) {
+          _payments[_payKey(p.id, mm)] = [PaymentEntry(amount: b.total, date: dueDateFor(p.dueDay, mm.year, mm.month))];
+        }
+      }
+    }
+    final current = DateTime(y, m);
+    final marTotal = bill(plan('mariana'), month: current).total;
+    if (marTotal > 0) {
+      _payments[_payKey('mariana', current)] = [PaymentEntry(amount: marTotal, date: dueDateFor(5, y, m))];
+    }
+    final ricTotal = bill(plan('ricardo'), month: current).total;
+    if (ricTotal > 0) {
+      _payments[_payKey('ricardo', current)] = [
+        PaymentEntry(amount: _round10(ricTotal * .4), date: dueDateFor(8, y, m), method: 'Dinheiro'),
+      ];
+    }
+    _syncDashboard();
+    notifyListeners();
+  }
+
+  void _seedRoutineScenarios(int y, int m, DateTime prev) {
+    List<DateTime> routine(String id) => routineDates(plan(id), y, m);
+    final t = terms;
+
+    // Mariana: remarcada para o dia seguinte.
     final mar = routine('mariana');
     if (mar.length > 2) {
       final original = mar[1];
-      saveLessonSilently('mariana', original,
-          LessonRecord(status: LessonStatus.moved, newDate: original.add(const Duration(days: 1))));
+      final target = original.add(const Duration(days: 1));
+      _events.putIfAbsent('mariana', () => {})
+        ..[dateKey(original)] = LessonRecord(status: LessonStatus.moved, newDate: target)
+        ..[dateKey(target)] = LessonRecord(
+            status: LessonStatus.rescheduled, originDate: original, note: 'Reposição de ${_short(original)}');
     }
 
-    // Ricardo: uma aula vira crédito.
+    // Ricardo: crédito.
     final ric = routine('ricardo');
-    if (ric.length > 3) {
-      _events.putIfAbsent('ricardo', () => {})[dateKey(ric[3])] =
-          const LessonRecord(credit: true, note: 'Aula extra no mês passado');
+    if (ric.length > 2) {
+      _events.putIfAbsent('ricardo', () => {})[dateKey(ric[2])] =
+          LessonRecord(credit: true, note: '${t.sessionTitle} extra no mês passado');
     }
 
-    // Fernanda: falta cobrada no mês passado (vira desconto agora) e
-    // um cancelamento sem cobrança neste mês.
-    final ferPrev = routinePrev('fernanda');
-    if (ferPrev.length > 4) {
-      _events.putIfAbsent('fernanda', () => {})[dateKey(ferPrev[4])] =
+    // Fernanda: falta cobrada no mês passado e um cancelamento sem cobrança agora.
+    final ferPrev = routineDates(plan('fernanda'), prev.year, prev.month);
+    if (ferPrev.length > 2) {
+      _events.putIfAbsent('fernanda', () => {})[dateKey(ferPrev[2])] =
           const LessonRecord(status: LessonStatus.cancelled, charge: true, note: 'Faltou sem avisar');
     }
     final fer = routine('fernanda');
     if (fer.length > 2) {
-      _events.putIfAbsent('fernanda', () => {})[dateKey(fer[2])] =
+      _events.putIfAbsent('fernanda', () => {})[dateKey(fer[1])] =
           const LessonRecord(status: LessonStatus.cancelled, charge: false, note: 'Avisou com antecedência');
     }
 
-    // Paulo: férias nas duas últimas sextas do mês.
+    // Paulo: férias nos dois últimos atendimentos do mês.
     final pau = routine('paulo');
-    if (pau.length >= 2) {
+    if (pau.length >= 3) {
       for (final d in pau.sublist(pau.length - 2)) {
         _events.putIfAbsent('paulo', () => {})[dateKey(d)] =
             const LessonRecord(status: LessonStatus.cancelled, charge: false, note: 'Férias');
       }
     }
-
-    // Pagamentos do mês anterior: todos quitados.
-    for (final p in plans) {
-      final b = bill(p, month: prev);
-      if (b.total > 0) {
-        _payments[_payKey(p.id, prev)] = [
-          PaymentEntry(amount: b.total, date: dueDateFor(p.dueDay, prev.year, prev.month)),
-        ];
-      }
-    }
-    // Mês atual: Mariana pagou tudo; Ricardo pagou uma parte.
-    final current = DateTime(y, m);
-    final marTotal = bill(plan('mariana'), month: current).total;
-    _payments[_payKey('mariana', current)] = [
-      PaymentEntry(amount: marTotal, date: dueDateFor(5, y, m)),
-    ];
-    _payments[_payKey('ricardo', current)] = [
-      PaymentEntry(amount: 300, date: dueDateFor(8, y, m), method: 'Dinheiro'),
-    ];
   }
 
-  @visibleForTesting
-  void saveLessonSilently(String id, DateTime date, LessonRecord record) {
-    final map = _events.putIfAbsent(id, () => {});
-    map[dateKey(date)] = record;
-    if (record.status == LessonStatus.moved && record.newDate != null) {
-      map[dateKey(record.newDate!)] = LessonRecord(
-        status: LessonStatus.rescheduled,
-        originDate: dateOnly(date),
-        note: 'Reposição da aula de ${_short(date)}',
-      );
+  /// Sem rotina fixa: consultas avulsas espalhadas pelos últimos meses.
+  void _seedAppointments(int y, int m, DateTime start) {
+    const pattern = <String, List<int>>{
+      'mariana': [6, 20],
+      'ricardo': [9],
+      'fernanda': [3, 14, 27],
+      'paulo': [12, 26],
+    };
+    var cursor = start;
+    while (!cursor.isAfter(DateTime(y, m))) {
+      pattern.forEach((id, days) {
+        for (final day in days) {
+          final last = daysInMonth(cursor.year, cursor.month);
+          var d = DateTime(cursor.year, cursor.month, day > last ? last : day);
+          // Evita fins de semana.
+          while (d.weekday > 5) {
+            d = d.subtract(const Duration(days: 1));
+          }
+          _events.putIfAbsent(id, () => {})[dateKey(d)] = const LessonRecord(extra: true);
+        }
+      });
+      cursor = DateTime(cursor.year, cursor.month + 1);
+    }
+    // Fernanda faltou a uma consulta do mês atual.
+    final fer = _events['fernanda'];
+    if (fer != null) {
+      final key = dateKey(DateTime(y, m, 14));
+      final match = fer.keys.where((k) => k.startsWith(dateKey(DateTime(y, m, 1)).substring(0, 8))).toList()..sort();
+      final target = fer.containsKey(key) ? key : (match.isNotEmpty ? match.first : null);
+      if (target != null) {
+        fer[target] = const LessonRecord(
+            status: LessonStatus.cancelled, charge: false, extra: true, note: 'Desmarcou no dia');
+      }
     }
   }
 
@@ -381,19 +496,9 @@ class BillingStore extends ChangeNotifier {
       (12, 25, 'Natal'),
     ];
     final list = [
-      for (final (mo, d, name) in fixed)
-        Holiday(id: 'h$y-$mo-$d', date: DateTime(y, mo, d), name: name),
-      Holiday(
-        id: 'h$y-sexta-santa',
-        date: easter.subtract(const Duration(days: 2)),
-        name: 'Sexta-feira Santa',
-      ),
-      Holiday(
-        id: 'h$y-carnaval',
-        date: easter.subtract(const Duration(days: 47)),
-        name: 'Carnaval',
-        noClass: false,
-      ),
+      for (final (mo, d, name) in fixed) Holiday(id: 'h$y-$mo-$d', date: DateTime(y, mo, d), name: name),
+      Holiday(id: 'h$y-sexta-santa', date: easter.subtract(const Duration(days: 2)), name: 'Sexta-feira Santa'),
+      Holiday(id: 'h$y-carnaval', date: easter.subtract(const Duration(days: 47)), name: 'Carnaval', noClass: false),
     ];
     list.sort((a, b) => a.date.compareTo(b.date));
     return list;
