@@ -281,6 +281,173 @@ class BillingStore extends ChangeNotifier {
     _changed();
   }
 
+  // ---------------------------------------------------------------- cadastro de clientes
+
+  String newClientId() => 'c${DateTime.now().microsecondsSinceEpoch}';
+
+  /// Cria ou atualiza o cadastro de um cliente.
+  void savePlan(StudentPlan p) {
+    final i = plans.indexWhere((x) => x.id == p.id);
+    if (i >= 0) {
+      plans[i] = p;
+    } else {
+      plans.add(p);
+    }
+    plans.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _changed();
+  }
+
+  /// Arquiva (não apaga): o histórico continua guardado.
+  void setActive(String id, bool active) {
+    final i = plans.indexWhere((x) => x.id == id);
+    if (i < 0) return;
+    plans[i] = plans[i].copyWith(active: active);
+    _changed();
+  }
+
+  List<StudentPlan> get archivedPlans => plans.where((p) => !p.active).toList();
+
+  // ---------------------------------------------------------------- agenda
+
+  /// Atendimentos de todos os clientes ativos em um dia, por horário.
+  List<(StudentPlan, LessonLine)> sessionsOn(DateTime day) {
+    final d = dateOnly(day);
+    final out = <(StudentPlan, LessonLine)>[];
+    for (final p in activePlans) {
+      for (final line in bill(p, month: DateTime(d.year, d.month)).lines) {
+        if (dateOnly(line.date) == d) out.add((p, line));
+      }
+    }
+    out.sort((a, b) {
+      final ta = a.$2.time.isEmpty ? '99' : a.$2.time;
+      final tb = b.$2.time.isEmpty ? '99' : b.$2.time;
+      final c = ta.compareTo(tb);
+      return c != 0 ? c : a.$1.name.compareTo(b.$1.name);
+    });
+    return out;
+  }
+
+  /// Quantos atendimentos (que acontecem de fato) há em um dia.
+  int busyCount(DateTime day) => sessionsOn(day).where((e) => _happens(e.$2.outcome)).length;
+
+  static bool _happens(LessonOutcome o) =>
+      o == LessonOutcome.charged || o == LessonOutcome.makeUpCharged ||
+      o == LessonOutcome.makeUpNotCharged || o == LessonOutcome.credit ||
+      o == LessonOutcome.movedChargedHere || o == LessonOutcome.waived;
+
+  bool happens(LessonOutcome o) => _happens(o);
+
+  // ---------------------------------------------------------------- financeiro
+
+  final List<Expense> _expenses = [];
+  final List<ExtraIncome> _incomes = [];
+
+  /// Meta de recebimento do mês.
+  double monthlyGoal = 0;
+
+  void setGoal(double value) {
+    monthlyGoal = value < 0 ? 0 : value;
+    _changed();
+  }
+
+  List<Expense> expensesFor(DateTime month) {
+    final m = DateTime(month.year, month.month);
+    final out = <Expense>[];
+    for (final e in _expenses) {
+      final start = DateTime(e.date.year, e.date.month);
+      if (e.fixed) {
+        final ended = e.endMonth != null && !m.isBefore(e.endMonth!);
+        if (!m.isBefore(start) && !ended) {
+          out.add(e.atMonth(m));
+        }
+      } else if (start == m) {
+        out.add(e);
+      }
+    }
+    out.sort((a, b) => a.date.compareTo(b.date));
+    return out;
+  }
+
+  List<Expense> get fixedExpenses => _expenses.where((e) => e.fixed && e.endMonth == null).toList();
+
+  List<ExtraIncome> incomesFor(DateTime month) =>
+      _incomes.where((e) => e.date.year == month.year && e.date.month == month.month).toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+  void addExpense(Expense e) {
+    _expenses.add(e);
+    _changed();
+  }
+
+  /// Avulsa: apaga. Fixa: deixa de repetir a partir do mês informado.
+  void removeExpense(String id, {DateTime? fromMonth}) {
+    final i = _expenses.indexWhere((e) => e.id == id);
+    if (i < 0) return;
+    final e = _expenses[i];
+    if (e.fixed && fromMonth != null) {
+      final from = DateTime(fromMonth.year, fromMonth.month);
+      final start = DateTime(e.date.year, e.date.month);
+      if (!from.isAfter(start)) {
+        _expenses.removeAt(i);
+      } else {
+        _expenses[i] = e.endingAt(from);
+      }
+    } else {
+      _expenses.removeAt(i);
+    }
+    _changed();
+  }
+
+  void addIncome(ExtraIncome e) {
+    _incomes.add(e);
+    _changed();
+  }
+
+  void removeIncome(String id) {
+    _incomes.removeWhere((e) => e.id == id);
+    _changed();
+  }
+
+  /// Recebido de clientes no mês (pela data de competência da cobrança).
+  double clientReceived(DateTime month) =>
+      plans.fold(0.0, (s, p) => s + received(p.id, month: DateTime(month.year, month.month)));
+
+  double extraReceived(DateTime month) => incomesFor(month).fold(0.0, (s, e) => s + e.amount);
+  double expensesTotal(DateTime month) => expensesFor(month).fold(0.0, (s, e) => s + e.amount);
+  double totalIn(DateTime month) => clientReceived(month) + extraReceived(month);
+  double result(DateTime month) => totalIn(month) - expensesTotal(month);
+
+  /// Todos os pagamentos de clientes registrados no mês, com o nome do cliente.
+  List<(StudentPlan, PaymentEntry)> paymentsIn(DateTime month) {
+    final out = <(StudentPlan, PaymentEntry)>[];
+    for (final p in plans) {
+      for (final e in payments(p.id, month: DateTime(month.year, month.month))) {
+        out.add((p, e));
+      }
+    }
+    out.sort((a, b) => b.$2.date.compareTo(a.$2.date));
+    return out;
+  }
+
+  void _seedFinance(int y, int m) {
+    _expenses.clear();
+    _incomes.clear();
+    final start = DateTime(y, m - 5, 5);
+    _expenses.addAll([
+      Expense(id: 'e-aluguel', description: 'Aluguel da sala', amount: 900, date: start, fixed: true),
+      Expense(id: 'e-internet', description: 'Internet e telefone', amount: 150, date: DateTime(y, m - 5, 10), fixed: true),
+      Expense(id: 'e-contador', description: 'Contador', amount: 250, date: DateTime(y, m - 5, 20), fixed: true),
+      Expense(id: 'e-material', description: 'Material de trabalho', amount: 180, date: DateTime(y, m, 8)),
+    ]);
+    _incomes.addAll([
+      ExtraIncome(id: 'i-1', description: 'Avaliação avulsa', amount: 200, date: DateTime(y, m, 3)),
+      ExtraIncome(id: 'i-2', description: 'Palestra em empresa', amount: 600, date: DateTime(y, m - 1, 18)),
+    ]);
+    // Meta: 10% acima do previsto do mês, arredondada.
+    final expected = activePlans.fold(0.0, (s, p) => s + bill(p, month: DateTime(y, m)).total);
+    monthlyGoal = ((expected * 1.1) / 100).round() * 100.0;
+  }
+
   // ---------------------------------------------------------------- integração
 
   void _changed() {
@@ -398,6 +565,7 @@ class BillingStore extends ChangeNotifier {
         PaymentEntry(amount: _round10(ricTotal * .4), date: dueDateFor(8, y, m), method: 'Dinheiro'),
       ];
     }
+    _seedFinance(y, m);
     _syncDashboard();
     notifyListeners();
   }
@@ -516,4 +684,52 @@ class BillingStore extends ChangeNotifier {
     final day = ((h + l - 7 * m + 114) % 31) + 1;
     return DateTime(y, month, day);
   }
+}
+
+/// Despesa do profissional. Fixas se repetem todo mês até serem encerradas.
+class Expense {
+  const Expense({
+    required this.id,
+    required this.description,
+    required this.amount,
+    required this.date,
+    this.fixed = false,
+    this.endMonth,
+  });
+
+  final String id;
+  final String description;
+  final double amount;
+
+  /// Avulsa: data da despesa. Fixa: primeiro mês e dia de pagamento.
+  final DateTime date;
+  final bool fixed;
+
+  /// Fixa: primeiro mês em que ela deixa de valer.
+  final DateTime? endMonth;
+
+  /// A mesma despesa fixa, posicionada em outro mês.
+  Expense atMonth(DateTime month) {
+    final last = DateTime(month.year, month.month + 1, 0).day;
+    return Expense(
+      id: id,
+      description: description,
+      amount: amount,
+      date: DateTime(month.year, month.month, date.day > last ? last : date.day),
+      fixed: fixed,
+      endMonth: endMonth,
+    );
+  }
+
+  Expense endingAt(DateTime month) => Expense(
+        id: id, description: description, amount: amount, date: date, fixed: fixed, endMonth: month);
+}
+
+/// Ganho que não vem da cobrança mensal (avaliação avulsa, palestra...).
+class ExtraIncome {
+  const ExtraIncome({required this.id, required this.description, required this.amount, required this.date});
+  final String id;
+  final String description;
+  final double amount;
+  final DateTime date;
 }

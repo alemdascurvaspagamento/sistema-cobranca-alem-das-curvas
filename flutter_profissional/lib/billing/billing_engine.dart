@@ -169,7 +169,7 @@ class StudentPlan {
   /// Valor de cada atendimento (por atendimento ou por hora).
   double get unitPrice => model == BillingModel.hourly ? rate * durationMinutes / 60 : rate;
 
-  StudentPlan copyWith({int? dueDay, double? rate, BillingModel? model}) => StudentPlan(
+  StudentPlan copyWith({int? dueDay, double? rate, BillingModel? model, bool? active}) => StudentPlan(
         id: id,
         name: name,
         rate: rate ?? this.rate,
@@ -178,7 +178,7 @@ class StudentPlan {
         service: service,
         phone: phone,
         dueDay: dueDay ?? this.dueDay,
-        active: active,
+        active: active ?? this.active,
         model: model ?? this.model,
         durationMinutes: durationMinutes,
         packageSize: packageSize,
