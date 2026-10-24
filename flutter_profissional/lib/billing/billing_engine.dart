@@ -48,6 +48,7 @@ class LessonRecord {
     this.originDate,
     this.extra = false,
     this.note = '',
+    this.time,
   });
 
   final LessonStatus status;
@@ -65,6 +66,9 @@ class LessonRecord {
   /// Atendimento avulso, marcado fora da rotina.
   final bool extra;
   final String note;
+
+  /// Horário só desta data (ex.: '10:00'). `null` = horário fixo do dia.
+  final String? time;
 }
 
 /// O que fazer quando o cliente cancela.
@@ -442,7 +446,7 @@ MonthBill calculateMonth({
     final outcome = classify(record, d, allowHoliday: true);
     lines.add(LessonLine(
       date: d,
-      time: plan.times[d.weekday] ?? '',
+      time: record?.time ?? plan.times[d.weekday] ?? '',
       outcome: outcome,
       record: record,
       holidayName: outcome == LessonOutcome.holiday ? _holidayOn(holidays, d)?.name : null,
@@ -462,7 +466,7 @@ MonthBill calculateMonth({
       if (charged) makeUps++;
       lines.add(LessonLine(
         date: d,
-        time: '',
+        time: record.time ?? '',
         outcome: charged ? LessonOutcome.makeUpCharged : LessonOutcome.makeUpNotCharged,
         record: record,
         isMakeUp: true,
@@ -471,7 +475,7 @@ MonthBill calculateMonth({
       extras++;
       lines.add(LessonLine(
         date: d,
-        time: '',
+        time: record.time ?? '',
         outcome: classify(record, d, allowHoliday: false),
         record: record,
         isExtra: true,

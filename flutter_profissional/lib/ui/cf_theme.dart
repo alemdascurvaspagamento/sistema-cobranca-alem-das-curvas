@@ -291,7 +291,10 @@ String routineText(StudentPlan p) {
       ? names.first
       : '${names.sublist(0, names.length - 1).join(', ')} e ${names.last}';
   final times = days.map((d) => p.times[d]).whereType<String>().toSet();
-  return times.length == 1 ? '$joined às ${times.first}' : joined;
+  if (times.length == 1) return '$joined às ${times.first}';
+  if (times.isEmpty) return joined;
+  // Horários diferentes: "seg 07:00, qua 18:30".
+  return days.map((d) => '${weekdayShort[d - 1]} ${p.times[d] ?? ''}'.trim()).join(', ');
 }
 
 String capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

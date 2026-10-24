@@ -219,7 +219,15 @@ class _NewSession extends StatefulWidget {
 class _NewSessionState extends State<_NewSession> {
   final store = BillingStore.instance;
   late DateTime date = widget.initial;
+  String? time;
   String? clientId;
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 8, minute: 0));
+    if (picked != null) {
+      setState(() => time = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+    }
+  }
   String? error;
 
   Future<void> _pickDate() async {
@@ -238,7 +246,7 @@ class _NewSessionState extends State<_NewSession> {
       setState(() => error = 'Escolha com quem será ${t.theSession}.');
       return;
     }
-    final message = store.addExtra(clientId!, date);
+    final message = store.addExtra(clientId!, date, time: time);
     if (message != null) {
       setState(() => error = message);
       return;
@@ -267,6 +275,12 @@ class _NewSessionState extends State<_NewSession> {
               onPressed: _pickDate,
               icon: const Icon(Icons.event_rounded, size: 18),
               label: Text(capitalize(fullDate(date))),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _pickTime,
+              icon: const Icon(Icons.schedule_rounded, size: 18),
+              label: Text(time == null ? 'Escolher horário (opcional)' : 'Às $time'),
             ),
             const SizedBox(height: 14),
             Text('Com quem?', style: CF.body(16, weight: FontWeight.w700)),

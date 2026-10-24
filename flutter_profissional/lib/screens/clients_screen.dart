@@ -368,7 +368,11 @@ class _ClientFormState extends State<_ClientForm> {
   late final packageSize = TextEditingController(text: '${widget.plan?.packageSize ?? 10}');
   late BillingModel model = widget.plan?.model ?? ProfessionalProfile.instance.model;
   late Set<int> days = <int>{...?widget.plan?.weekdays};
-  late String time = widget.plan == null || widget.plan!.times.isEmpty ? '08:00' : widget.plan!.times.values.first;
+  /// Horário de cada dia fixo (1 = segunda ... 7 = domingo).
+  late Map<int, String> times = {...?widget.plan?.times};
+  String _lastTime = '08:00';
+
+  String _timeFor(int day) => times[day] ?? _lastTime;
   late int duration = widget.plan?.durationMinutes ?? ProfessionalProfile.instance.profession.duration;
   late int dueDay = widget.plan?.dueDay ?? 10;
   String? error;
@@ -384,17 +388,38 @@ class _ClientFormState extends State<_ClientForm> {
   double? _parseMoney(String s) =>
       double.tryParse(s.replaceAll('R\$', '').replaceAll(' ', '').replaceAll('.', '').replaceAll(',', '.'));
 
-  Future<void> _pickTime() async {
-    final parts = time.split(':');
+  Future<void> _pickTime(int day) async {
+    final parts = _timeFor(day).split(':');
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: int.tryParse(parts[0]) ?? 8, minute: int.tryParse(parts[1]) ?? 0),
-      helpText: 'Horário ${store.terms.ofSession}',
+      helpText: 'Horário de ${weekdayLong[day - 1].toLowerCase()}',
     );
     if (picked != null) {
-      setState(() => time = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+      final value = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      setState(() {
+        times[day] = value;
+        _lastTime = value;
+      });
     }
   }
+
+  void _toggleDay(int d) => setState(() {
+        if (days.remove(d)) {
+          times.remove(d);
+        } else {
+          days.add(d);
+          times[d] = _lastTime;
+        }
+      });
+
+  /// Copia o horário de um dia para todos os outros dias fixos.
+  void _sameForAll(int from) => setState(() {
+        final v = _timeFor(from);
+        for (final d in days) {
+          times[d] = v;
+        }
+      });
 
   void _save() {
     final t = store.terms;
@@ -421,7 +446,7 @@ class _ClientFormState extends State<_ClientForm> {
       rate: value,
       model: model,
       weekdays: days,
-      times: {for (final d in days) d: time},
+      times: {for (final d in days) d: _timeFor(d)},
       durationMinutes: duration,
       packageSize: size,
       packageStart: widget.plan?.packageStart ?? DateTime(today.year, today.month),
@@ -529,17 +554,41 @@ class _ClientFormState extends State<_ClientForm> {
             const SizedBox(height: 8),
             Wrap(spacing: 6, runSpacing: 6, children: [
               for (var d = 1; d <= 7; d++)
-                _chip(weekdayShort[d - 1], days.contains(d), () => setState(() {
-                      if (!days.remove(d)) days.add(d);
-                    })),
+                _chip(weekdayShort[d - 1], days.contains(d), () => _toggleDay(d)),
             ]),
             if (days.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: _pickTime,
-                icon: const Icon(Icons.schedule_rounded, size: 18),
-                label: Text('Horário: $time'),
+              const SizedBox(height: 12),
+              Text('Horário de cada dia', style: CF.body(15, weight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              Container(
+                decoration: BoxDecoration(
+                  color: CF.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: CF.line),
+                ),
+                child: Column(children: [
+                  for (final d in (days.toList()..sort())) ...[
+                    ListTile(
+                      leading: const Icon(Icons.schedule_rounded, color: CF.muted),
+                      title: Text(weekdayLong[d - 1], style: CF.body(16, weight: FontWeight.w600)),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(_timeFor(d), style: CF.score(24)),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.edit_rounded, size: 18, color: CF.blue),
+                      ]),
+                      onTap: () => _pickTime(d),
+                    ),
+                  ],
+                ]),
               ),
+              if (days.length > 1)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => _sameForAll((days.toList()..sort()).first),
+                    child: Text('Usar o horário de ${weekdayLong[(days.toList()..sort()).first - 1].toLowerCase()} em todos'),
+                  ),
+                ),
             ],
             const SizedBox(height: 18),
             Text('Vencimento', style: CF.body(16, weight: FontWeight.w700)),

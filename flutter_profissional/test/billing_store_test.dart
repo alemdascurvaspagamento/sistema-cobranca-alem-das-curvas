@@ -59,4 +59,49 @@ void main() {
     store.setActive(id, true);
     expect(store.activePlans.any((p) => p.id == id), isTrue);
   });
+
+  test('dar baixa em despesa: cada mês da fixa tem a sua baixa', () {
+    store.seed(professionById('psico'), BillingModel.perSession);
+    final m = store.selectedMonth;
+    final next = DateTime(m.year, m.month + 1);
+    store.addExpense(Expense(id: 'b', description: 'Sala', amount: 500, date: DateTime(m.year, m.month, 2), fixed: true));
+    final thisMonth = store.expensesFor(m).firstWhere((e) => e.id == 'b');
+    final nextMonth = store.expensesFor(next).firstWhere((e) => e.id == 'b');
+    final paidBefore = store.expensesPaid(m);
+    store.payExpense(thisMonth);
+    expect(store.paidAt(thisMonth), isNotNull);
+    expect(store.expenseStatus(thisMonth), ExpenseStatus.paid);
+    expect(store.paidAt(nextMonth), isNull);
+    expect(store.expensesPaid(m), paidBefore + 500);
+    store.unpayExpense(thisMonth);
+    expect(store.paidAt(thisMonth), isNull);
+  });
+
+  test('sobra do mês só desconta despesas pagas', () {
+    store.seed(professionById('psico'), BillingModel.perSession);
+    final m = store.selectedMonth;
+    expect(store.result(m), closeTo(store.totalIn(m) - store.expensesPaid(m), .001));
+    expect(store.expensesPaid(m) + store.expensesOpen(m), closeTo(store.expensesTotal(m), .001));
+  });
+
+  test('horário diferente em cada dia e só numa data', () {
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final base = store.activePlans.firstWhere((p) => p.weekdays.length >= 2);
+    final days = base.weekdays.toList()..sort();
+    final plan = StudentPlan(
+      id: base.id, name: base.name, rate: base.rate, weekdays: base.weekdays,
+      times: {days[0]: '07:00', days[1]: '18:30'},
+    );
+    store.savePlan(plan);
+    final lines = store.bill(plan).lines.where((l) => !l.isMakeUp && !l.isExtra).toList();
+    final first = lines.firstWhere((l) => l.date.weekday == days[0]);
+    final second = lines.firstWhere((l) => l.date.weekday == days[1]);
+    expect(first.time, '07:00');
+    expect(second.time, '18:30');
+    store.saveLesson(plan.id, first.date, const LessonRecord(time: '10:15'));
+    final changed = store.bill(plan).lines.firstWhere((l) => l.date == first.date);
+    expect(changed.time, '10:15');
+    final other = store.bill(plan).lines.where((l) => l.date.weekday == days[0] && l.date != first.date);
+    expect(other.every((l) => l.time == '07:00' || l.outcome != LessonOutcome.charged), isTrue);
+  });
 }

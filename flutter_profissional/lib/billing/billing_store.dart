@@ -121,12 +121,15 @@ class BillingStore extends ChangeNotifier {
       originDate: record.originDate,
       extra: previous?.extra ?? record.extra,
       note: record.note,
+      // Na remarcação, o horário escolhido vale para a nova data.
+      time: record.status == LessonStatus.moved ? previous?.time : record.time,
     );
     if (record.status == LessonStatus.moved) {
       map[dateKey(record.newDate!)] = LessonRecord(
         status: LessonStatus.rescheduled,
         originDate: dateOnly(date),
         note: 'Reposição de ${_short(date)}',
+        time: record.time,
       );
     }
     _changed();
@@ -145,26 +148,26 @@ class BillingStore extends ChangeNotifier {
       final original = map[dateKey(origin)];
       // Se a original era avulsa, ela volta como avulsa agendada.
       if (original != null && original.extra) {
-        map[dateKey(origin)] = const LessonRecord(extra: true);
+        map[dateKey(origin)] = LessonRecord(extra: true, time: original.time);
       } else {
         map.remove(dateKey(origin));
       }
     }
     if (previous != null && previous.extra && previous.status != LessonStatus.scheduled) {
       // Avulso alterado: "voltar ao normal" mantém o atendimento marcado.
-      map[key] = const LessonRecord(extra: true);
+      map[key] = LessonRecord(extra: true, time: previous.time);
     }
     _changed();
   }
 
   /// Marca um atendimento avulso. Retorna erro, ou `null`.
-  String? addExtra(String studentId, DateTime date, {String note = ''}) {
+  String? addExtra(String studentId, DateTime date, {String note = '', String? time}) {
     final map = _events.putIfAbsent(studentId, () => {});
     final key = dateKey(date);
     if (map.containsKey(key) || plan(studentId).weekdays.contains(date.weekday)) {
       return 'Já existe ${terms.theSession} nessa data.';
     }
-    map[key] = LessonRecord(extra: true, note: note);
+    map[key] = LessonRecord(extra: true, note: note, time: time);
     _changed();
     return null;
   }
@@ -219,6 +222,7 @@ class BillingStore extends ChangeNotifier {
         charge: false,
         extra: map[key]?.extra ?? false,
         note: reason,
+        time: map[key]?.time,
       );
     }
     _changed();
@@ -415,7 +419,51 @@ class BillingStore extends ChangeNotifier {
   double extraReceived(DateTime month) => incomesFor(month).fold(0.0, (s, e) => s + e.amount);
   double expensesTotal(DateTime month) => expensesFor(month).fold(0.0, (s, e) => s + e.amount);
   double totalIn(DateTime month) => clientReceived(month) + extraReceived(month);
-  double result(DateTime month) => totalIn(month) - expensesTotal(month);
+
+  // ---- baixa de despesas (cada mês de uma despesa fixa tem a sua baixa)
+
+  final Map<String, DateTime> _expensePaid = {};
+
+  String _expKey(String id, DateTime d) => '$id|${d.year}-${d.month}';
+
+  /// Data em que a despesa daquele mês foi paga, ou `null` se ainda não foi.
+  DateTime? paidAt(Expense e) => _expensePaid[_expKey(e.id, e.date)];
+
+  ExpenseStatus expenseStatus(Expense e) {
+    if (paidAt(e) != null) return ExpenseStatus.paid;
+    return dateOnly(e.date).isBefore(today) ? ExpenseStatus.overdue : ExpenseStatus.open;
+  }
+
+  void payExpense(Expense e, {DateTime? on}) {
+    _expensePaid[_expKey(e.id, e.date)] = dateOnly(on ?? today);
+    _changed();
+  }
+
+  void unpayExpense(Expense e) {
+    _expensePaid.remove(_expKey(e.id, e.date));
+    _changed();
+  }
+
+  double expensesPaid(DateTime month) =>
+      expensesFor(month).where((e) => paidAt(e) != null).fold(0.0, (s, e) => s + e.amount);
+
+  double expensesOpen(DateTime month) =>
+      expensesFor(month).where((e) => paidAt(e) == null).fold(0.0, (s, e) => s + e.amount);
+
+  /// Sobrou no mês: tudo o que entrou menos as despesas já pagas.
+  double result(DateTime month) => totalIn(month) - expensesPaid(month);
+
+  /// Contas não pagas que venceram ou vencem nos próximos [days] dias (para a Secretária).
+  List<Expense> billsDue({int days = 3}) {
+    final limit = today.add(Duration(days: days));
+    final out = <Expense>[];
+    for (var k = 2; k >= 0; k--) {
+      for (final e in expensesFor(DateTime(today.year, today.month - k))) {
+        if (paidAt(e) == null && !dateOnly(e.date).isAfter(limit)) out.add(e);
+      }
+    }
+    return out;
+  }
 
   /// Todos os pagamentos de clientes registrados no mês, com o nome do cliente.
   List<(StudentPlan, PaymentEntry)> paymentsIn(DateTime month) {
@@ -443,6 +491,16 @@ class BillingStore extends ChangeNotifier {
       ExtraIncome(id: 'i-1', description: 'Avaliação avulsa', amount: 200, date: DateTime(y, m, 3)),
       ExtraIncome(id: 'i-2', description: 'Palestra em empresa', amount: 600, date: DateTime(y, m - 1, 18)),
     ]);
+    // Baixas: meses anteriores pagos; neste mês, só o que já passou, menos o contador.
+    _expensePaid.clear();
+    for (var k = 5; k >= 0; k--) {
+      for (final e in expensesFor(DateTime(y, m - k))) {
+        final pastMonth = k > 0;
+        if (pastMonth || (e.date.isBefore(today) && e.id != 'e-contador')) {
+          _expensePaid[_expKey(e.id, e.date)] = e.date;
+        }
+      }
+    }
     // Meta: 10% acima do previsto do mês, arredondada.
     final expected = activePlans.fold(0.0, (s, p) => s + bill(p, month: DateTime(y, m)).total);
     monthlyGoal = ((expected * 1.1) / 100).round() * 100.0;
@@ -733,3 +791,5 @@ class ExtraIncome {
   final double amount;
   final DateTime date;
 }
+
+enum ExpenseStatus { paid, open, overdue }

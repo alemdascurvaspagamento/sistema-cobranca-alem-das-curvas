@@ -214,6 +214,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 onAgenda: () => go(Section.agenda),
                 onBilling: () => go(Section.cobrancas),
                 onClients: () => go(Section.clientes),
+                onFinance: () => go(Section.financeiro),
               )
             : ProfessionalDashboard(
                 demo: false,

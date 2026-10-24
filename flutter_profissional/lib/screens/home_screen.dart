@@ -8,8 +8,15 @@ import '../ui/widgets.dart';
 
 /// Início: o dia de hoje, o que precisa de atenção e o mês em uma olhada.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.onAgenda, required this.onBilling, required this.onClients});
+  const HomeScreen({
+    super.key,
+    required this.onAgenda,
+    required this.onBilling,
+    required this.onClients,
+    this.onFinance,
+  });
   final VoidCallback onAgenda, onBilling, onClients;
+  final VoidCallback? onFinance;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +27,7 @@ class HomeScreen extends StatelessWidget {
         final now = DateTime.now();
         final today = store.sessionsOn(now);
         final summary = _DaySummary(today: today, onAgenda: onAgenda);
-        final todo = _Secretary(onBilling: onBilling);
+        final todo = _Secretary(onBilling: onBilling, onFinance: onFinance);
         final agenda = _TodayAgenda(today: today, onAgenda: onAgenda);
         final month = _MonthGlance(onBilling: onBilling);
         return LayoutBuilder(builder: (context, box) {
@@ -126,8 +133,9 @@ class _DaySummary extends StatelessWidget {
 
 /// Itens que pedem ação, com o botão certo em cada um.
 class _Secretary extends StatelessWidget {
-  const _Secretary({required this.onBilling});
+  const _Secretary({required this.onBilling, this.onFinance});
   final VoidCallback onBilling;
+  final VoidCallback? onFinance;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +156,7 @@ class _Secretary extends StatelessWidget {
           title: 'Confirme ${t.theSession} das ${line.time}',
           detail: '${p.name} veio? Marque como ${t.g('realizada', 'realizado')} ou registre a falta.',
           actionLabel: t.g('Realizada', 'Realizado'),
-          onAction: () => store.saveLesson(p.id, line.date, LessonRecord(status: LessonStatus.completed, extra: line.isExtra)),
+          onAction: () => store.saveLesson(p.id, line.date, LessonRecord(status: LessonStatus.completed, extra: line.isExtra, time: line.record?.time)),
           onTap: () => openLessonEditor(context, p, line),
         ));
       }
@@ -195,6 +203,23 @@ class _Secretary extends StatelessWidget {
           ));
         }
       }
+    }
+
+    // Contas do profissional atrasadas ou vencendo nos próximos dias.
+    for (final e in store.billsDue()) {
+      final overdue = dateOnly(e.date).isBefore(today);
+      final isToday = dateOnly(e.date) == today;
+      items.add(_TodoItem(
+        icon: Icons.receipt_long_rounded,
+        color: overdue ? CF.red : CF.amber,
+        title: overdue
+            ? 'Conta atrasada: ${e.description}'
+            : (isToday ? 'Conta vence hoje: ${e.description}' : 'Conta vence em ${ddmm(e.date)}: ${e.description}'),
+        detail: '${money(e.amount)}${e.fixed ? ' · despesa fixa' : ''}. Já pagou? Dê baixa.',
+        actionLabel: 'Dar baixa',
+        onAction: () => store.payExpense(e),
+        onTap: onFinance ?? () {},
+      ));
     }
 
     return Panel(

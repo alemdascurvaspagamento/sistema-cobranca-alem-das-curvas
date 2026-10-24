@@ -67,7 +67,8 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
     final income = store.totalIn(month);
-    final out = store.expensesTotal(month);
+    final out = store.expensesPaid(month);
+    final toPay = store.expensesOpen(month);
     final result = income - out;
     final goal = store.monthlyGoal;
     final progress = goal <= 0 ? 0.0 : (income / goal).clamp(0.0, 1.0).toDouble();
@@ -85,7 +86,8 @@ class _ResultCard extends StatelessWidget {
         const SizedBox(height: 14),
         Row(children: [
           Expanded(child: _DarkStat(label: 'Entrou', value: moneyCompact(income), color: CF.mint)),
-          Expanded(child: _DarkStat(label: 'Saiu', value: moneyCompact(out), color: const Color(0xFFFF9AA2))),
+          Expanded(child: _DarkStat(label: 'Saiu (pago)', value: moneyCompact(out), color: const Color(0xFFFF9AA2))),
+          Expanded(child: _DarkStat(label: 'Contas a pagar', value: moneyCompact(toPay), color: CF.lap)),
         ]),
         const SizedBox(height: 16),
         InkWell(
@@ -173,7 +175,7 @@ class _HistoryChart extends StatelessWidget {
     final store = BillingStore.instance;
     final months = [for (var k = 5; k >= 0; k--) DateTime(month.year, month.month - k)];
     final ins = [for (final m in months) store.totalIn(m)];
-    final outs = [for (final m in months) store.expensesTotal(m)];
+    final outs = [for (final m in months) store.expensesPaid(m)];
     final top = [...ins, ...outs].fold<double>(1, (a, b) => b > a ? b : a);
     return Panel(
       title: 'Últimos 6 meses',
@@ -331,6 +333,7 @@ class _Expenses extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
     final list = store.expensesFor(month);
+    final open = store.expensesOpen(month);
     return Panel(
       title: 'Despesas',
       action: TextButton.icon(
@@ -340,27 +343,127 @@ class _Expenses extends StatelessWidget {
       ),
       child: list.isEmpty
           ? const EmptyNote(icon: Icons.receipt_long_rounded, text: 'Nenhuma despesa neste mês.')
-          : Column(children: [
-              for (final e in list)
-                _MoneyRow(
-                  title: e.description,
-                  detail: e.fixed ? '${ddmm(e.date)} · fixa, todo mês' : ddmm(e.date),
-                  value: '− ${money(e.amount)}',
-                  color: CF.red,
-                  onDelete: () => e.fixed
-                      ? _confirmRemove(
-                          context,
-                          'Parar de repetir "${e.description}"?',
-                          'Ela sai deste mês em diante. Os meses anteriores continuam como estão.',
-                          () => store.removeExpense(e.id, fromMonth: month),
-                          confirmLabel: 'Parar de repetir',
-                        )
-                      : _confirmRemove(context, 'Remover "${e.description}"?', 'O valor sai das despesas do mês.',
-                          () => store.removeExpense(e.id)),
-                ),
+          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(
+                open > 0
+                    ? 'Falta pagar ${moneyCompact(open)} de ${moneyCompact(store.expensesTotal(month))}'
+                    : 'Todas as despesas do mês estão pagas.',
+                style: CF.body(14, color: open > 0 ? CF.amber : CF.green, weight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              for (final e in list) _ExpenseRow(expense: e, month: month),
             ]),
     );
   }
+}
+
+class _ExpenseRow extends StatelessWidget {
+  const _ExpenseRow({required this.expense, required this.month});
+  final Expense expense;
+  final DateTime month;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final e = expense;
+    final status = store.expenseStatus(e);
+    final paid = store.paidAt(e);
+    final (fg, bg, label) = switch (status) {
+      ExpenseStatus.paid => (CF.green, CF.greenBg, 'Paga'),
+      ExpenseStatus.overdue => (CF.red, CF.redBg, 'Atrasada'),
+      ExpenseStatus.open => (CF.amber, CF.amberBg, 'A pagar'),
+    };
+    final detail = StringBuffer(paid != null ? 'Paga em ${ddmm(paid)}' : 'Vence em ${ddmm(e.date)}');
+    if (e.fixed) detail.write(' · fixa, todo mês');
+
+    void undo() {
+      store.unpayExpense(e);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(e.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(16, weight: FontWeight.w600)),
+              Text(detail.toString(), style: CF.body(14, color: CF.muted)),
+            ]),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(money(e.amount), style: CF.score(22, color: paid != null ? CF.muted : CF.text)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+              child: Text(label, style: CF.body(12, color: fg, weight: FontWeight.w700)),
+            ),
+          ]),
+          PopupMenuButton<String>(
+            tooltip: 'Mais ações',
+            icon: const Icon(Icons.more_vert_rounded, color: CF.muted, size: 20),
+            onSelected: (v) {
+              if (v == 'undo') undo();
+              if (v == 'date') _payOnDate(context, e);
+              if (v == 'remove') {
+                if (e.fixed) {
+                  _confirmRemove(
+                    context,
+                    'Parar de repetir "${e.description}"?',
+                    'Ela sai deste mês em diante. Os meses anteriores continuam como estão.',
+                    () => store.removeExpense(e.id, fromMonth: month),
+                    confirmLabel: 'Parar de repetir',
+                  );
+                } else {
+                  _confirmRemove(context, 'Remover "${e.description}"?', 'O valor sai das despesas do mês.',
+                      () => store.removeExpense(e.id));
+                }
+              }
+            },
+            itemBuilder: (_) => [
+              if (paid != null) const PopupMenuItem(value: 'undo', child: Text('Desfazer baixa')),
+              if (paid == null) const PopupMenuItem(value: 'date', child: Text('Dar baixa em outra data')),
+              PopupMenuItem(value: 'remove', child: Text(e.fixed ? 'Parar de repetir' : 'Remover')),
+            ],
+          ),
+        ]),
+        if (paid == null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: status == ExpenseStatus.overdue ? CF.red : CF.ink,
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                onPressed: () {
+                  store.payExpense(e);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Baixa feita: ${e.description} paga hoje.'),
+                    action: SnackBarAction(label: 'Desfazer', onPressed: undo),
+                  ));
+                },
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: const Text('Dar baixa'),
+              ),
+            ),
+          ),
+      ]),
+    );
+  }
+}
+
+Future<void> _payOnDate(BuildContext context, Expense e) async {
+  final store = BillingStore.instance;
+  final picked = await showDatePicker(
+    context: context,
+    initialDate: store.today,
+    firstDate: DateTime(e.date.year - 1),
+    lastDate: DateTime(e.date.year + 1, 12, 31),
+    helpText: 'Data do pagamento',
+  );
+  if (picked != null) store.payExpense(e, on: picked);
 }
 
 class _MoneyRow extends StatelessWidget {

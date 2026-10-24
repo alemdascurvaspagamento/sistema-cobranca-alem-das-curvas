@@ -790,6 +790,52 @@ class _LessonEditorState extends State<_LessonEditor> {
 
   bool get _cancelChargeValue => charge ?? store.rules.cancel != CancelRule.waive;
 
+  /// Horário só desta data; `null` usa o horário fixo do dia.
+  late String? timeOverride = widget.line.record?.time;
+  String? get _routineTime => widget.plan.times[widget.line.date.weekday];
+
+  Future<void> _pickTime() async {
+    final current = timeOverride ?? _routineTime ?? '08:00';
+    final parts = current.split(':');
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: int.tryParse(parts[0]) ?? 8, minute: int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0),
+      helpText: status == LessonStatus.moved ? 'Horário na nova data' : 'Horário só nesta data',
+    );
+    if (picked != null) {
+      setState(() => timeOverride =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+    }
+  }
+
+  Widget _timeRow() {
+    final effective = timeOverride ?? _routineTime;
+    final custom = timeOverride != null && timeOverride != _routineTime;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: CF.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: CF.line),
+      ),
+      child: Row(children: [
+        const Icon(Icons.schedule_rounded, size: 20, color: CF.muted),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(effective == null ? 'Sem horário definido' : 'Horário: $effective',
+                style: CF.body(16, weight: FontWeight.w700)),
+            if (custom && _routineTime != null)
+              Text('Só nesta data. O fixo é $_routineTime.', style: CF.body(13, color: CF.muted)),
+          ]),
+        ),
+        if (custom && _routineTime != null)
+          TextButton(onPressed: () => setState(() => timeOverride = null), child: const Text('Usar o fixo')),
+        TextButton(onPressed: _pickTime, child: const Text('Mudar')),
+      ]),
+    );
+  }
+
   static bool _isPlainExtra(LessonRecord r) =>
       r.extra && r.status == LessonStatus.scheduled && !r.credit && r.charge == null;
 
@@ -829,6 +875,7 @@ class _LessonEditorState extends State<_LessonEditor> {
       credit: status == LessonStatus.moved || status == LessonStatus.cancelled ? false : credit,
       newDate: status == LessonStatus.moved ? newDate : null,
       note: note.text.trim(),
+      time: timeOverride == _routineTime && status != LessonStatus.moved ? null : timeOverride,
     );
     final message = store.saveLesson(widget.plan.id, widget.line.date, record);
     if (message != null) {
@@ -896,6 +943,8 @@ class _LessonEditorState extends State<_LessonEditor> {
                 ),
             ]),
             const SizedBox(height: 12),
+            _timeRow(),
+            const SizedBox(height: 10),
             if (status == LessonStatus.cancelled)
               _SwitchBox(
                 title: 'Cobrar ${_t.g('esta', 'este')} ${_t.session}',
