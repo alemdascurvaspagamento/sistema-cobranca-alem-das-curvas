@@ -40,7 +40,7 @@ void main() {
           ),
         ));
         await tester.pump();
-        expect(tester.takeException(), isNull);
+        // Se algo estourar, o próprio Flutter falha o teste mostrando o arquivo e a linha.
       });
     }
   }
@@ -54,9 +54,9 @@ void main() {
     ));
     await tester.tap(find.text('Semana'));
     await tester.pump();
-    expect(tester.takeException(), isNull);
+    await tester.pump();
     await tester.tap(find.text('Mês'));
     await tester.pump();
-    expect(tester.takeException(), isNull);
+    await tester.pump();
   });
 }

@@ -204,7 +204,10 @@ class StatusPill extends StatelessWidget {
           color: fg,
         ),
         const SizedBox(width: 5),
-        Text(status.label, style: CF.body(13, color: fg, weight: FontWeight.w700)),
+        Flexible(
+          child: Text(status.label,
+              maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(13, color: fg, weight: FontWeight.w700)),
+        ),
       ]),
     );
   }

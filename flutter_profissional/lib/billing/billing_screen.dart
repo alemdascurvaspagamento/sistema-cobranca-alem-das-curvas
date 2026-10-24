@@ -463,7 +463,7 @@ class _BillingTable extends StatelessWidget {
         const TableCol('Falta', flex: 2, end: true),
         const TableCol('Vence', flex: 1),
         const TableCol('Situação', flex: 2),
-        const TableCol('', width: 226, end: true),
+        const TableCol('', width: 300, end: true),
       ],
       highlight: (i) => statuses[i] == BillStatus.overdue,
       onTapRow: (i) => openBillDetail(context, plans[i]),
@@ -488,7 +488,7 @@ class _BillingTable extends StatelessWidget {
               Text(ddmm(store.dueDate(p)),
                   style: CF.body(15, color: st == BillStatus.overdue ? CF.red : CF.text, weight: FontWeight.w600)),
               StatusPill(st),
-              Row(mainAxisSize: MainAxisSize.min, children: [
+              FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Row(mainAxisSize: MainAxisSize.min, children: [
                 if (unpaid) ...[
                   OutlinedButton(
                     onPressed: () => openPaymentSheet(context, p),
@@ -508,7 +508,7 @@ class _BillingTable extends StatelessWidget {
                   ),
                 ],
                 _MoreMenu(plan: p),
-              ]),
+              ])),
             ];
           }(),
       ],
