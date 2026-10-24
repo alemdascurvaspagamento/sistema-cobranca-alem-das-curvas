@@ -106,7 +106,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Instalar o Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
