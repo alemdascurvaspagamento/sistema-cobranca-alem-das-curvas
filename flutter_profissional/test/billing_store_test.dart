@@ -104,4 +104,18 @@ void main() {
     final other = store.bill(plan).lines.where((l) => l.date.weekday == days[0] && l.date != first.date);
     expect(other.every((l) => l.time == '07:00' || l.outcome != LessonOutcome.charged), isTrue);
   });
+
+  test('calendário do mês bate com a lista de cada dia', () {
+    for (final id in ['personal', 'medico', 'fisio']) {
+      store.seed(professionById(id), professionById(id).defaultModel);
+      final m = store.selectedMonth;
+      final month = store.sessionsInMonth(m);
+      for (var d = 1; d <= daysInMonth(m.year, m.month); d++) {
+        final day = DateTime(m.year, m.month, d);
+        final fromMonth = (month[day] ?? const []).map((e) => '${e.$1.id}|${e.$2.time}|${e.$2.outcome}').toList();
+        final fromDay = store.sessionsOn(day).map((e) => '${e.$1.id}|${e.$2.time}|${e.$2.outcome}').toList();
+        expect(fromMonth, fromDay, reason: '$id em ${dateKey(day)}');
+      }
+    }
+  });
 }

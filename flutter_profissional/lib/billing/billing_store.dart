@@ -331,6 +331,27 @@ class BillingStore extends ChangeNotifier {
     return out;
   }
 
+  /// Atendimentos de um mês inteiro, agrupados por dia e ordenados por horário.
+  /// Calcula cada cliente uma vez só (mais rápido que [sessionsOn] dia a dia).
+  Map<DateTime, List<(StudentPlan, LessonLine)>> sessionsInMonth(DateTime month) {
+    final m = DateTime(month.year, month.month);
+    final out = <DateTime, List<(StudentPlan, LessonLine)>>{};
+    for (final p in activePlans) {
+      for (final line in bill(p, month: m).lines) {
+        out.putIfAbsent(dateOnly(line.date), () => []).add((p, line));
+      }
+    }
+    for (final list in out.values) {
+      list.sort((a, b) {
+        final ta = a.$2.time.isEmpty ? '99' : a.$2.time;
+        final tb = b.$2.time.isEmpty ? '99' : b.$2.time;
+        final c = ta.compareTo(tb);
+        return c != 0 ? c : a.$1.name.compareTo(b.$1.name);
+      });
+    }
+    return out;
+  }
+
   /// Quantos atendimentos (que acontecem de fato) há em um dia.
   int busyCount(DateTime day) => sessionsOn(day).where((e) => _happens(e.$2.outcome)).length;
 
