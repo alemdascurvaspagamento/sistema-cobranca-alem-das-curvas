@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../demo_ledger.dart';
 import '../ui/cf_theme.dart';
+import '../ui/widgets.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
 
@@ -24,6 +25,7 @@ class BillingScreen extends StatefulWidget {
 class _BillingScreenState extends State<BillingScreen> {
   final store = BillingStore.instance;
   _Filter filter = _Filter.all;
+  bool table = true;
 
   bool _matches(StudentPlan p) {
     final s = store.status(p);
@@ -77,11 +79,31 @@ class _BillingScreenState extends State<BillingScreen> {
             _EmptyState(filter: filter, onShowAll: () => setState(() => filter = _Filter.all))
           else
             LayoutBuilder(builder: (context, box) {
-              final columns = box.maxWidth >= 980 ? 2 : 1;
+              final wide = box.maxWidth >= 980;
+              if (wide && table) {
+                return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: LayoutToggle(table: table, onChanged: (v) => setState(() => table = v)),
+                  ),
+                  const SizedBox(height: 10),
+                  _BillingTable(plans: shown),
+                ]);
+              }
+              final columns = wide ? 2 : 1;
               const gap = 12.0;
               final w = (box.maxWidth - gap * (columns - 1)) / columns;
-              return Wrap(spacing: gap, runSpacing: gap, children: [
-                for (final p in shown) SizedBox(width: w, child: StudentBillCard(plan: p)),
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                if (wide) ...[
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: LayoutToggle(table: table, onChanged: (v) => setState(() => table = v)),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                Wrap(spacing: gap, runSpacing: gap, children: [
+                  for (final p in shown) SizedBox(width: w, child: StudentBillCard(plan: p)),
+                ]),
               ]);
             }),
           const SizedBox(height: 16),
@@ -415,6 +437,91 @@ class _PartialBar extends StatelessWidget {
         Text('Recebido ${money(received)} · falta ${money(remaining)}',
             style: CF.body(14, color: CF.amber, weight: FontWeight.w600)),
       ]);
+}
+
+/// Cobranças em tabela, para o computador.
+class _BillingTable extends StatelessWidget {
+  const _BillingTable({required this.plans});
+  final List<StudentPlan> plans;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = _t;
+    final bills = [for (final p in plans) store.bill(p)];
+    final statuses = [for (final p in plans) store.status(p)];
+    double sum(double Function(int i) f) => [for (var i = 0; i < plans.length; i++) f(i)].fold(0.0, (a, b) => a + b);
+    final total = sum((i) => bills[i].total);
+    final received = sum((i) => store.received(plans[i].id));
+    final open = sum((i) => store.remaining(plans[i]));
+    return WideTable(
+      columns: [
+        TableCol(t.clientTitle, flex: 4),
+        const TableCol('Cálculo', flex: 4),
+        const TableCol('Valor do mês', flex: 2, end: true),
+        const TableCol('Recebido', flex: 2, end: true),
+        const TableCol('Falta', flex: 2, end: true),
+        const TableCol('Vence', flex: 1),
+        const TableCol('Situação', flex: 2),
+        const TableCol('', width: 226, end: true),
+      ],
+      highlight: (i) => statuses[i] == BillStatus.overdue,
+      onTapRow: (i) => openBillDetail(context, plans[i]),
+      rows: [
+        for (var i = 0; i < plans.length; i++)
+          () {
+            final p = plans[i];
+            final b = bills[i];
+            final st = statuses[i];
+            final unpaid = st != BillStatus.paid && st != BillStatus.nothing;
+            final left = store.remaining(p);
+            return <Widget>[
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(16, weight: FontWeight.w700)),
+                Text(p.service, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(13, color: CF.muted)),
+              ]),
+              Text(billSummary(b, t), maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(14, color: CF.muted)),
+              Text(money(b.total), style: CF.score(22)),
+              Text(money(store.received(p.id)), style: CF.body(15, color: CF.green, weight: FontWeight.w600)),
+              Text(left > 0 ? money(left) : '—',
+                  style: CF.body(15, color: left > 0 ? CF.amber : CF.muted, weight: FontWeight.w600)),
+              Text(ddmm(store.dueDate(p)),
+                  style: CF.body(15, color: st == BillStatus.overdue ? CF.red : CF.text, weight: FontWeight.w600)),
+              StatusPill(st),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                if (unpaid) ...[
+                  OutlinedButton(
+                    onPressed: () => openPaymentSheet(context, p),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
+                    child: const Text('Recebi'),
+                  ),
+                  const SizedBox(width: 6),
+                  FilledButton.icon(
+                    onPressed: () => openWhatsAppBilling(context, p),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: CF.whatsapp,
+                      minimumSize: const Size(0, 38),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    icon: const Icon(Icons.chat_rounded, size: 16),
+                    label: const Text('Cobrar'),
+                  ),
+                ],
+                _MoreMenu(plan: p),
+              ]),
+            ];
+          }(),
+      ],
+      footer: [
+        Text('Total · ${plans.length} ${plans.length == 1 ? t.client : t.clients}',
+            style: CF.body(15, weight: FontWeight.w700)),
+        const SizedBox(),
+        Text(money(total), style: CF.score(22)),
+        Text(money(received), style: CF.body(15, color: CF.green, weight: FontWeight.w700)),
+        Text(money(open), style: CF.body(15, color: CF.amber, weight: FontWeight.w700)),
+      ],
+    );
+  }
 }
 
 class _MoreMenu extends StatelessWidget {

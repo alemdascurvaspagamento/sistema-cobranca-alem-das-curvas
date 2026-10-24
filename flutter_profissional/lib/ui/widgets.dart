@@ -176,3 +176,105 @@ String greetingFor(DateTime now) {
 
 String fullDate(DateTime d) =>
     '${weekdayLong[d.weekday - 1]}, ${d.day} de ${monthNames[d.month - 1]}';
+
+/// Coluna de uma [WideTable]: título, largura relativa e alinhamento.
+class TableCol {
+  const TableCol(this.label, {this.flex = 2, this.end = false, this.width});
+  final String label;
+  final int flex;
+
+  /// Alinha à direita (bom para valores em reais).
+  final bool end;
+
+  /// Largura fixa em pixels (substitui o [flex]).
+  final double? width;
+}
+
+/// Tabela para telas grandes (computador). Cada linha pode ser tocada.
+class WideTable extends StatelessWidget {
+  const WideTable({super.key, required this.columns, required this.rows, this.onTapRow, this.footer, this.highlight});
+  final List<TableCol> columns;
+  final List<List<Widget>> rows;
+  final void Function(int index)? onTapRow;
+
+  /// Linha de totais, opcional.
+  final List<Widget>? footer;
+
+  /// Linhas com fundo de alerta (ex.: atrasados).
+  final bool Function(int index)? highlight;
+
+  Widget _cell(TableCol c, Widget child) {
+    final aligned = Align(alignment: c.end ? Alignment.centerRight : Alignment.centerLeft, child: child);
+    final padded = Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: aligned);
+    return c.width != null ? SizedBox(width: c.width, child: padded) : Expanded(flex: c.flex, child: padded);
+  }
+
+  Widget _row(List<Widget> cells) => Row(children: [
+        for (var i = 0; i < columns.length; i++) _cell(columns[i], i < cells.length ? cells[i] : const SizedBox()),
+      ]);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CF.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: CF.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Container(
+          color: CF.bg,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: _row([
+            for (final c in columns) Text(c.label, style: CF.body(13, color: CF.muted, weight: FontWeight.w700)),
+          ]),
+        ),
+        for (var r = 0; r < rows.length; r++) ...[
+          if (r > 0) const Divider(height: 1),
+          Material(
+            color: (highlight?.call(r) ?? false) ? CF.redBg.withValues(alpha: .45) : CF.surface,
+            child: InkWell(
+              onTap: onTapRow == null ? null : () => onTapRow!(r),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: _row(rows[r]),
+              ),
+            ),
+          ),
+        ],
+        if (footer != null)
+          Container(
+            decoration: const BoxDecoration(color: CF.bg, border: Border(top: BorderSide(color: CF.line))),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: _row(footer!),
+          ),
+      ]),
+    );
+  }
+}
+
+/// Alternância Cartões / Tabela, mostrada só em telas grandes.
+class LayoutToggle extends StatelessWidget {
+  const LayoutToggle({super.key, required this.table, required this.onChanged});
+  final bool table;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SegmentedButton<bool>(
+        showSelectedIcon: false,
+        segments: const [
+          ButtonSegment(value: true, icon: Icon(Icons.table_rows_rounded), label: Text('Tabela')),
+          ButtonSegment(value: false, icon: Icon(Icons.grid_view_rounded), label: Text('Cartões')),
+        ],
+        selected: {table},
+        onSelectionChanged: (v) => onChanged(v.first),
+        style: ButtonStyle(
+          foregroundColor:
+              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : CF.ink),
+          backgroundColor:
+              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? CF.ink : CF.surface),
+          side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
+        ),
+      );
+}

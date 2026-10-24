@@ -21,6 +21,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   final store = BillingStore.instance;
   String query = '';
   bool archived = false;
+  bool table = true;
 
   @override
   Widget build(BuildContext context) {
@@ -87,15 +88,81 @@ class _ClientsScreenState extends State<ClientsScreen> {
             )
           else
             LayoutBuilder(builder: (context, box) {
-              final columns = box.maxWidth >= 980 ? 2 : 1;
+              final wide = box.maxWidth >= 980;
+              final toggle = Align(
+                alignment: Alignment.centerRight,
+                child: LayoutToggle(table: table, onChanged: (v) => setState(() => table = v)),
+              );
+              if (wide && table) {
+                return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  toggle,
+                  const SizedBox(height: 10),
+                  _ClientsTable(plans: list),
+                ]);
+              }
+              final columns = wide ? 2 : 1;
               const gap = 10.0;
               final w = (box.maxWidth - gap * (columns - 1)) / columns;
-              return Wrap(spacing: gap, runSpacing: gap, children: [
-                for (final p in list) SizedBox(width: w, child: _ClientTile(plan: p)),
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                if (wide) ...[toggle, const SizedBox(height: 10)],
+                Wrap(spacing: gap, runSpacing: gap, children: [
+                  for (final p in list) SizedBox(width: w, child: _ClientTile(plan: p)),
+                ]),
               ]);
             }),
         ]);
       },
+    );
+  }
+}
+
+class _ClientsTable extends StatelessWidget {
+  const _ClientsTable({required this.plans});
+  final List<StudentPlan> plans;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = store.terms;
+    final today = store.today;
+    final current = DateTime(today.year, today.month);
+    return WideTable(
+      columns: [
+        TableCol(t.clientTitle, flex: 4),
+        const TableCol('Dias e horários', flex: 4),
+        const TableCol('Cobrança', flex: 4),
+        const TableCol('Vence', flex: 1),
+        const TableCol('WhatsApp', flex: 3),
+        const TableCol('Este mês', flex: 2),
+      ],
+      onTapRow: (i) => openClientProfile(context, plans[i].id),
+      rows: [
+        for (final p in plans)
+          <Widget>[
+            Row(children: [
+              CircleAvatar(
+                radius: 17,
+                backgroundColor: CF.greyBg,
+                child: Text(initialsOf(p.name), style: CF.body(13, weight: FontWeight.w700, color: CF.ink)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(16, weight: FontWeight.w700)),
+                  if (p.service.isNotEmpty)
+                    Text(p.service, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(13, color: CF.muted)),
+                ]),
+              ),
+            ]),
+            Text(p.hasRoutine ? routineText(p) : '${t.sessionsTitle} avuls${t.g('as', 'os')}',
+                maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(14)),
+            Text('${p.model.title} · ${planPriceText(p, t)}',
+                maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(14)),
+            Text('Dia ${p.dueDay}', style: CF.body(14)),
+            Text(p.phone.isEmpty ? '—' : _formatPhone(p.phone), style: CF.body(14, color: CF.muted)),
+            p.active ? StatusPill(store.status(p, month: current)) : Text('Arquivado', style: CF.body(14, color: CF.muted)),
+          ],
+      ],
     );
   }
 }
