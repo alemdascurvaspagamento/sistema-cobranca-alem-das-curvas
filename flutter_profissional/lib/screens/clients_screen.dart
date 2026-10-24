@@ -54,7 +54,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Row(children: [
+          Wrap(spacing: 0, runSpacing: 8, children: [
             ChoiceChip(
               label: Text('Ativos ${store.activePlans.length}'),
               selected: !archived,
