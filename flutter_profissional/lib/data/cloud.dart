@@ -5,6 +5,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
 import 'cloud_sink.dart';
+import 'subscription.dart';
 
 /// Situação da gravação: quantas mudanças estão sendo enviadas e o último erro.
 class SyncStatus {
@@ -41,9 +42,14 @@ class CloudService implements CloudSink {
         status.value = SyncStatus(pending: status.value.pending - 1);
       } catch (e) {
         debugPrint('Coach Flow: falha ao salvar: $e');
+        final text = '$e';
         status.value = SyncStatus(
           pending: status.value.pending - 1,
-          error: 'Não foi possível salvar a última alteração. Confira a internet e tente de novo.',
+          error: text.contains('cf_limite_clientes')
+              ? 'O plano Essencial vai até 15 clientes ativos. Esta alteração não foi salva.'
+              : text.contains('row-level security') || text.contains('42501')
+                  ? 'Sua conta está no modo somente leitura. Esta alteração não foi salva.'
+                  : 'Não foi possível salvar a última alteração. Confira a internet e tente de novo.',
         );
       }
     });
@@ -300,7 +306,18 @@ class CloudService implements CloudSink {
       pixTown: pr['pix_city'] as String? ?? '',
     );
     store.sink = this;
+    await refreshSubscription(store);
     return true;
+  }
+
+  /// Lê a situação da assinatura (teste, ativa, atraso, somente leitura).
+  Future<void> refreshSubscription(BillingStore store) async {
+    try {
+      final data = await db.rpc('cf_my_subscription');
+      store.setSubscription(SubscriptionInfo.fromJson(Map<String, dynamic>.from(data as Map)));
+    } catch (e) {
+      debugPrint('Coach Flow: falha ao ler a assinatura: $e');
+    }
   }
 
   /// Primeiro acesso: cria o perfil e os feriados nacionais deste ano e do próximo.

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../data/cloud_sink.dart';
 import '../data/ids.dart';
+import '../data/subscription.dart';
 import '../demo_ledger.dart';
 import '../profile/profession_profile.dart';
 import 'billing_engine.dart';
@@ -30,6 +31,38 @@ class BillingStore extends ChangeNotifier {
   /// Canal de gravação no banco. `null` na demonstração.
   CloudSink? sink;
   bool get isCloud => sink != null;
+
+  // ---- assinatura (conta real)
+
+  /// Assinatura da conta logada. `null` na demonstração.
+  SubscriptionInfo? subscription;
+
+  /// Chamado quando uma alteração é recusada (somente leitura ou limite de clientes).
+  void Function(String message)? onLocked;
+
+  bool get canEdit => !isCloud || (subscription?.canWrite ?? true);
+
+  static const lockedMessage =
+      'Sua conta está no modo somente leitura. Assine para voltar a lançar; seus dados continuam aqui.';
+
+  void setSubscription(SubscriptionInfo? info) {
+    subscription = info;
+    notifyListeners();
+  }
+
+  bool _locked() {
+    if (canEdit) return false;
+    onLocked?.call(lockedMessage);
+    return true;
+  }
+
+  bool _overClientLimit() {
+    final limit = isCloud ? subscription?.clientLimit : null;
+    if (limit == null || activePlans.length < limit) return false;
+    onLocked?.call('O plano Essencial vai até $limit ${terms.clients} ativos. '
+        'Arquive quem parou ou passe para o Profissional, com ${terms.clients} ilimitados.');
+    return true;
+  }
 
   String pixKey = '';
   String businessName = '';
@@ -189,6 +222,7 @@ class BillingStore extends ChangeNotifier {
   /// Salva a situação de um atendimento. Em remarcações, cria a reposição na
   /// nova data. Retorna uma mensagem de erro, ou `null` quando deu certo.
   String? saveLesson(String studentId, DateTime date, LessonRecord record) {
+    if (!canEdit) return lockedMessage;
     final map = _events.putIfAbsent(studentId, () => {});
     final key = dateKey(date);
     final previous = map[key];
@@ -233,6 +267,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Volta o atendimento ao normal. Se for avulso, ele é desmarcado.
   void clearLesson(String studentId, DateTime date) {
+    if (_locked()) return;
     final map = _events[studentId];
     if (map == null) return;
     final before = _snap(studentId);
@@ -259,6 +294,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Marca um atendimento avulso. Retorna erro, ou `null`.
   String? addExtra(String studentId, DateTime date, {String note = '', String? time}) {
+    if (!canEdit) return lockedMessage;
     final map = _events.putIfAbsent(studentId, () => {});
     final key = dateKey(date);
     if (map.containsKey(key) || plan(studentId).weekdays.contains(date.weekday)) {
@@ -273,6 +309,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Desmarca um atendimento avulso.
   void removeExtra(String studentId, DateTime date) {
+    if (_locked()) return;
     final map = _events[studentId];
     if (map == null) return;
     final snap = _snap(studentId);
@@ -313,6 +350,7 @@ class BillingStore extends ChangeNotifier {
   /// Marca férias: cancela os atendimentos do período sem cobrança.
   /// Retorna o estado anterior, para permitir desfazer.
   Map<String, LessonRecord?> applyVacation(String studentId, DateTime start, DateTime end, String reason) {
+    if (_locked()) return const {};
     final map = _events.putIfAbsent(studentId, () => {});
     final snap = _snap(studentId);
     final before = <String, LessonRecord?>{};
@@ -333,6 +371,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void restore(String studentId, Map<String, LessonRecord?> before) {
+    if (_locked()) return;
     final map = _events.putIfAbsent(studentId, () => {});
     final snap = _snap(studentId);
     before.forEach((key, record) {
@@ -349,6 +388,7 @@ class BillingStore extends ChangeNotifier {
   // ---------------------------------------------------------------- pagamentos
 
   void addPayment(String studentId, PaymentEntry entry, {DateTime? month}) {
+    if (_locked()) return;
     final m = month ?? selectedMonth;
     final e = entry.id.isEmpty ? entry.withId(newUuid()) : entry;
     _payments.putIfAbsent(_payKey(studentId, m), () => []).add(e);
@@ -357,6 +397,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void removeLastPayment(String studentId, {DateTime? month}) {
+    if (_locked()) return;
     final list = _payments[_payKey(studentId, month ?? selectedMonth)];
     if (list == null || list.isEmpty) return;
     final removed = list.removeLast();
@@ -365,6 +406,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void setDueDay(String studentId, int day) {
+    if (_locked()) return;
     final i = plans.indexWhere((p) => p.id == studentId);
     if (i < 0) return;
     plans[i] = plans[i].copyWith(dueDay: day);
@@ -375,6 +417,7 @@ class BillingStore extends ChangeNotifier {
   // ---------------------------------------------------------------- regras e feriados
 
   void setRules(BillingRules value) {
+    if (_locked()) return;
     rules = value;
     sink?.saveProfile({
       'cancel_rule': value.cancel.name,
@@ -385,6 +428,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void saveHoliday(Holiday h) {
+    if (_locked()) return;
     final i = holidays.indexWhere((x) => x.id == h.id);
     if (i >= 0) {
       holidays[i] = h;
@@ -397,6 +441,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void removeHoliday(String id) {
+    if (_locked()) return;
     holidays.removeWhere((h) => h.id == id);
     sink?.deleteHoliday(id);
     _changed();
@@ -408,6 +453,10 @@ class BillingStore extends ChangeNotifier {
 
   /// Cria ou atualiza o cadastro de um cliente.
   void savePlan(StudentPlan p) {
+    if (_locked()) return;
+    final at = plans.indexWhere((x) => x.id == p.id);
+    final wasActive = at >= 0 && plans[at].active;
+    if (p.active && !wasActive && _overClientLimit()) return;
     final i = plans.indexWhere((x) => x.id == p.id);
     if (i >= 0) {
       plans[i] = p;
@@ -421,6 +470,8 @@ class BillingStore extends ChangeNotifier {
 
   /// Arquiva (não apaga): o histórico continua guardado.
   void setActive(String id, bool active) {
+    if (_locked()) return;
+    if (active && _overClientLimit()) return;
     final i = plans.indexWhere((x) => x.id == id);
     if (i < 0) return;
     plans[i] = plans[i].copyWith(active: active);
@@ -583,6 +634,7 @@ class BillingStore extends ChangeNotifier {
         ..sort((a, b) => a.date.compareTo(b.date));
 
   void addExpense(Expense e) {
+    if (_locked()) return;
     _expenses.add(e);
     sink?.saveExpense(e);
     _changed();
@@ -590,6 +642,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Avulsa: apaga. Fixa: deixa de repetir a partir do mês informado.
   void removeExpense(String id, {DateTime? fromMonth}) {
+    if (_locked()) return;
     final i = _expenses.indexWhere((e) => e.id == id);
     if (i < 0) return;
     final e = _expenses[i];
@@ -632,6 +685,7 @@ class BillingStore extends ChangeNotifier {
   /// Fixa com [fromMonth]: os meses anteriores ficam como estavam e a nova versão
   /// vale daquele mês em diante (as baixas desses meses vão junto).
   void updateExpense(String id, {
+    if (_locked()) return;
     required String description,
     required double amount,
     required DateTime date,
@@ -685,6 +739,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void updateIncome(ExtraIncome e) {
+    if (_locked()) return;
     final i = _incomes.indexWhere((x) => x.id == e.id);
     if (i < 0) return;
     _incomes[i] = e;
@@ -693,12 +748,14 @@ class BillingStore extends ChangeNotifier {
   }
 
   void addIncome(ExtraIncome e) {
+    if (_locked()) return;
     _incomes.add(e);
     sink?.addIncome(e);
     _changed();
   }
 
   void removeIncome(String id) {
+    if (_locked()) return;
     _incomes.removeWhere((e) => e.id == id);
     sink?.deleteIncome(id);
     _changed();
@@ -727,6 +784,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void payExpense(Expense e, {DateTime? on}) {
+    if (_locked()) return;
     final paidOn = dateOnly(on ?? today);
     _expensePaid[_expKey(e.id, e.date)] = paidOn;
     sink?.payExpense(e.id, DateTime(e.date.year, e.date.month), paidOn);
@@ -734,6 +792,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void unpayExpense(Expense e) {
+    if (_locked()) return;
     _expensePaid.remove(_expKey(e.id, e.date));
     sink?.unpayExpense(e.id, DateTime(e.date.year, e.date.month));
     _changed();
@@ -912,6 +971,7 @@ class BillingStore extends ChangeNotifier {
   /// Recria os dados de exemplo para a profissão e a forma de cobrança escolhidas.
   void seed(ProfessionProfile prof, BillingModel model) {
     sink = null;
+    subscription = null;
     pixKey = '';
     businessName = '';
     pixName = '';

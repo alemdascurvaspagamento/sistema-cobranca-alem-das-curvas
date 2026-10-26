@@ -69,6 +69,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
         ),
       ),
+      if (cloud) ...[
+        const SizedBox(height: 14),
+        AnimatedBuilder(animation: store, builder: (context, _) => _SubscriptionPanel(store: store)),
+      ],
       const SizedBox(height: 14),
       Panel(
         title: 'Seus dados',
@@ -141,3 +145,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ]);
   }
 }
+
+/// Situação da assinatura e os planos.
+class _SubscriptionPanel extends StatelessWidget {
+  const _SubscriptionPanel({required this.store});
+  final BillingStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final sub = store.subscription;
+    final now = DateTime.now();
+    String date(DateTime? d) => d == null
+        ? ''
+        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    final (String title, String detail, Color color) = switch (sub?.state) {
+      'courtesy' => ('Conta cortesia', 'Acesso completo, sem cobrança.', CF.green),
+      'active' => (
+          'Plano ${sub!.planName}${sub.founder ? ' · fundador' : ''}',
+          sub.status == 'canceled'
+              ? 'Cancelado. Você usa até ${date(sub.currentPeriodEnd)}.'
+              : 'Em dia. Próxima cobrança em ${date(sub.currentPeriodEnd)}.',
+          CF.green,
+        ),
+      'grace' => ('Pagamento em atraso', 'Acesso garantido até ${date(sub!.currentPeriodEnd?.add(const Duration(days: 7)))}.', CF.red),
+      'read_only' => ('Somente leitura', 'Você vê e baixa seus dados. Para voltar a lançar, assine um plano.', CF.red),
+      _ => (
+          'Teste grátis',
+          sub == null
+              ? '14 dias com tudo liberado.'
+              : 'Faltam ${sub.trialDaysLeft(now)} dias (até ${date(sub.trialEndsAt)}). Tudo liberado, sem cartão.',
+          CF.amber,
+        ),
+    };
+    final t = store.terms;
+    return Panel(
+      title: 'Assinatura',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(title, style: CF.body(18, weight: FontWeight.w700, color: color)),
+        Text(detail, style: CF.body(14.5, color: CF.muted, height: 1.35)),
+        if (sub?.isCourtesy != true) ...[
+          const SizedBox(height: 12),
+          LayoutBuilder(builder: (context, box) {
+            final w = box.maxWidth >= 520 ? (box.maxWidth - 10) / 2 : box.maxWidth;
+            Widget plan(String name, String price, String what, bool highlight) => Container(
+                  width: w,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: highlight ? const Color(0xFFE9EFFA) : CF.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: highlight ? CF.ink : CF.line, width: highlight ? 2 : 1),
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(name, style: CF.body(16, weight: FontWeight.w700)),
+                    Text(price, style: CF.score(28)),
+                    Text(what, style: CF.body(14, color: CF.muted)),
+                  ]),
+                );
+            return Wrap(spacing: 10, runSpacing: 10, children: [
+              plan('Essencial', 'R\$ 29,90/mês', 'Até 15 ${t.clients} ativos', false),
+              plan('Profissional', 'R\$ 49,90/mês', '${t.clientsTitle} ilimitados', true),
+            ]);
+          }),
+          const SizedBox(height: 10),
+          Text('Plano anual com 2 meses grátis. A assinatura pelo site abre em breve; '
+              'você entra no app com este mesmo e-mail.',
+              style: CF.body(13.5, color: CF.muted, height: 1.35)),
+        ],
+      ]),
+    );
+  }
+}
+

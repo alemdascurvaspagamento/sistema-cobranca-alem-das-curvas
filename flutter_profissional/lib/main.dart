@@ -129,6 +129,9 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   /// Aviso mostrado na tela de entrar (ex.: saída por inatividade).
   String? loginNotice;
 
+  /// A tela de entrar abre no cadastro (criar conta grátis).
+  bool loginSignup = false;
+
   Future<void> _signOut({bool idle = false}) async {
     await cloud?.flush();
     BillingStore.instance.sink = null;
@@ -151,7 +154,18 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
       case _Mode.entry:
         return SalesEntry(
           onStart: () => setState(() => mode = _Mode.demoOnboarding),
-          onLogin: _cloudReady ? () => setState(() => mode = _Mode.login) : null,
+          onLogin: _cloudReady
+              ? () => setState(() {
+                    loginSignup = false;
+                    mode = _Mode.login;
+                  })
+              : null,
+          onSignup: _cloudReady
+              ? () => setState(() {
+                    loginSignup = true;
+                    mode = _Mode.login;
+                  })
+              : null,
         );
       case _Mode.demoOnboarding:
         return Onboarding(
@@ -174,6 +188,8 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
         );
       case _Mode.login:
         return LoginScreen(
+          key: ValueKey(loginSignup),
+          startSignup: loginSignup,
           notice: loginNotice,
           onBack: () => setState(() {
             loginNotice = null;
@@ -352,6 +368,94 @@ class CoachFlowShell extends StatefulWidget {
 class _CoachFlowShellState extends State<CoachFlowShell> {
   Section selected = Section.inicio;
   bool calendarSettings = false;
+
+  @override
+  void initState() {
+    super.initState();
+    BillingStore.instance.onLocked = _showLocked;
+  }
+
+  @override
+  void dispose() {
+    if (BillingStore.instance.onLocked == _showLocked) BillingStore.instance.onLocked = null;
+    super.dispose();
+  }
+
+  void _showLocked(String message) {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Não foi possível salvar'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              go(Section.mais);
+            },
+            child: const Text('Ver minha assinatura'),
+          ),
+          FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendi')),
+        ],
+      ),
+    );
+  }
+
+  /// Faixa da assinatura: teste grátis, atraso ou somente leitura.
+  Widget _subscriptionBanner() {
+    if (widget.demo) return const SizedBox.shrink();
+    final store = BillingStore.instance;
+    return AnimatedBuilder(
+      animation: store,
+      builder: (context, _) {
+        final sub = store.subscription;
+        if (sub == null) return const SizedBox.shrink();
+        final now = DateTime.now();
+        final (String text, Color fg, Color bg, IconData icon)? look = switch (sub.state) {
+          'trialing' => (
+              sub.trialDaysLeft(now) <= 1
+                  ? 'Último dia do teste grátis. Tudo continua liberado até o fim do dia.'
+                  : 'Teste grátis: faltam ${sub.trialDaysLeft(now)} dias. Tudo liberado.',
+              CF.ink,
+              CF.amberBg,
+              Icons.hourglass_bottom_rounded,
+            ),
+          'grace' => (
+              'Pagamento em atraso. Seu acesso continua por mais ${sub.graceDaysLeft(now)} '
+                  '${sub.graceDaysLeft(now) == 1 ? 'dia' : 'dias'}.',
+              CF.red,
+              CF.redBg,
+              Icons.warning_amber_rounded,
+            ),
+          'read_only' => (
+              'Modo somente leitura: você vê e baixa seus dados, mas não lança nada novo.',
+              CF.red,
+              CF.redBg,
+              Icons.lock_rounded,
+            ),
+          _ => null,
+        };
+        if (look == null) return const SizedBox.shrink();
+        final (text, fg, bg, icon) = look;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            Icon(icon, color: fg, size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text(text, style: CF.body(14.5, color: fg, weight: FontWeight.w600))),
+            TextButton(
+              onPressed: () => go(Section.mais),
+              style: TextButton.styleFrom(foregroundColor: fg),
+              child: const Text('Assinatura'),
+            ),
+          ]),
+        );
+      },
+    );
+  }
 
   void go(Section s) => setState(() {
         selected = s;
@@ -543,6 +647,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                     ),
                     children: [
                       if (widget.demo) _DemoBanner(onLogin: widget.onLogin),
+                      _subscriptionBanner(),
                       _syncBanner(),
                       Center(
                         child: ConstrainedBox(
