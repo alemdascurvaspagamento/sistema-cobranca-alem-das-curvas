@@ -72,6 +72,20 @@ class _Pitch extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (onLogin != null) ...[
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: onLogin,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: CF.ink,
+              minimumSize: const Size(0, 42),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            icon: const Icon(Icons.login_rounded, size: 18),
+            label: const Text('Entrar'),
+          ),
+        ],
       ]),
       SizedBox(height: wide ? 40 : 28),
       Text(

@@ -152,6 +152,12 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
             BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
             setState(() => mode = _Mode.entry);
           },
+          onLogin: _cloudReady
+              ? () {
+                  BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
+                  setState(() => mode = _Mode.login);
+                }
+              : null,
         );
       case _Mode.login:
         return LoginScreen(onBack: () => setState(() => mode = _Mode.entry));
@@ -183,6 +189,42 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
         );
     }
   }
+}
+
+/// Faixa da demonstração: deixa claro que os dados são de exemplo.
+class _DemoBanner extends StatelessWidget {
+  const _DemoBanner({this.onLogin});
+  final VoidCallback? onLogin;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+        decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(16)),
+        child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          runSpacing: 8,
+          spacing: 12,
+          children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.science_rounded, color: CF.ink, size: 20),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text('Demonstração: você está vendo dados de exemplo.',
+                    style: CF.body(15, color: CF.ink, weight: FontWeight.w700)),
+              ),
+            ]),
+            if (onLogin != null)
+              FilledButton.icon(
+                onPressed: onLogin,
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 14)),
+                icon: const Icon(Icons.login_rounded, size: 18),
+                label: const Text('Entrar na minha conta'),
+              ),
+          ],
+        ),
+      );
 }
 
 class _Loading extends StatelessWidget {
@@ -266,8 +308,11 @@ extension SectionDetails on Section {
 const _bottomSections = [Section.inicio, Section.agenda, Section.cobrancas, Section.clientes];
 
 class CoachFlowShell extends StatefulWidget {
-  const CoachFlowShell({super.key, this.demo = false, this.cloud, this.email, this.onLeave});
+  const CoachFlowShell({super.key, this.demo = false, this.cloud, this.email, this.onLeave, this.onLogin});
   final bool demo;
+
+  /// Demonstração: ir para a tela de entrar na conta real.
+  final VoidCallback? onLogin;
 
   /// Conta real conectada (null na demonstração).
   final CloudService? cloud;
@@ -466,12 +511,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                       vertical: desktop ? 20 : 14,
                     ),
                     children: [
-                      if (widget.demo)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Text('Demonstração com dados fictícios',
-                              textAlign: TextAlign.center, style: CF.body(13, color: CF.muted)),
-                        ),
+                      if (widget.demo) _DemoBanner(onLogin: widget.onLogin),
                       _syncBanner(),
                       Center(
                         child: ConstrainedBox(
