@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../billing/billing_screen.dart' show openPixSettings;
 import '../billing/billing_store.dart';
+import '../data/export.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
 
@@ -25,6 +26,16 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = BillingStore.instance;
+  Future<void> _download() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await downloadMyData(store);
+      messenger.showSnackBar(const SnackBar(content: Text('Planilha baixada. Procure na pasta Downloads.')));
+    } catch (e) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível baixar a planilha. Tente de novo.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cloud = store.isCloud;
@@ -57,6 +68,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
         ),
+      ),
+      const SizedBox(height: 14),
+      Panel(
+        title: 'Seus dados',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(
+            'Baixe tudo numa planilha do Excel: resumo por mês, cobranças, pagamentos, clientes, '
+            'atendimentos alterados, despesas, ganhos extras e feriados. Os dados são seus: '
+            'guarde como cópia ou leve para o contador.',
+            style: CF.body(14, color: CF.muted, height: 1.35),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              onPressed: _download,
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('Baixar meus dados (planilha)'),
+            ),
+          ),
+        ]),
       ),
       const SizedBox(height: 14),
       Panel(

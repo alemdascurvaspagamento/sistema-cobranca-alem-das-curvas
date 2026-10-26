@@ -486,6 +486,10 @@ class BillingStore extends ChangeNotifier {
   final List<Expense> _expenses = [];
   final List<ExtraIncome> _incomes = [];
 
+  /// Todas as despesas cadastradas (fixas aparecem uma vez, com o mês de início).
+  List<Expense> get allExpenses => List.unmodifiable(_expenses);
+  List<ExtraIncome> get allIncomes => List.unmodifiable(_incomes);
+
   /// Meta de recebimento do ano (como no Coach Flow Pessoal).
   double annualGoal = 0;
 
