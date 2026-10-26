@@ -381,6 +381,7 @@ class _Incomes extends StatelessWidget {
               detail: ddmm(e.date),
               value: money(e.amount),
               color: CF.green,
+              onEdit: () => _openEntrySheet(context, expense: false, income: e),
               onDelete: () => _confirmRemove(context, 'Remover "${e.description}"?', 'O valor sai das entradas do mês.',
                   () => store.removeIncome(e.id)),
             ),
@@ -467,6 +468,7 @@ class _ExpenseRow extends StatelessWidget {
             icon: const Icon(Icons.more_vert_rounded, color: CF.muted, size: 20),
             onSelected: (v) {
               if (v == 'undo') undo();
+              if (v == 'edit') _openEntrySheet(context, expense: true, editing: e, month: month);
               if (v == 'date') _payOnDate(context, e);
               if (v == 'remove') {
                 if (e.fixed) {
@@ -484,6 +486,7 @@ class _ExpenseRow extends StatelessWidget {
               }
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('Editar')),
               if (paid != null) const PopupMenuItem(value: 'undo', child: Text('Desfazer baixa')),
               if (paid == null) const PopupMenuItem(value: 'date', child: Text('Dar baixa em outra data')),
               PopupMenuItem(value: 'remove', child: Text(e.fixed ? 'Parar de repetir' : 'Remover')),
@@ -531,10 +534,17 @@ Future<void> _payOnDate(BuildContext context, Expense e) async {
 }
 
 class _MoneyRow extends StatelessWidget {
-  const _MoneyRow({required this.title, required this.detail, required this.value, required this.color, this.onDelete});
+  const _MoneyRow({
+    required this.title,
+    required this.detail,
+    required this.value,
+    required this.color,
+    this.onDelete,
+    this.onEdit,
+  });
   final String title, detail, value;
   final Color color;
-  final VoidCallback? onDelete;
+  final VoidCallback? onDelete, onEdit;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -551,8 +561,11 @@ class _MoneyRow extends StatelessWidget {
             PopupMenuButton<String>(
               tooltip: 'Mais ações',
               icon: const Icon(Icons.more_vert_rounded, color: CF.muted, size: 20),
-              onSelected: (_) => onDelete!(),
-              itemBuilder: (_) => const [PopupMenuItem(value: 'remove', child: Text('Remover'))],
+              onSelected: (v) => v == 'edit' ? onEdit?.call() : onDelete!(),
+              itemBuilder: (_) => [
+                if (onEdit != null) const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                const PopupMenuItem(value: 'remove', child: Text('Remover')),
+              ],
             ),
         ]),
       );
@@ -578,19 +591,35 @@ Future<void> _confirmRemove(BuildContext context, String title, String body, Voi
   if (ok == true) onConfirm();
 }
 
-Future<void> _openEntrySheet(BuildContext context, {required bool expense}) => showModalBottomSheet<void>(
+Future<void> _openEntrySheet(
+  BuildContext context, {
+  required bool expense,
+  Expense? editing,
+  ExtraIncome? income,
+  DateTime? month,
+}) =>
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (sheet) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheet).bottom),
-        child: _EntrySheet(expense: expense),
+        child: _EntrySheet(expense: expense, editing: editing, income: income, month: month),
       ),
     );
 
 class _EntrySheet extends StatefulWidget {
-  const _EntrySheet({required this.expense});
+  const _EntrySheet({required this.expense, this.editing, this.income, this.month});
   final bool expense;
+
+  /// Despesa sendo corrigida (como aparece no mês aberto).
+  final Expense? editing;
+
+  /// Ganho extra sendo corrigido.
+  final ExtraIncome? income;
+  final DateTime? month;
+
+  bool get isEdit => editing != null || income != null;
 
   @override
   State<_EntrySheet> createState() => _EntrySheetState();
@@ -598,11 +627,14 @@ class _EntrySheet extends StatefulWidget {
 
 class _EntrySheetState extends State<_EntrySheet> {
   final store = BillingStore.instance;
-  final description = TextEditingController();
-  final amount = TextEditingController();
-  late DateTime date = _defaultDate();
-  bool fixed = false;
+  late final description = TextEditingController(text: widget.editing?.description ?? widget.income?.description ?? '');
+  late final amount = TextEditingController(text: _amountText(widget.editing?.amount ?? widget.income?.amount));
+  late DateTime date = widget.editing?.date ?? widget.income?.date ?? _defaultDate();
+  late bool fixed = widget.editing?.fixed ?? false;
   String? error;
+
+  static String _amountText(double? v) =>
+      v == null ? '' : v.toStringAsFixed(2).replaceAll('.', ',').replaceAll(',00', '');
 
   DateTime _defaultDate() {
     final m = store.selectedMonth;
@@ -627,7 +659,7 @@ class _EntrySheetState extends State<_EntrySheet> {
     if (picked != null) setState(() => date = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     final v = double.tryParse(amount.text.replaceAll('.', '').replaceAll(',', '.'));
     if (description.text.trim().isEmpty) {
       setState(() => error = 'Escreva uma descrição.');
@@ -637,13 +669,42 @@ class _EntrySheetState extends State<_EntrySheet> {
       setState(() => error = 'Digite um valor maior que zero.');
       return;
     }
-    final id = newUuid();
-    if (widget.expense) {
-      store.addExpense(Expense(id: id, description: description.text.trim(), amount: v, date: date, fixed: fixed));
+    final text = description.text.trim();
+    final editing = widget.editing;
+    if (editing != null) {
+      final base = store.expenseById(editing.id) ?? editing;
+      final month = widget.month ?? store.selectedMonth;
+      final startedBefore = base.fixed &&
+          DateTime(month.year, month.month).isAfter(DateTime(base.date.year, base.date.month));
+      if (startedBefore) {
+        final scope = await showDialog<String>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Mudar a partir de quando?'),
+            content: Text('"${base.description}" se repete todo mês desde ${monthNames[base.date.month - 1]}.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, 'all'), child: const Text('Em todos os meses')),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, 'from'),
+                child: Text('De ${monthNames[month.month - 1]} em diante'),
+              ),
+            ],
+          ),
+        );
+        if (scope == null || !mounted) return;
+        store.updateExpense(editing.id,
+            description: text, amount: v, date: date, fixed: true, fromMonth: scope == 'from' ? month : null);
+      } else {
+        store.updateExpense(editing.id, description: text, amount: v, date: date, fixed: fixed);
+      }
+    } else if (widget.income != null) {
+      store.updateIncome(ExtraIncome(id: widget.income!.id, description: text, amount: v, date: date));
+    } else if (widget.expense) {
+      store.addExpense(Expense(id: newUuid(), description: text, amount: v, date: date, fixed: fixed));
     } else {
-      store.addIncome(ExtraIncome(id: id, description: description.text.trim(), amount: v, date: date));
+      store.addIncome(ExtraIncome(id: newUuid(), description: text, amount: v, date: date));
     }
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -655,11 +716,16 @@ class _EntrySheetState extends State<_EntrySheet> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(e ? 'Nova despesa' : 'Novo ganho extra', style: CF.body(24, weight: FontWeight.w700)),
+            Text(
+              widget.isEdit
+                  ? (e ? 'Editar despesa' : 'Editar ganho extra')
+                  : (e ? 'Nova despesa' : 'Novo ganho extra'),
+              style: CF.body(24, weight: FontWeight.w700),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: description,
-              autofocus: true,
+              autofocus: !widget.isEdit,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: 'Descrição',
@@ -678,7 +744,9 @@ class _EntrySheetState extends State<_EntrySheet> {
             OutlinedButton.icon(
               onPressed: _pickDate,
               icon: const Icon(Icons.event_rounded, size: 18),
-              label: Text(e && fixed ? 'Começa em ${ddmm(date)}' : 'Data: ${ddmm(date)}'),
+              label: Text(e && fixed
+                  ? (widget.editing?.fixed == true ? 'Vence todo dia ${date.day}' : 'Começa em ${ddmm(date)}')
+                  : 'Data: ${ddmm(date)}'),
             ),
             if (e) ...[
               const SizedBox(height: 10),
@@ -691,9 +759,13 @@ class _EntrySheetState extends State<_EntrySheet> {
                 child: SwitchListTile(
                   value: fixed,
                   activeTrackColor: CF.ink,
-                  onChanged: (v) => setState(() => fixed = v),
+                  // Para tirar a repetição de uma fixa, use "Parar de repetir".
+                  onChanged: widget.editing?.fixed == true ? null : (v) => setState(() => fixed = v),
                   title: Text('Repete todo mês', style: CF.body(16, weight: FontWeight.w700)),
-                  subtitle: Text('Para aluguel, internet, contador e outras contas fixas.',
+                  subtitle: Text(
+                      widget.editing?.fixed == true
+                          ? 'Para deixar de repetir, use "Parar de repetir" no menu da despesa.'
+                          : 'Para aluguel, internet, contador e outras contas fixas.',
                       style: CF.body(14, color: CF.muted)),
                 ),
               ),
@@ -703,7 +775,10 @@ class _EntrySheetState extends State<_EntrySheet> {
               Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),
             ],
             const SizedBox(height: 18),
-            FilledButton(onPressed: _save, child: Text(e ? 'Salvar despesa' : 'Salvar ganho')),
+            FilledButton(
+              onPressed: _save,
+              child: Text(widget.isEdit ? 'Salvar alterações' : (e ? 'Salvar despesa' : 'Salvar ganho')),
+            ),
           ]),
         ),
       ),

@@ -5,6 +5,7 @@ import '../data/ids.dart';
 import '../demo_ledger.dart';
 import '../profile/profession_profile.dart';
 import 'billing_engine.dart';
+import 'pix.dart';
 
 /// Guarda clientes, atendimentos, feriados, regras, pagamentos e finanças.
 ///
@@ -33,12 +34,72 @@ class BillingStore extends ChangeNotifier {
   String pixKey = '';
   String businessName = '';
 
+  /// Nome e cidade de quem recebe, que aparecem no app do banco ao pagar o Pix.
+  String pixName = '';
+  String pixCity = '';
+
   void setPixKey(String value) {
     pixKey = value.trim();
     DemoLedger.instance.setProfessionalPixKey(pixKey);
     sink?.saveProfile({'pix_key': pixKey});
     notifyListeners();
   }
+
+  void setPixInfo({required String key, required String name, required String city}) {
+    pixKey = key.trim();
+    pixName = name.trim();
+    pixCity = city.trim();
+    DemoLedger.instance.setProfessionalPixKey(pixKey);
+    sink?.saveProfile({'pix_key': pixKey, 'pix_name': pixName, 'pix_city': pixCity});
+    notifyListeners();
+  }
+
+  /// Código Pix "copia e cola" com o valor que falta de um cliente no mês.
+  String pixCodeFor(StudentPlan p, {DateTime? month}) {
+    final m = month ?? selectedMonth;
+    return pixPayload(
+      key: pixKey,
+      name: pixName.isNotEmpty ? pixName : businessName,
+      city: pixCity,
+      amount: remaining(p, month: m),
+      message: '${terms.sessionsTitle} ${monthNames[m.month - 1]}',
+    );
+  }
+
+  /// Primeiro mês com pagamento registrado: antes disso o app ainda não era usado.
+  DateTime? get firstPaymentMonth {
+    DateTime? first;
+    _payments.forEach((key, list) {
+      if (list.isEmpty) return;
+      final ym = key.split('|').last.split('-');
+      final m = DateTime(int.parse(ym[0]), int.parse(ym[1]));
+      if (first == null || m.isBefore(first!)) first = m;
+    });
+    return first;
+  }
+
+  /// Cobranças atrasadas por mês, nos últimos 12 meses de uso (só clientes ativos).
+  /// Meses anteriores ao primeiro pagamento registrado não contam.
+  List<({DateTime month, double amount, int count})> overdueByMonth() {
+    final out = <({DateTime month, double amount, int count})>[];
+    final current = DateTime(today.year, today.month);
+    final start = firstPaymentMonth ?? current;
+    for (var k = 0; k < 12; k++) {
+      final m = DateTime(today.year, today.month - k);
+      if (m.isBefore(start)) break;
+      var amount = 0.0;
+      var count = 0;
+      for (final p in activePlans) {
+        if (status(p, month: m) == BillStatus.overdue) {
+          amount += remaining(p, month: m);
+          count++;
+        }
+      }
+      if (count > 0) out.add((month: m, amount: amount, count: count));
+    }
+    return out;
+  }
+
 
   // ---- envio de atendimentos alterados
 
@@ -545,6 +606,88 @@ class BillingStore extends ChangeNotifier {
     _changed();
   }
 
+  Expense? expenseById(String id) {
+    for (final e in _expenses) {
+      if (e.id == id) return e;
+    }
+    return null;
+  }
+
+  void _moveExpensePaid(String fromId, DateTime fromMonth, String toId, DateTime toMonth) {
+    final old = _expKey(fromId, fromMonth);
+    final paidOn = _expensePaid.remove(old);
+    if (paidOn == null) return;
+    _expensePaid[_expKey(toId, toMonth)] = paidOn;
+    sink?.unpayExpense(fromId, DateTime(fromMonth.year, fromMonth.month));
+    sink?.payExpense(toId, DateTime(toMonth.year, toMonth.month), paidOn);
+  }
+
+  /// Corrige uma despesa.
+  ///
+  /// Avulsa (ou fixa com [fromMonth] nulo): muda a despesa inteira, em todos os meses.
+  /// Fixa com [fromMonth]: os meses anteriores ficam como estavam e a nova versão
+  /// vale daquele mês em diante (as baixas desses meses vão junto).
+  void updateExpense(String id, {
+    required String description,
+    required double amount,
+    required DateTime date,
+    required bool fixed,
+    DateTime? fromMonth,
+  }) {
+    final i = _expenses.indexWhere((e) => e.id == id);
+    if (i < 0) return;
+    final old = _expenses[i];
+    final oldStart = DateTime(old.date.year, old.date.month);
+    final from = fromMonth == null ? null : DateTime(fromMonth.year, fromMonth.month);
+    if (old.fixed && from != null && from.isAfter(oldStart)) {
+      _expenses[i] = old.endingAt(from);
+      sink?.saveExpense(_expenses[i]);
+      final next = Expense(
+        id: newUuid(),
+        description: description,
+        amount: amount,
+        date: DateTime(from.year, from.month, date.day),
+        fixed: true,
+        endMonth: old.endMonth,
+      );
+      _expenses.add(next);
+      sink?.saveExpense(next);
+      final moving = [
+        for (final k in _expensePaid.keys)
+          if (k.startsWith('$id|')) k,
+      ];
+      for (final k in moving) {
+        final ym = k.split('|').last.split('-');
+        final m = DateTime(int.parse(ym[0]), int.parse(ym[1]));
+        if (!m.isBefore(from)) _moveExpensePaid(id, m, next.id, m);
+      }
+    } else {
+      final start = old.fixed ? DateTime(old.date.year, old.date.month, date.day) : date;
+      final updated = Expense(
+        id: id,
+        description: description,
+        amount: amount,
+        date: old.fixed && fixed ? start : date,
+        fixed: fixed,
+        endMonth: fixed ? old.endMonth : null,
+      );
+      if (!old.fixed && (old.date.year != date.year || old.date.month != date.month)) {
+        _moveExpensePaid(id, old.date, id, date);
+      }
+      _expenses[i] = updated;
+      sink?.saveExpense(updated);
+    }
+    _changed();
+  }
+
+  void updateIncome(ExtraIncome e) {
+    final i = _incomes.indexWhere((x) => x.id == e.id);
+    if (i < 0) return;
+    _incomes[i] = e;
+    sink?.addIncome(e);
+    _changed();
+  }
+
   void addIncome(ExtraIncome e) {
     _incomes.add(e);
     sink?.addIncome(e);
@@ -668,6 +811,8 @@ class BillingStore extends ChangeNotifier {
     required BillingRules billingRules,
     required Terms vocabulary,
     required double goal,
+    String pixHolder = '',
+    String pixTown = '',
     required String pix,
     required String business,
   }) {
@@ -701,6 +846,8 @@ class BillingStore extends ChangeNotifier {
     annualGoal = goal;
     pixKey = pix;
     businessName = business;
+    pixName = pixHolder;
+    pixCity = pixTown;
     DemoLedger.instance.setProfessionalPixKey(pix);
     selectedMonth = DateTime(today.year, today.month);
     _syncDashboard();
@@ -763,6 +910,8 @@ class BillingStore extends ChangeNotifier {
     sink = null;
     pixKey = '';
     businessName = '';
+    pixName = '';
+    pixCity = '';
     plans.clear();
     _events.clear();
     holidays.clear();

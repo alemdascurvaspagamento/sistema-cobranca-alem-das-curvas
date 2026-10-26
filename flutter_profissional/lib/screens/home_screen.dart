@@ -31,6 +31,8 @@ class HomeScreen extends StatelessWidget {
         final todo = _Secretary(onBilling: onBilling, onFinance: onFinance);
         final agenda = _TodayAgenda(today: today, onAgenda: onAgenda);
         final month = _MonthGlance(onBilling: onBilling, onReports: onReports);
+        final late = store.overdueByMonth();
+        final overdue = late.isEmpty ? null : _OverdueCard(items: late, onBilling: onBilling);
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
           final header = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -41,6 +43,7 @@ class HomeScreen extends StatelessWidget {
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               header,
               const SizedBox(height: 16),
+              if (overdue != null) ...[overdue, const SizedBox(height: 14)],
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(
                   flex: 6,
@@ -65,6 +68,7 @@ class HomeScreen extends StatelessWidget {
           return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             header,
             const SizedBox(height: 16),
+            if (overdue != null) ...[overdue, const SizedBox(height: 14)],
             summary,
             const SizedBox(height: 14),
             todo,
@@ -387,3 +391,74 @@ class _Stat extends StatelessWidget {
         ),
       ]);
 }
+
+/// Valor em atraso, em vermelho, com um toque para ir cobrar.
+class _OverdueCard extends StatelessWidget {
+  const _OverdueCard({required this.items, required this.onBilling});
+  final List<({DateTime month, double amount, int count})> items;
+  final VoidCallback onBilling;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = store.terms;
+    final total = items.fold(0.0, (s, e) => s + e.amount);
+    void open(DateTime m) {
+      store.goToMonth(m);
+      onBilling();
+    }
+
+    return Material(
+      color: CF.redBg,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => open(items.last.month),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: CF.red.withValues(alpha: .35)),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              const Icon(Icons.warning_amber_rounded, color: CF.red),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Em atraso', style: CF.body(16, weight: FontWeight.w700, color: CF.red))),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(money(total), style: CF.score(30, color: CF.red)),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 6),
+            for (final e in items)
+              InkWell(
+                onTap: () => open(e.month),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text(
+                        '${capitalize(monthNames[e.month.month - 1])}: '
+                        '${e.count} ${e.count == 1 ? t.client : t.clients}',
+                        style: CF.body(15, color: CF.text),
+                      ),
+                    ),
+                    Text(money(e.amount), style: CF.body(15, weight: FontWeight.w700, color: CF.red)),
+                    const Icon(Icons.chevron_right_rounded, color: CF.red, size: 20),
+                  ]),
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text('Toque para ver e cobrar.', style: CF.body(13.5, color: CF.muted)),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+

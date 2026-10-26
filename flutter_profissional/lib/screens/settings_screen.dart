@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../billing/billing_screen.dart' show openPixSettings;
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
@@ -24,42 +25,38 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = BillingStore.instance;
-  late final pix = TextEditingController(text: store.pixKey);
-
-  @override
-  void dispose() {
-    pix.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final cloud = store.isCloud;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const PageTitle('Configurações'),
       const SizedBox(height: 14),
-      Panel(
-        title: 'Chave Pix',
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Aparece no resumo de cobrança enviado pelo WhatsApp.', style: CF.body(14, color: CF.muted)),
-          const SizedBox(height: 10),
-          TextField(
-            controller: pix,
-            decoration: const InputDecoration(labelText: 'CPF, e-mail, telefone ou chave aleatória'),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton(
-              onPressed: () {
-                store.setPixKey(pix.text);
-                FocusScope.of(context).unfocus();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chave Pix salva.')));
-              },
-              child: const Text('Salvar chave Pix'),
+      AnimatedBuilder(
+        animation: store,
+        builder: (context, _) => Panel(
+          title: 'Pix',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('Vai na cobrança pelo WhatsApp e gera o Pix copia e cola e o QR Code já com o valor de cada cliente.',
+                style: CF.body(14, color: CF.muted, height: 1.35)),
+            const SizedBox(height: 10),
+            if (store.pixKey.isEmpty)
+              Text('Nenhuma chave cadastrada.', style: CF.body(15, weight: FontWeight.w600))
+            else ...[
+              Text('Chave: ${store.pixKey}', style: CF.body(15, weight: FontWeight.w600)),
+              if (store.pixName.isNotEmpty || store.pixCity.isNotEmpty)
+                Text([store.pixName, store.pixCity].where((e) => e.isNotEmpty).join(' · '),
+                    style: CF.body(14, color: CF.muted)),
+            ],
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton(
+                onPressed: () => openPixSettings(context),
+                child: Text(store.pixKey.isEmpty ? 'Cadastrar Pix' : 'Alterar dados do Pix'),
+              ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ),
       const SizedBox(height: 14),
       Panel(

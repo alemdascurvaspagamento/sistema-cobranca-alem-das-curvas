@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../ui/cf_theme.dart';
@@ -404,11 +405,22 @@ class StudentBillCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => openPixSheet(context, plan),
+                    style: OutlinedButton.styleFrom(foregroundColor: CF.pix),
+                    icon: const Icon(Icons.pix_rounded, size: 18),
+                    label: const Text('Pix'),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
                   child: FilledButton.icon(
                     onPressed: () => openWhatsAppBilling(context, plan),
                     style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
                     icon: const Icon(Icons.chat_rounded, size: 18),
-                    label: const Text('Cobrar'),
+                    label: const Text('Cobrar no WhatsApp'),
                   ),
                 ),
                 _MoreMenu(plan: plan),
@@ -466,7 +478,7 @@ class _BillingTable extends StatelessWidget {
         const TableCol('Falta', flex: 2, end: true),
         const TableCol('Vence', flex: 1),
         const TableCol('Situação', flex: 2),
-        const TableCol('', width: 300, end: true),
+        const TableCol('', width: 360, end: true),
       ],
       highlight: (i) => statuses[i] == BillStatus.overdue,
       onTapRow: (i) => openBillDetail(context, plans[i]),
@@ -497,6 +509,17 @@ class _BillingTable extends StatelessWidget {
                     onPressed: () => openPaymentSheet(context, p),
                     style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
                     child: const Text('Recebi'),
+                  ),
+                  const SizedBox(width: 6),
+                  OutlinedButton.icon(
+                    onPressed: () => openPixSheet(context, p),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: CF.pix,
+                      minimumSize: const Size(0, 38),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    icon: const Icon(Icons.pix_rounded, size: 16),
+                    label: const Text('Pix'),
                   ),
                   const SizedBox(width: 6),
                   FilledButton.icon(
@@ -550,11 +573,14 @@ class _MoreMenu extends StatelessWidget {
             confirmUndoPayment(context, plan);
           case 'whatsapp':
             openWhatsAppBilling(context, plan);
+          case 'pix':
+            openPixSheet(context, plan);
         }
       },
       itemBuilder: (_) => [
         const PopupMenuItem(value: 'pay', child: Text('Registrar pagamento')),
         const PopupMenuItem(value: 'whatsapp', child: Text('Enviar resumo no WhatsApp')),
+        const PopupMenuItem(value: 'pix', child: Text('Pix com o valor')),
         const PopupMenuItem(value: 'vacation', child: Text('Férias ou ausência')),
         const PopupMenuItem(value: 'due', child: Text('Mudar dia de vencimento')),
         if (hasPayments) const PopupMenuItem(value: 'undo', child: Text('Desfazer último pagamento')),
@@ -1535,7 +1561,15 @@ String billingMessage(StudentPlan plan) {
       ..writeln('Falta: ${money(remaining)}');
   }
   b.writeln('Vencimento: ${ddmm(due)}');
-  if (pix.isNotEmpty) b.writeln('Pix: $pix');
+  if (pix.isNotEmpty) {
+    b.writeln('Pix: $pix');
+    if (remaining > 0) {
+      b
+        ..writeln()
+        ..writeln('Pix copia e cola (já com o valor):')
+        ..writeln(store.pixCodeFor(plan));
+    }
+  }
   b
     ..writeln()
     ..write('Qualquer dúvida, é só me chamar.');
@@ -1589,3 +1623,145 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Pix com valor
+// ---------------------------------------------------------------------------
+
+/// Mostra o Pix "copia e cola" e o QR Code já com o valor que falta.
+Future<void> openPixSheet(BuildContext context, StudentPlan plan) async {
+  final store = BillingStore.instance;
+  if (store.pixKey.isEmpty) {
+    final saved = await openPixSettings(context);
+    if (saved != true || !context.mounted) return;
+  }
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (sheet) => AnimatedBuilder(
+      animation: store,
+      builder: (sheet, _) {
+        final left = store.remaining(plan);
+        final code = store.pixCodeFor(plan);
+        final first = plan.name.split(' ').first;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Text('Pix de $first', style: CF.body(22, weight: FontWeight.w700)),
+                Text(
+                  left > 0
+                      ? '${money(left)} de ${monthNames[store.selectedMonth.month - 1]}. '
+                          'O valor já vai preenchido no app do banco.'
+                      : 'Nada em aberto neste mês. O Pix vai sem valor; quem paga digita.',
+                  style: CF.body(15, color: CF.muted, height: 1.35),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: CF.line),
+                    ),
+                    child: QrImageView(data: code, size: 210, backgroundColor: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text('Mostre este código para pagar na hora, pelo celular.',
+                    textAlign: TextAlign.center, style: CF.body(13.5, color: CF.muted)),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: CF.greyBg, borderRadius: BorderRadius.circular(12)),
+                  child: SelectableText(code, style: CF.body(13, color: CF.text)),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (sheet.mounted) {
+                      ScaffoldMessenger.of(sheet).showSnackBar(
+                        const SnackBar(content: Text('Código Pix copiado. É só colar na conversa.')),
+                      );
+                    }
+                  },
+                  style: FilledButton.styleFrom(backgroundColor: CF.pix),
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  label: const Text('Copiar Pix copia e cola'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheet);
+                    openWhatsAppBilling(context, plan);
+                  },
+                  icon: const Icon(Icons.chat_rounded, size: 18),
+                  label: const Text('Mandar cobrança com o Pix no WhatsApp'),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => openPixSettings(sheet),
+                  child: Text('Chave: ${store.pixKey} · alterar'),
+                ),
+              ]),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// Pede chave, nome e cidade do Pix. Retorna `true` se salvou.
+Future<bool?> openPixSettings(BuildContext context) {
+  final store = BillingStore.instance;
+  final key = TextEditingController(text: store.pixKey);
+  final name = TextEditingController(text: store.pixName.isNotEmpty ? store.pixName : store.businessName);
+  final city = TextEditingController(text: store.pixCity);
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Dados do seu Pix'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+            controller: key,
+            decoration: const InputDecoration(
+              labelText: 'Chave Pix',
+              helperText: 'CPF, CNPJ, e-mail, celular com DDD ou chave aleatória',
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: name,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Seu nome (aparece para quem paga)'),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: city,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Cidade'),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () {
+            if (key.text.trim().isEmpty) return;
+            store.setPixInfo(key: key.text, name: name.text, city: city.text);
+            Navigator.pop(ctx, true);
+          },
+          child: const Text('Salvar'),
+        ),
+      ],
+    ),
+  );
+}
+

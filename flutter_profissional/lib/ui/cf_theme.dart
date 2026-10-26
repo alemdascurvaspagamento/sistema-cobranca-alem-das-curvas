@@ -37,6 +37,7 @@ class CF {
   static const lap = Color(0xFFFFC23D);
 
   static const whatsapp = Color(0xFF1FA855);
+  static const pix = Color(0xFF00897B);
 
   /// Desligado nos testes automáticos, que não têm internet para baixar fontes.
   static bool useGoogleFonts = true;

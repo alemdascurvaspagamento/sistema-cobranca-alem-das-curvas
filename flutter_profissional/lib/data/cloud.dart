@@ -146,7 +146,7 @@ class CloudService implements CloudSink {
       () => db.from('cf_expense_payments').delete().eq('expense_id', expenseId).eq('month', _m(month)));
 
   @override
-  void addIncome(ExtraIncome e) => _enqueue(() => db.from('cf_incomes').insert({
+  void addIncome(ExtraIncome e) => _enqueue(() => db.from('cf_incomes').upsert({
         'id': e.id,
         'description': e.description,
         'amount': e.amount,
@@ -296,6 +296,8 @@ class CloudService implements CloudSink {
       goal: _num(pr['annual_goal']) > 0 ? _num(pr['annual_goal']) : _num(pr['monthly_goal']) * 12,
       pix: pr['pix_key'] as String? ?? '',
       business: pr['business_name'] as String? ?? '',
+      pixHolder: pr['pix_name'] as String? ?? '',
+      pixTown: pr['pix_city'] as String? ?? '',
     );
     store.sink = this;
     return true;

@@ -134,4 +134,39 @@ void main() {
     expect(store.monthlyGoal, 10000);
     expect(store.yearIn(m.year), greaterThanOrEqualTo(store.totalIn(m)));
   });
+
+  test('editar despesa fixa daqui em diante preserva meses anteriores e baixas', () {
+    final store = BillingStore.instance;
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final start = DateTime(store.today.year, store.today.month - 2, 10);
+    final e = Expense(id: 'aluguel-teste', description: 'Aluguel', amount: 1000, date: start, fixed: true);
+    store.addExpense(e);
+    final now = DateTime(store.today.year, store.today.month);
+    store.payExpense(store.expensesFor(now).firstWhere((x) => x.id == e.id));
+    store.updateExpense(e.id, description: 'Aluguel', amount: 1200, date: DateTime(now.year, now.month, 15), fixed: true, fromMonth: now);
+    final before = store.expensesFor(DateTime(now.year, now.month - 1)).where((x) => x.description == 'Aluguel');
+    expect(before.single.amount, 1000);
+    final current = store.expensesFor(now).where((x) => x.description == 'Aluguel').single;
+    expect(current.amount, 1200);
+    expect(current.date.day, 15);
+    expect(store.paidAt(current), isNotNull);
+    final next = store.expensesFor(DateTime(now.year, now.month + 1)).where((x) => x.description == 'Aluguel');
+    expect(next.single.amount, 1200);
+  });
+
+  test('editar ganho extra e atraso só conta depois do primeiro pagamento', () {
+    final store = BillingStore.instance;
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final g = ExtraIncome(id: 'g1', description: 'Palestra', amount: 300, date: store.today);
+    store.addIncome(g);
+    store.updateIncome(ExtraIncome(id: 'g1', description: 'Palestra empresa', amount: 450, date: store.today));
+    final list = store.incomesFor(store.today).where((x) => x.id == 'g1');
+    expect(list.single.amount, 450);
+    final first = store.firstPaymentMonth;
+    for (final o in store.overdueByMonth()) {
+      expect(first == null || !o.month.isBefore(first), isTrue);
+      expect(o.amount, greaterThan(0));
+    }
+  });
 }
+
