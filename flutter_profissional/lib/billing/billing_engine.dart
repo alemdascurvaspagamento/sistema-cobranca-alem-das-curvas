@@ -552,10 +552,15 @@ MonthBill calculateMonth({
 // ---------------------------------------------------------------------------
 
 class PaymentEntry {
-  const PaymentEntry({required this.amount, required this.date, this.method = 'Pix'});
+  const PaymentEntry({required this.amount, required this.date, this.method = 'Pix', this.id = ''});
   final double amount;
   final DateTime date;
   final String method;
+
+  /// Identificador no banco ('' nos dados de exemplo).
+  final String id;
+
+  PaymentEntry withId(String value) => PaymentEntry(amount: amount, date: date, method: method, id: value);
 }
 
 enum BillStatus { paid, partial, pending, overdue, nothing }

@@ -4,6 +4,7 @@ import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
+import '../data/ids.dart';
 
 /// Regras de cobrança e calendário de feriados do profissional.
 class RulesScreen extends StatelessWidget {
@@ -381,7 +382,7 @@ Future<void> _editHoliday(BuildContext context, Holiday? holiday) async {
   );
   if (result == 'save') {
     store.saveHoliday(Holiday(
-      id: holiday?.id ?? 'h${DateTime.now().microsecondsSinceEpoch}',
+      id: holiday?.id ?? newUuid(),
       date: dateOnly(date),
       name: name.text.trim(),
       noClass: noClass,

@@ -5,8 +5,11 @@ import 'cf_theme.dart';
 /// Tela de entrada: explica em segundos o que o Coach Flow resolve e
 /// convida a pessoa a experimentar a demonstração.
 class SalesEntry extends StatelessWidget {
-  const SalesEntry({super.key, required this.onStart});
+  const SalesEntry({super.key, required this.onStart, this.onLogin});
   final VoidCallback onStart;
+
+  /// "Já tenho conta": abre a tela de entrar. Sem ele, o botão não aparece.
+  final VoidCallback? onLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class SalesEntry extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 920;
-          final pitch = _Pitch(onStart: onStart, wide: wide);
+          final pitch = _Pitch(onStart: onStart, onLogin: onLogin, wide: wide);
           const preview = _ScoreboardPreview();
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: wide ? 56 : 22, vertical: wide ? 48 : 24),
@@ -43,8 +46,9 @@ class SalesEntry extends StatelessWidget {
 }
 
 class _Pitch extends StatelessWidget {
-  const _Pitch({required this.onStart, required this.wide});
+  const _Pitch({required this.onStart, required this.wide, this.onLogin});
   final VoidCallback onStart;
+  final VoidCallback? onLogin;
   final bool wide;
 
   @override
@@ -110,6 +114,20 @@ class _Pitch extends StatelessWidget {
           icon: const Icon(Icons.play_arrow_rounded),
           label: const Text('Experimentar agora'),
         ),
+        if (onLogin != null)
+          OutlinedButton.icon(
+            onPressed: onLogin,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
+              side: const BorderSide(color: Colors.white38, width: 1.5),
+              minimumSize: const Size(0, 56),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              textStyle: CF.body(18, weight: FontWeight.w700),
+            ),
+            icon: const Icon(Icons.login_rounded),
+            label: const Text('Já tenho conta: entrar'),
+          ),
       ]),
       const SizedBox(height: 12),
       Text('Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros '

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../demo_ledger.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
 import 'billing_engine.dart';
@@ -1506,7 +1505,7 @@ String billingMessage(StudentPlan plan) {
   final received = store.received(plan.id);
   final remaining = store.remaining(plan);
   final due = store.dueDate(plan);
-  final pix = DemoLedger.instance.professionalPixKey;
+  final pix = BillingStore.instance.pixKey;
   final first = plan.name.split(' ').first;
   final b = StringBuffer()
     ..writeln('Olá, $first! Tudo bem?')
@@ -1560,7 +1559,7 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
                 style: CF.body(15, color: CF.muted)),
             const SizedBox(height: 14),
             TextField(controller: controller, minLines: 8, maxLines: 14, style: CF.body(16)),
-            if (DemoLedger.instance.professionalPixKey.isEmpty) ...[
+            if (BillingStore.instance.pixKey.isEmpty) ...[
               const SizedBox(height: 8),
               Text('Dica: cadastre sua chave Pix em Mais › Configurações para ela aparecer aqui.',
                   style: CF.body(14, color: CF.muted)),

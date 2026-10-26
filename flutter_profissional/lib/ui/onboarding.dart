@@ -10,9 +10,12 @@ import 'cf_theme.dart';
 /// Ao terminar, o app passa a usar o vocabulário da profissão e monta
 /// clientes de exemplo com a forma de cobrança escolhida.
 class Onboarding extends StatefulWidget {
-  const Onboarding({super.key, required this.onDone, this.onBack});
+  const Onboarding({super.key, required this.onDone, this.onBack, this.onChosen});
   final VoidCallback onDone;
   final VoidCallback? onBack;
+
+  /// Conta real: recebe a escolha em vez de montar dados de exemplo.
+  final void Function(ProfessionProfile profession, BillingModel model)? onChosen;
 
   @override
   State<Onboarding> createState() => _OnboardingState();
@@ -39,6 +42,10 @@ class _OnboardingState extends State<Onboarding> {
   void _finish() {
     var p = profession!;
     if (p.id == 'outra' && otherName.text.trim().isNotEmpty) p = p.withName(otherName.text.trim());
+    if (widget.onChosen != null) {
+      widget.onChosen!(p, model);
+      return;
+    }
     ProfessionalProfile.instance.choose(p, model);
     BillingStore.instance.seed(p, model);
     widget.onDone();

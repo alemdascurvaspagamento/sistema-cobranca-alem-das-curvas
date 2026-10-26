@@ -1,30 +1,36 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'professional_agenda.dart';
-import 'booking_requests.dart';
-import 'calendar_connections.dart';
-import 'demo_modules.dart';
+
+import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
 import 'billing/rules_screen.dart';
+import 'booking_requests.dart';
+import 'calendar_connections.dart';
+import 'config.dart';
+import 'data/cloud.dart';
+import 'profile/profession_profile.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/clients_screen.dart';
 import 'screens/finance_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
-import 'ui/sales_entry.dart';
+import 'ui/login_screen.dart';
 import 'ui/onboarding.dart';
-import 'profile/profession_profile.dart';
-import 'professional_dashboard.dart';
-import 'professional_clients.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'ui/sales_entry.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const url = String.fromEnvironment('SUPABASE_URL');
-  const key = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
-  if (url.isNotEmpty && key.isNotEmpty) {
-    await Supabase.initialize(url: url, anonKey: key);
+  if (AppConfig.cloudEnabled) {
+    try {
+      await Supabase.initialize(url: AppConfig.supabaseUrl, anonKey: AppConfig.supabaseKey);
+    } catch (e) {
+      debugPrint('Coach Flow: banco indisponível ($e). Só a demonstração funciona.');
+    }
   }
   runApp(const CoachFlowApp());
 }
@@ -39,12 +45,18 @@ class CoachFlowApp extends StatelessWidget {
         theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
-        localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, GlobalWidgetsLocalizations.delegate],
-        home: Uri.base.queryParameters['agendar']=='demo'
-      ? const BookingPublicDemo() : const CoachFlowEntry(),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: Uri.base.queryParameters['agendar'] == 'demo' ? const BookingPublicDemo() : const CoachFlowEntry(),
       );
 }
 
+enum _Mode { entry, demoOnboarding, demo, login, loading, cloudOnboarding, cloud, newPassword, loadError }
+
+/// Decide o que mostrar: entrada, demonstração, login ou a conta real.
 class CoachFlowEntry extends StatefulWidget {
   const CoachFlowEntry({super.key});
   @override
@@ -52,66 +64,179 @@ class CoachFlowEntry extends StatefulWidget {
 }
 
 class _CoachFlowEntryState extends State<CoachFlowEntry> {
-  bool demo = false;
-  bool onboarding = false;
-  final email = TextEditingController();
-  final password = TextEditingController();
-  bool busy = false;
-  String? error;
+  _Mode mode = _Mode.entry;
+  CloudService? cloud;
+  StreamSubscription<AuthState>? _authSub;
+
+  bool get _cloudReady {
+    if (!AppConfig.cloudEnabled) return false;
+    try {
+      Supabase.instance.client;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
-  void dispose() { email.dispose(); password.dispose(); super.dispose(); }
+  void initState() {
+    super.initState();
+    if (!_cloudReady) return;
+    final auth = Supabase.instance.client.auth;
+    _authSub = auth.onAuthStateChange.listen((data) {
+      if (!mounted) return;
+      switch (data.event) {
+        case AuthChangeEvent.passwordRecovery:
+          setState(() => mode = _Mode.newPassword);
+        case AuthChangeEvent.signedIn:
+          if (mode == _Mode.login || mode == _Mode.entry) _load();
+        case AuthChangeEvent.signedOut:
+          setState(() => mode = _Mode.entry);
+        default:
+          break;
+      }
+    });
+    if (auth.currentSession != null) {
+      mode = _Mode.loading;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => mode = _Mode.loading);
+    final service = CloudService(Supabase.instance.client);
+    try {
+      final hasProfile = await service.load(BillingStore.instance);
+      if (!mounted) return;
+      setState(() {
+        cloud = service;
+        mode = hasProfile ? _Mode.cloud : _Mode.cloudOnboarding;
+      });
+    } catch (e) {
+      debugPrint('Coach Flow: falha ao carregar: $e');
+      if (mounted) setState(() => mode = _Mode.loadError);
+    }
+  }
+
+  Future<void> _signOut() async {
+    await cloud?.flush();
+    BillingStore.instance.sink = null;
+    await Supabase.instance.client.auth.signOut();
+    BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
+    if (mounted) setState(() => mode = _Mode.entry);
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (demo) return const CoachFlowShell(demo: true);
-    if (const String.fromEnvironment('SUPABASE_URL').isEmpty ||
-        const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY').isEmpty) {
-      if (onboarding) {
-        return Onboarding(
-          onBack: () => setState(() => onboarding = false),
-          onDone: () => setState(() {
-            onboarding = false;
-            demo = true;
-          }),
+    switch (mode) {
+      case _Mode.entry:
+        return SalesEntry(
+          onStart: () => setState(() => mode = _Mode.demoOnboarding),
+          onLogin: _cloudReady ? () => setState(() => mode = _Mode.login) : null,
         );
-      }
-      return SalesEntry(onStart: () => setState(() => onboarding = true));
+      case _Mode.demoOnboarding:
+        return Onboarding(
+          onBack: () => setState(() => mode = _Mode.entry),
+          onDone: () => setState(() => mode = _Mode.demo),
+        );
+      case _Mode.demo:
+        return CoachFlowShell(
+          demo: true,
+          onLeave: () {
+            BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
+            setState(() => mode = _Mode.entry);
+          },
+        );
+      case _Mode.login:
+        return LoginScreen(onBack: () => setState(() => mode = _Mode.entry));
+      case _Mode.newPassword:
+        return NewPasswordScreen(onDone: _load);
+      case _Mode.loading:
+        return const _Loading();
+      case _Mode.loadError:
+        return _LoadError(onRetry: _load, onSignOut: _signOut);
+      case _Mode.cloudOnboarding:
+        return Onboarding(
+          onBack: _signOut,
+          onChosen: (prof, model) async {
+            setState(() => mode = _Mode.loading);
+            try {
+              await cloud!.createProfile(BillingStore.instance, prof, model);
+              if (mounted) setState(() => mode = _Mode.cloud);
+            } catch (_) {
+              if (mounted) setState(() => mode = _Mode.loadError);
+            }
+          },
+          onDone: () {},
+        );
+      case _Mode.cloud:
+        return CoachFlowShell(
+          cloud: cloud,
+          email: Supabase.instance.client.auth.currentUser?.email,
+          onLeave: _signOut,
+        );
     }
-    final auth = Supabase.instance.client.auth;
-    return StreamBuilder<AuthState>(
-      stream: auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        if (auth.currentSession != null) return const CoachFlowShell();
-        return Scaffold(body: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(padding: const EdgeInsets.all(24), child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Coach Flow Profissional', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
-              TextField(controller: email, keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'E-mail')),
-              const SizedBox(height: 12),
-              TextField(controller: password, obscureText: true,
-                decoration: const InputDecoration(labelText: 'Senha')),
-              if (error != null) Padding(padding: const EdgeInsets.only(top: 12),
-                child: Text(error!, style: const TextStyle(color: Colors.redAccent))),
-              const SizedBox(height: 20),
-              FilledButton(onPressed: busy ? null : () async {
-                setState(() { busy = true; error = null; });
-                try {
-                  await auth.signInWithPassword(email: email.text.trim(), password: password.text);
-                } catch (_) {
-                  if (mounted) setState(() => error = 'Não foi possível entrar. Confira suas credenciais.');
-                } finally {
-                  if (mounted) setState(() => busy = false);
-                }
-              }, child: Text(busy ? 'Entrando...' : 'Entrar')),
-            ],
-          )),
-        )));
-      },
-    );
   }
+}
+
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: CF.ink,
+        body: Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const CircularProgressIndicator(color: CF.lap),
+            const SizedBox(height: 18),
+            Text('Carregando seus dados...', style: CF.body(17, color: Colors.white)),
+          ]),
+        ),
+      );
+}
+
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.onRetry, required this.onSignOut});
+  final VoidCallback onRetry, onSignOut;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: CF.ink,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.cloud_off_rounded, color: CF.lap, size: 48),
+                const SizedBox(height: 14),
+                Text('Não foi possível carregar seus dados.', textAlign: TextAlign.center,
+                    style: CF.body(20, color: Colors.white, weight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Text('Confira a internet e tente de novo. Nada foi perdido.', textAlign: TextAlign.center,
+                    style: CF.body(16, color: Colors.white70)),
+                const SizedBox(height: 18),
+                FilledButton(
+                  onPressed: onRetry,
+                  style: FilledButton.styleFrom(backgroundColor: CF.lap, foregroundColor: CF.ink),
+                  child: const Text('Tentar de novo'),
+                ),
+                TextButton(
+                  onPressed: onSignOut,
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                  child: const Text('Sair da conta'),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      );
 }
 
 enum Section { inicio, agenda, cobrancas, clientes, financeiro, regras, mais }
@@ -141,8 +266,15 @@ extension SectionDetails on Section {
 const _bottomSections = [Section.inicio, Section.agenda, Section.cobrancas, Section.clientes];
 
 class CoachFlowShell extends StatefulWidget {
-  const CoachFlowShell({super.key, this.demo = false});
+  const CoachFlowShell({super.key, this.demo = false, this.cloud, this.email, this.onLeave});
   final bool demo;
+
+  /// Conta real conectada (null na demonstração).
+  final CloudService? cloud;
+  final String? email;
+
+  /// Sair da conta ou da demonstração.
+  final VoidCallback? onLeave;
 
   @override
   State<CoachFlowShell> createState() => _CoachFlowShellState();
@@ -162,6 +294,14 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       fullscreenDialog: true,
       builder: (routeContext) => Onboarding(
         onBack: () => Navigator.of(routeContext).pop(),
+        // Na conta real só muda profissão e vocabulário; os dados continuam.
+        onChosen: widget.demo
+            ? null
+            : (prof, model) {
+                ProfessionalProfile.instance.choose(prof, model);
+                BillingStore.instance.applyProfession(prof, model);
+                Navigator.of(routeContext).pop();
+              },
         onDone: () {
           Navigator.of(routeContext).pop();
           if (mounted) go(Section.inicio);
@@ -206,46 +346,28 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   }
 
   Widget _content() {
-    final demo = widget.demo;
     switch (selected) {
       case Section.inicio:
-        return demo
-            ? HomeScreen(
-                onAgenda: () => go(Section.agenda),
-                onBilling: () => go(Section.cobrancas),
-                onClients: () => go(Section.clientes),
-                onFinance: () => go(Section.financeiro),
-              )
-            : ProfessionalDashboard(
-                demo: false,
-                onClients: () => go(Section.clientes),
-                onAgenda: () => go(Section.agenda),
-                onBilling: () => go(Section.cobrancas),
-                onFinance: () => go(Section.financeiro),
-                onSecretary: () => go(Section.inicio),
-              );
+        return HomeScreen(
+          onAgenda: () => go(Section.agenda),
+          onBilling: () => go(Section.cobrancas),
+          onClients: () => go(Section.clientes),
+          onFinance: () => go(Section.financeiro),
+        );
       case Section.agenda:
-        return demo
-            ? const Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                AgendaScreen(),
-                SizedBox(height: 18),
-                BookingManagementDemo(),
-              ])
-            : const ProfessionalAgenda();
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const AgendaScreen(),
+          // O link de agendamento ainda é só demonstração.
+          if (widget.demo) ...[const SizedBox(height: 18), const BookingManagementDemo()],
+        ]);
       case Section.cobrancas:
-        return demo
-            ? BillingScreen(onOpenRules: () => go(Section.regras))
-            : _panel('Cobranças', 'Disponível após conectar o banco de dados.');
+        return BillingScreen(onOpenRules: () => go(Section.regras));
       case Section.clientes:
-        return demo ? const ClientsScreen() : const ProfessionalClients();
+        return const ClientsScreen();
       case Section.financeiro:
-        return demo
-            ? FinanceScreen(onBilling: () => go(Section.cobrancas))
-            : _panel('Financeiro', 'Disponível após conectar o banco de dados.');
+        return FinanceScreen(onBilling: () => go(Section.cobrancas));
       case Section.regras:
-        return demo
-            ? RulesScreen(onChangeProfession: _changeProfession)
-            : _panel('Regras de cobrança', 'Disponível após conectar o banco de dados.');
+        return RulesScreen(onChangeProfession: _changeProfession);
       case Section.mais:
         if (calendarSettings) {
           return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -260,24 +382,35 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             const CalendarConnections(),
           ]);
         }
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Configurações', style: CF.body(28, weight: FontWeight.w700)),
-          const SizedBox(height: 14),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.sync_rounded, color: CF.ink),
-              title: const Text('Sincronização de calendários'),
-              subtitle: const Text('Apple, Google e privacidade dos compromissos'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => setState(() => calendarSettings = true),
-            ),
-          ),
-          if (demo)
-            const DemoMore()
-          else
-            _panel('Configurações', 'Perfil, serviços, relatórios e preferências.'),
-        ]);
+        return SettingsScreen(
+          onCalendarSync: () => setState(() => calendarSettings = true),
+          email: widget.email,
+          onSignOut: widget.demo ? null : widget.onLeave,
+          onLeaveDemo: widget.demo ? widget.onLeave : null,
+        );
     }
+  }
+
+  /// Aviso discreto quando uma gravação falha.
+  Widget _syncBanner() {
+    final cloud = widget.cloud;
+    if (cloud == null) return const SizedBox.shrink();
+    return ValueListenableBuilder<SyncStatus>(
+      valueListenable: cloud.status,
+      builder: (context, st, _) {
+        if (st.error == null) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: CF.redBg, borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            const Icon(Icons.cloud_off_rounded, color: CF.red),
+            const SizedBox(width: 10),
+            Expanded(child: Text(st.error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600))),
+          ]),
+        );
+      },
+    );
   }
 
   @override
@@ -339,6 +472,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                           child: Text('Demonstração com dados fictícios',
                               textAlign: TextAlign.center, style: CF.body(13, color: CF.muted)),
                         ),
+                      _syncBanner(),
                       Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 1180),
@@ -376,17 +510,4 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         }),
       );
 
-  Widget _panel(String title, String description) => Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: CF.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: CF.line),
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: CF.body(22, weight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Text(description, style: CF.body(15, color: CF.muted)),
-        ]),
-      );
 }

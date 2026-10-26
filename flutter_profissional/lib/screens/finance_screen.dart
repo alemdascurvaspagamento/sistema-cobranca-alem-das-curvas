@@ -5,6 +5,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
+import '../data/ids.dart';
 
 /// Financeiro: quanto entrou, quanto saiu e o que sobrou no mês.
 class FinanceScreen extends StatelessWidget {
@@ -573,7 +574,7 @@ class _EntrySheetState extends State<_EntrySheet> {
       setState(() => error = 'Digite um valor maior que zero.');
       return;
     }
-    final id = '${widget.expense ? 'e' : 'i'}${DateTime.now().microsecondsSinceEpoch}';
+    final id = newUuid();
     if (widget.expense) {
       store.addExpense(Expense(id: id, description: description.text.trim(), amount: v, date: date, fixed: fixed));
     } else {

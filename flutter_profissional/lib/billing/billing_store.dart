@@ -1,13 +1,15 @@
 import 'package:flutter/foundation.dart';
 
+import '../data/cloud_sink.dart';
+import '../data/ids.dart';
 import '../demo_ledger.dart';
 import '../profile/profession_profile.dart';
 import 'billing_engine.dart';
 
-/// Guarda clientes, atendimentos, feriados, regras e pagamentos da demonstração.
+/// Guarda clientes, atendimentos, feriados, regras, pagamentos e finanças.
 ///
-/// Tudo fica só na memória desta sessão. Na Etapa 3, esta classe passa a ler e
-/// gravar no banco, mantendo o mesmo motor de cálculo.
+/// Na demonstração, tudo fica só na memória. Com login, os dados são carregados
+/// do banco ([replaceAll]) e cada mudança é enviada pelo [sink].
 class BillingStore extends ChangeNotifier {
   BillingStore._() {
     seed(professionById('personal'), BillingModel.perSession);
@@ -23,6 +25,36 @@ class BillingStore extends ChangeNotifier {
   final Map<String, List<PaymentEntry>> _payments = {};
   BillingRules rules = const BillingRules();
   Terms terms = Terms.generic;
+
+  /// Canal de gravação no banco. `null` na demonstração.
+  CloudSink? sink;
+  bool get isCloud => sink != null;
+
+  String pixKey = '';
+  String businessName = '';
+
+  void setPixKey(String value) {
+    pixKey = value.trim();
+    DemoLedger.instance.setProfessionalPixKey(pixKey);
+    sink?.saveProfile({'pix_key': pixKey});
+    notifyListeners();
+  }
+
+  // ---- envio de atendimentos alterados
+
+  Map<String, LessonRecord> _snap(String id) => Map.of(_events[id] ?? const {});
+
+  void _pushEvents(String id, Map<String, LessonRecord> before) {
+    final s = sink;
+    if (s == null) return;
+    final after = _events[id] ?? const <String, LessonRecord>{};
+    final up = <String, LessonRecord>{};
+    after.forEach((k, v) {
+      if (!identical(before[k], v)) up[k] = v;
+    });
+    final del = [for (final k in before.keys) if (!after.containsKey(k)) k];
+    if (up.isNotEmpty || del.isNotEmpty) s.syncSessions(id, up, del);
+  }
 
   late DateTime selectedMonth = DateTime(today.year, today.month);
 
@@ -112,6 +144,7 @@ class BillingStore extends ChangeNotifier {
       }
     }
 
+    final before = _snap(studentId);
     _removeMakeUpOf(map, previous, date);
     map[key] = LessonRecord(
       status: record.status,
@@ -132,6 +165,7 @@ class BillingStore extends ChangeNotifier {
         time: record.time,
       );
     }
+    _pushEvents(studentId, before);
     _changed();
     return null;
   }
@@ -140,6 +174,7 @@ class BillingStore extends ChangeNotifier {
   void clearLesson(String studentId, DateTime date) {
     final map = _events[studentId];
     if (map == null) return;
+    final before = _snap(studentId);
     final key = dateKey(date);
     final previous = map.remove(key);
     _removeMakeUpOf(map, previous, date);
@@ -157,6 +192,7 @@ class BillingStore extends ChangeNotifier {
       // Avulso alterado: "voltar ao normal" mantém o atendimento marcado.
       map[key] = LessonRecord(extra: true, time: previous.time);
     }
+    _pushEvents(studentId, before);
     _changed();
   }
 
@@ -167,7 +203,9 @@ class BillingStore extends ChangeNotifier {
     if (map.containsKey(key) || plan(studentId).weekdays.contains(date.weekday)) {
       return 'Já existe ${terms.theSession} nessa data.';
     }
+    final before = _snap(studentId);
     map[key] = LessonRecord(extra: true, note: note, time: time);
+    _pushEvents(studentId, before);
     _changed();
     return null;
   }
@@ -176,8 +214,10 @@ class BillingStore extends ChangeNotifier {
   void removeExtra(String studentId, DateTime date) {
     final map = _events[studentId];
     if (map == null) return;
+    final snap = _snap(studentId);
     final previous = map.remove(dateKey(date));
     _removeMakeUpOf(map, previous, date);
+    _pushEvents(studentId, snap);
     _changed();
   }
 
@@ -213,6 +253,7 @@ class BillingStore extends ChangeNotifier {
   /// Retorna o estado anterior, para permitir desfazer.
   Map<String, LessonRecord?> applyVacation(String studentId, DateTime start, DateTime end, String reason) {
     final map = _events.putIfAbsent(studentId, () => {});
+    final snap = _snap(studentId);
     final before = <String, LessonRecord?>{};
     for (final d in vacationPreview(studentId, start, end)) {
       final key = dateKey(d);
@@ -225,12 +266,14 @@ class BillingStore extends ChangeNotifier {
         time: map[key]?.time,
       );
     }
+    _pushEvents(studentId, snap);
     _changed();
     return before;
   }
 
   void restore(String studentId, Map<String, LessonRecord?> before) {
     final map = _events.putIfAbsent(studentId, () => {});
+    final snap = _snap(studentId);
     before.forEach((key, record) {
       if (record == null) {
         map.remove(key);
@@ -238,20 +281,25 @@ class BillingStore extends ChangeNotifier {
         map[key] = record;
       }
     });
+    _pushEvents(studentId, snap);
     _changed();
   }
 
   // ---------------------------------------------------------------- pagamentos
 
   void addPayment(String studentId, PaymentEntry entry, {DateTime? month}) {
-    _payments.putIfAbsent(_payKey(studentId, month ?? selectedMonth), () => []).add(entry);
+    final m = month ?? selectedMonth;
+    final e = entry.id.isEmpty ? entry.withId(newUuid()) : entry;
+    _payments.putIfAbsent(_payKey(studentId, m), () => []).add(e);
+    sink?.addPayment(studentId, DateTime(m.year, m.month), e);
     _changed();
   }
 
   void removeLastPayment(String studentId, {DateTime? month}) {
     final list = _payments[_payKey(studentId, month ?? selectedMonth)];
     if (list == null || list.isEmpty) return;
-    list.removeLast();
+    final removed = list.removeLast();
+    if (removed.id.isNotEmpty) sink?.deletePayment(removed.id);
     _changed();
   }
 
@@ -259,6 +307,7 @@ class BillingStore extends ChangeNotifier {
     final i = plans.indexWhere((p) => p.id == studentId);
     if (i < 0) return;
     plans[i] = plans[i].copyWith(dueDay: day);
+    sink?.saveClient(plans[i]);
     _changed();
   }
 
@@ -266,6 +315,11 @@ class BillingStore extends ChangeNotifier {
 
   void setRules(BillingRules value) {
     rules = value;
+    sink?.saveProfile({
+      'cancel_rule': value.cancel.name,
+      'holiday_rule': value.holiday.name,
+      'move_rule': value.move.name,
+    });
     _changed();
   }
 
@@ -277,17 +331,19 @@ class BillingStore extends ChangeNotifier {
       holidays.add(h);
     }
     holidays.sort((a, b) => a.date.compareTo(b.date));
+    sink?.saveHoliday(h);
     _changed();
   }
 
   void removeHoliday(String id) {
     holidays.removeWhere((h) => h.id == id);
+    sink?.deleteHoliday(id);
     _changed();
   }
 
   // ---------------------------------------------------------------- cadastro de clientes
 
-  String newClientId() => 'c${DateTime.now().microsecondsSinceEpoch}';
+  String newClientId() => newUuid();
 
   /// Cria ou atualiza o cadastro de um cliente.
   void savePlan(StudentPlan p) {
@@ -298,6 +354,7 @@ class BillingStore extends ChangeNotifier {
       plans.add(p);
     }
     plans.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    sink?.saveClient(p);
     _changed();
   }
 
@@ -306,6 +363,7 @@ class BillingStore extends ChangeNotifier {
     final i = plans.indexWhere((x) => x.id == id);
     if (i < 0) return;
     plans[i] = plans[i].copyWith(active: active);
+    sink?.saveClient(plans[i]);
     _changed();
   }
 
@@ -372,6 +430,7 @@ class BillingStore extends ChangeNotifier {
 
   void setGoal(double value) {
     monthlyGoal = value < 0 ? 0 : value;
+    sink?.saveProfile({'monthly_goal': monthlyGoal});
     _changed();
   }
 
@@ -401,6 +460,7 @@ class BillingStore extends ChangeNotifier {
 
   void addExpense(Expense e) {
     _expenses.add(e);
+    sink?.saveExpense(e);
     _changed();
   }
 
@@ -414,22 +474,27 @@ class BillingStore extends ChangeNotifier {
       final start = DateTime(e.date.year, e.date.month);
       if (!from.isAfter(start)) {
         _expenses.removeAt(i);
+        sink?.deleteExpense(id);
       } else {
         _expenses[i] = e.endingAt(from);
+        sink?.saveExpense(_expenses[i]);
       }
     } else {
       _expenses.removeAt(i);
+      sink?.deleteExpense(id);
     }
     _changed();
   }
 
   void addIncome(ExtraIncome e) {
     _incomes.add(e);
+    sink?.addIncome(e);
     _changed();
   }
 
   void removeIncome(String id) {
     _incomes.removeWhere((e) => e.id == id);
+    sink?.deleteIncome(id);
     _changed();
   }
 
@@ -456,12 +521,15 @@ class BillingStore extends ChangeNotifier {
   }
 
   void payExpense(Expense e, {DateTime? on}) {
-    _expensePaid[_expKey(e.id, e.date)] = dateOnly(on ?? today);
+    final paidOn = dateOnly(on ?? today);
+    _expensePaid[_expKey(e.id, e.date)] = paidOn;
+    sink?.payExpense(e.id, DateTime(e.date.year, e.date.month), paidOn);
     _changed();
   }
 
   void unpayExpense(Expense e) {
     _expensePaid.remove(_expKey(e.id, e.date));
+    sink?.unpayExpense(e.id, DateTime(e.date.year, e.date.month));
     _changed();
   }
 
@@ -527,6 +595,76 @@ class BillingStore extends ChangeNotifier {
     monthlyGoal = ((expected * 1.1) / 100).round() * 100.0;
   }
 
+  // ---------------------------------------------------------------- carregar do banco
+
+  /// Troca todos os dados pelos que vieram do banco (conta real).
+  void replaceAll({
+    required List<StudentPlan> clients,
+    required Map<String, Map<String, LessonRecord>> events,
+    required List<Holiday> holidayList,
+    required Map<String, Map<DateTime, List<PaymentEntry>>> payments,
+    required List<Expense> expenses,
+    required Map<String, Map<DateTime, DateTime>> expensePaidOn,
+    required List<ExtraIncome> incomes,
+    required BillingRules billingRules,
+    required Terms vocabulary,
+    required double goal,
+    required String pix,
+    required String business,
+  }) {
+    plans
+      ..clear()
+      ..addAll(clients)
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _events
+      ..clear()
+      ..addAll(events);
+    holidays
+      ..clear()
+      ..addAll(holidayList)
+      ..sort((a, b) => a.date.compareTo(b.date));
+    _payments.clear();
+    payments.forEach((id, byMonth) {
+      byMonth.forEach((m, list) => _payments[_payKey(id, m)] = [...list]);
+    });
+    _expenses
+      ..clear()
+      ..addAll(expenses);
+    _expensePaid.clear();
+    expensePaidOn.forEach((id, byMonth) {
+      byMonth.forEach((m, paidOn) => _expensePaid['$id|${m.year}-${m.month}'] = paidOn);
+    });
+    _incomes
+      ..clear()
+      ..addAll(incomes);
+    rules = billingRules;
+    terms = vocabulary;
+    monthlyGoal = goal;
+    pixKey = pix;
+    businessName = business;
+    DemoLedger.instance.setProfessionalPixKey(pix);
+    selectedMonth = DateTime(today.year, today.month);
+    _syncDashboard();
+    notifyListeners();
+  }
+
+  /// Vocabulário e regras novos ao trocar de profissão (conta real: sem dados de exemplo).
+  void applyProfession(ProfessionProfile prof, BillingModel model) {
+    terms = prof.terms;
+    sink?.saveProfile({
+      'profession_id': prof.id,
+      'profession_name': prof.name,
+      'billing_model': model.name,
+    });
+    notifyListeners();
+  }
+
+  /// Feriados nacionais do ano (para contas novas).
+  List<Holiday> nationalHolidays(int year) => [
+        for (final h in _nationalHolidays(year))
+          Holiday(id: newUuid(), date: h.date, name: h.name, noClass: h.noClass),
+      ];
+
   // ---------------------------------------------------------------- integração
 
   void _changed() {
@@ -563,6 +701,9 @@ class BillingStore extends ChangeNotifier {
 
   /// Recria os dados de exemplo para a profissão e a forma de cobrança escolhidas.
   void seed(ProfessionProfile prof, BillingModel model) {
+    sink = null;
+    pixKey = '';
+    businessName = '';
     plans.clear();
     _events.clear();
     holidays.clear();
