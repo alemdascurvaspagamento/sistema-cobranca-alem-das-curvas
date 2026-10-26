@@ -61,4 +61,33 @@ void main() {
     await tester.pump();
     await tester.pump();
   });
+
+  for (final size in const [Size(390, 900), Size(1400, 1000)]) {
+    testWidgets('Pix e calendário de despesas em ${size.width.toInt()} px', (tester) async {
+      final store = BillingStore.instance;
+      store.seed(professionById('personal'), BillingModel.perSession);
+      store.setPixInfo(key: 'daniel@exemplo.com', name: 'Daniel Barsottini', city: 'São Paulo');
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpWidget(MaterialApp(
+        theme: CF.theme(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Column(children: [
+              TextButton(onPressed: () => openPixSheet(context, store.activePlans.first), child: const Text('pix')),
+              TextButton(onPressed: () => openExpenseCalendar(context, store.selectedMonth), child: const Text('cal')),
+            ]),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('pix'));
+      await tester.pumpAndSettle();
+      expect(find.text('Copiar Pix copia e cola'), findsOneWidget);
+      Navigator.of(tester.element(find.text('Copiar Pix copia e cola'))).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('cal'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Despesas de'), findsOneWidget);
+    });
+  }
 }
+

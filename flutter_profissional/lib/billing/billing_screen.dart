@@ -460,7 +460,161 @@ class _BillingTable extends StatelessWidget {
   final List<StudentPlan> plans;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, box) => box.maxWidth >= 1150 ? _detailed(context) : _simple(context),
+      );
+
+  /// Computador com tela larga: as contas do mês coluna por coluna, como no Coach Flow Pessoal.
+  Widget _detailed(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = _t;
+    final bills = [for (final p in plans) store.bill(p)];
+    final statuses = [for (final p in plans) store.status(p)];
+    double sum(double Function(int i) f) => [for (var i = 0; i < plans.length; i++) f(i)].fold(0.0, (a, b) => a + b);
+    int count(int Function(MonthBill b) f) => bills.fold(0, (a, b) => a + f(b));
+    Widget n(int v, {Color? color}) => Text('$v',
+        style: CF.body(15, weight: FontWeight.w600, color: v == 0 ? CF.muted : (color ?? CF.text)));
+    Widget bold(int v) => Text('$v', style: CF.body(15, weight: FontWeight.w700));
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      WideTable(
+        columns: [
+          TableCol(t.clientTitle, flex: 4),
+          const TableCol('Prev.', flex: 1, end: true),
+          const TableCol('Fer.', flex: 1, end: true),
+          const TableCol('Faltas', flex: 1, end: true),
+          const TableCol('Rem.', flex: 1, end: true),
+          const TableCol('Créd.', flex: 1, end: true),
+          const TableCol('Desconto', flex: 2, end: true),
+          const TableCol('Valor do mês', flex: 2, end: true),
+          const TableCol('Recebido', flex: 2, end: true),
+          const TableCol('Situação', flex: 2),
+          const TableCol('', width: 300, end: true),
+        ],
+        highlight: (i) => statuses[i] == BillStatus.overdue,
+        onTapRow: (i) => openBillDetail(context, plans[i]),
+        rows: [
+          for (var i = 0; i < plans.length; i++)
+            () {
+              final p = plans[i];
+              final b = bills[i];
+              final st = statuses[i];
+              final left = store.remaining(p);
+              return <Widget>[
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(16, weight: FontWeight.w700)),
+                  Text('${planPriceText(p, t)} · ${routineText(p)}',
+                      maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(13, color: CF.muted)),
+                ]),
+                n(b.routineCount + b.extras),
+                n(b.holidays),
+                n(b.cancelledCharged + b.cancelledWaived, color: CF.red),
+                n(b.movedOut + b.makeUps, color: CF.violet),
+                n(b.credits, color: CF.blue),
+                b.discountLessons > 0
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: CF.amberBg, borderRadius: BorderRadius.circular(999)),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('−${b.discountLessons} (${money(b.discountValue)})',
+                              style: CF.body(13, weight: FontWeight.w700, color: CF.amber)),
+                        ),
+                      )
+                    : Text('—', style: CF.body(15, color: CF.muted)),
+                FittedBox(fit: BoxFit.scaleDown, child: Text(money(b.total), style: CF.score(22))),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(money(store.received(p.id)),
+                        style: CF.body(15, color: CF.green, weight: FontWeight.w600)),
+                  ),
+                  if (left > 0)
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('falta ${money(left)}', style: CF.body(13, color: CF.amber, weight: FontWeight.w600)),
+                    ),
+                ]),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  StatusPill(st),
+                  Text('vence ${ddmm(store.dueDate(p))}',
+                      style: CF.body(13, color: st == BillStatus.overdue ? CF.red : CF.muted)),
+                ]),
+                _rowActions(context, p, st),
+              ];
+            }(),
+        ],
+        footer: [
+          Text('Total · ${plans.length} ${plans.length == 1 ? t.client : t.clients}',
+              style: CF.body(15, weight: FontWeight.w700)),
+          bold(count((b) => b.routineCount + b.extras)),
+          bold(count((b) => b.holidays)),
+          bold(count((b) => b.cancelledCharged + b.cancelledWaived)),
+          bold(count((b) => b.movedOut + b.makeUps)),
+          bold(count((b) => b.credits)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(money(bills.fold(0.0, (a, b) => a + b.discountValue)),
+                style: CF.body(14, weight: FontWeight.w700, color: CF.amber)),
+          ),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(money(sum((i) => bills[i].total)), style: CF.score(22))),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(money(sum((i) => store.received(plans[i].id))),
+                style: CF.body(15, color: CF.green, weight: FontWeight.w700)),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Prev. = ${t.sessions} previst${t.g('a', 'o')}s · Fer. = feriados · Faltas = faltas e cancelamentos · '
+        'Rem. = remarcad${t.g('a', 'o')}s e reposições · Créd. = créditos · '
+        'Desconto = faltas cobradas no mês anterior. Toque na linha para ver o cálculo.',
+        style: CF.body(13, color: CF.muted),
+      ),
+    ]);
+  }
+
+  Widget _rowActions(BuildContext context, StudentPlan p, BillStatus st) {
+    final unpaid = st != BillStatus.paid && st != BillStatus.nothing;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (unpaid) ...[
+          OutlinedButton(
+            onPressed: () => openPaymentSheet(context, p),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
+            child: const Text('Recebi'),
+          ),
+          const SizedBox(width: 6),
+          OutlinedButton.icon(
+            onPressed: () => openPixSheet(context, p),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: CF.pix,
+              minimumSize: const Size(0, 38),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            icon: const Icon(Icons.pix_rounded, size: 16),
+            label: const Text('Pix'),
+          ),
+          const SizedBox(width: 6),
+          FilledButton.icon(
+            onPressed: () => openWhatsAppBilling(context, p),
+            style: FilledButton.styleFrom(
+              backgroundColor: CF.whatsapp,
+              minimumSize: const Size(0, 38),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            icon: const Icon(Icons.chat_rounded, size: 16),
+            label: const Text('Cobrar'),
+          ),
+        ],
+        _MoreMenu(plan: p),
+      ]),
+    );
+  }
+
+  Widget _simple(BuildContext context) {
     final store = BillingStore.instance;
     final t = _t;
     final bills = [for (final p in plans) store.bill(p)];
