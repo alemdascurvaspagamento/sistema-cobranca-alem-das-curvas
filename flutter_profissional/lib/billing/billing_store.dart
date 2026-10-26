@@ -685,13 +685,13 @@ class BillingStore extends ChangeNotifier {
   /// Fixa com [fromMonth]: os meses anteriores ficam como estavam e a nova versão
   /// vale daquele mês em diante (as baixas desses meses vão junto).
   void updateExpense(String id, {
-    if (_locked()) return;
     required String description,
     required double amount,
     required DateTime date,
     required bool fixed,
     DateTime? fromMonth,
   }) {
+    if (_locked()) return;
     final i = _expenses.indexWhere((e) => e.id == id);
     if (i < 0) return;
     final old = _expenses[i];
