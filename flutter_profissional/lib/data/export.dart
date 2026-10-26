@@ -95,7 +95,10 @@ Uint8List buildDataWorkbook(BillingStore store) {
   ]);
   final rows = <(DateTime, String, LessonRecord)>[];
   for (final p in store.plans) {
-    store.eventsFor(p.id).forEach((key, r) => rows.add((parseDateKey(key), p.name, r)));
+    store.eventsFor(p.id).forEach((key, r) {
+      final date = parseDateKey(key);
+      if (date != null) rows.add((date, p.name, r));
+    });
   }
   rows.sort((a, b) => a.$1.compareTo(b.$1));
   for (final (date, name, r) in rows) {
