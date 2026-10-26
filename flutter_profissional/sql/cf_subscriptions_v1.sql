@@ -31,7 +31,7 @@ create trigger cf_subscriptions_touch before update on public.cf_subscriptions
 -- Situação efetiva de quem está logado (considera datas): trialing, active, grace, read_only, courtesy.
 create or replace function public.cf_access_state()
 returns text
-language sql stable security definer
+language sql stable security invoker
 set search_path = ''
 as $$
   select case
@@ -60,7 +60,7 @@ grant execute on function public.cf_can_write() to authenticated;
 -- O que o app precisa saber da assinatura.
 create or replace function public.cf_my_subscription()
 returns jsonb
-language sql stable security definer
+language sql stable security invoker
 set search_path = ''
 as $$
   select jsonb_build_object(

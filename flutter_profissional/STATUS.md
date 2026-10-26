@@ -68,6 +68,17 @@
   chave pública (publishable). Login com a mesma conta do Pessoal. Recuperar senha envia e-mail pelo Supabase.
 - **A partir de 26/10 os dois sistemas são independentes:** o que for lançado no Pessoal não aparece no Profissional e vice-versa.
 
+## Assinatura (26/10)
+
+- Preços aprovados por Daniel: teste de 14 dias sem cartão; Essencial R$ 29,90 (até 15 clientes ativos);
+  Profissional R$ 49,90 (ilimitado); anual com 2 meses grátis; fundador R$ 39,90 para os 50 primeiros.
+  Proposta completa: documento "Coach Flow Profissional: planos e regras de cobrança".
+- Banco (`sql/cf_subscriptions_v1.sql`): `cf_subscriptions` (só o servidor altera), `cf_access_state()`,
+  `cf_my_subscription()`, teste começa ao criar o perfil, gravação bloqueada em somente leitura (políticas
+  restritivas), limite de 15 clientes ativos no Essencial. Conta do Daniel = cortesia.
+- App: cadastro "Criar conta grátis", faixa de teste/atraso/somente leitura, painel Assinatura em Configurações.
+- Falta: cobrança pelo Asaas (página de assinatura + função que recebe o aviso de pagamento), termos e privacidade.
+
 ## Próximos passos (em ordem)
 
 1. **Daniel:** entrar com a conta do Pessoal, conferir alunos/horários/valores e o mês de outubro; publicar o
