@@ -1,6 +1,6 @@
 # Coach Flow Profissional: onde paramos
 
-Última atualização: 26/10/2026.
+Última atualização: 26/10/2026 (tarde).
 
 ## Onde está o trabalho
 
@@ -36,8 +36,17 @@
 - **Cobranças** (`lib/billing/billing_screen.dart`): placar do mês, cartão por cliente, detalhe com cálculo,
   editar atendimento, férias, registrar pagamento, WhatsApp com revisão.
 - **Pacientes/Alunos/Clientes** (`lib/screens/clients_screen.dart`): busca, ficha, cadastro completo, arquivar.
-- **Financeiro** (`lib/screens/finance_screen.dart`): sobra do mês, entradas, ganhos extras,
-  despesas fixas e avulsas com **dar baixa** por mês, contas a pagar, meta e gráfico de 6 meses.
+- **Financeiro** (`lib/screens/finance_screen.dart`): previsão do mês (vai faturar, vai gastar, deve sobrar),
+  entradas, ganhos extras, despesas fixas e avulsas com **dar baixa** e **editar** (fixa: "daqui em diante" ou
+  "todos os meses"), calendário de despesas, meta e gráfico de 6 meses.
+- **Relatórios** (`lib/screens/reports_screen.dart`): visão geral do mês, meta do ano com projeção,
+  situação por cliente, ano mês a mês, copiar resumo.
+- **Início:** cartão vermelho "Em atraso" (só conta meses a partir do primeiro pagamento registrado).
+- **Cobranças:** botão **Pix** com QR Code e "copia e cola" já com o valor (`lib/billing/pix.dart`, padrão BR Code);
+  o código também vai na mensagem do WhatsApp. No computador largo, tabela com previstas, feriados, faltas,
+  remarcadas, créditos e desconto.
+- **Configurações:** dados do Pix (chave, nome, cidade) e **baixar meus dados** em planilha Excel (`lib/data/export.dart`).
+- **Segurança:** saída automática após 30 minutos sem uso na conta real (`lib/ui/idle_guard.dart`).
 - **Regras e feriados** (`lib/billing/rules_screen.dart`): regras de cobrança, feriados nacionais, troca de profissão.
 - Identidade visual em `lib/ui/cf_theme.dart` (Barlow, azul-marinho, números em estilo placar).
 - Todas as telas leem a mesma base (`lib/billing/billing_store.dart`): os números batem entre telas.
@@ -53,7 +62,8 @@
 - **Segurança:** RLS em todas as `cf_*` (dono = `auth.uid()`); visitante sem login não tem acesso; testado com intruso simulado.
 - **Dados do Daniel copiados do Pessoal em 26/10:** 17 alunos ativos + 5 arquivados, horários por dia, 183 aulas com alteração,
   10 feriados, 53 pagamentos (R$ 63.097,50), 37 despesas lançadas até outubro (36 pagas) + 13 despesas fixas a partir de novembro,
-  6 ganhos extras, meta mensal = meta anual ÷ 12, regras do Pessoal.
+  6 ganhos extras, meta anual (`annual_goal`, mensal = anual ÷ 12), regras do Pessoal.
+- Colunas novas em `cf_profiles`: `annual_goal`, `pix_name`, `pix_city`.
 - **App:** `lib/data/cloud.dart` carrega tudo ao entrar e grava cada mudança em fila; `lib/config.dart` tem o endereço e a
   chave pública (publishable). Login com a mesma conta do Pessoal. Recuperar senha envia e-mail pelo Supabase.
 - **A partir de 26/10 os dois sistemas são independentes:** o que for lançado no Pessoal não aparece no Profissional e vice-versa.
