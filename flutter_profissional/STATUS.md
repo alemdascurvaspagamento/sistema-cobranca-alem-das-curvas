@@ -1,6 +1,6 @@
 # Coach Flow Profissional: onde paramos
 
-Última atualização: 23/10/2026, fim do dia.
+Última atualização: 26/10/2026.
 
 ## Onde está o trabalho
 
@@ -46,17 +46,27 @@
 - Testes em `test/`: motor de cobrança, 15 profissões × 4 formas de cobrança, avulsos, despesas,
   baixa, horários, calendário do mês × dia, telas de entrada.
 
+## Banco de dados (Etapa 3, feita em 26/10)
+
+- **Projeto Supabase:** "Além das Curvas" (`yjpxjzgvshaabjpdpbsc`), o mesmo do Coach Flow Pessoal.
+  O Profissional usa só as tabelas `cf_*` (desenho em `sql/cf_schema_v1.sql`). As tabelas do Pessoal não foram alteradas.
+- **Segurança:** RLS em todas as `cf_*` (dono = `auth.uid()`); visitante sem login não tem acesso; testado com intruso simulado.
+- **Dados do Daniel copiados do Pessoal em 26/10:** 17 alunos ativos + 5 arquivados, horários por dia, 183 aulas com alteração,
+  10 feriados, 53 pagamentos (R$ 63.097,50), 37 despesas lançadas até outubro (36 pagas) + 13 despesas fixas a partir de novembro,
+  6 ganhos extras, meta mensal = meta anual ÷ 12, regras do Pessoal.
+- **App:** `lib/data/cloud.dart` carrega tudo ao entrar e grava cada mudança em fila; `lib/config.dart` tem o endereço e a
+  chave pública (publishable). Login com a mesma conta do Pessoal. Recuperar senha envia e-mail pelo Supabase.
+- **A partir de 26/10 os dois sistemas são independentes:** o que for lançado no Pessoal não aparece no Profissional e vice-versa.
+
 ## Próximos passos (em ordem)
 
-1. **Daniel:** testar o app Android e a Agenda (principalmente a visão Mês no celular) e mandar ajustes.
-2. **Etapa 3 (banco gratuito):**
-   - criar uma organização nova no Supabase (Daniel faz, com passo a passo) — plano gratuito;
-   - usar o desenho inicial em `sql/coachflow_profissional_schema.sql` como ponto de partida;
-   - tabelas: profissionais, clientes, atendimentos, feriados, regras, pagamentos, despesas, ganhos extras;
-   - cada profissional vê só os próprios dados (RLS por `owner_id`), com teste de acesso cruzado;
-   - cadastro e login próprios, recuperação de senha; a demonstração continua separada;
-   - `BillingStore` passa a ler e gravar no banco, sem mudar o motor de cálculo.
-3. Antes de vender: teste com 2 ou 3 profissionais, termos de uso e privacidade (LGPD), preço e teste grátis,
+1. **Daniel:** entrar com a conta do Pessoal, conferir alunos/horários/valores e o mês de outubro; publicar o
+   endereço fixo na Vercel (Production Branch = `etapa1-regras-cobranca`).
+2. **Piloto de 1 mês:** usar os dois em paralelo e comparar as cobranças; depois aposentar o Pessoal
+   (backup, limpar `audit_log`, remover tabelas antigas, incluindo as de uma tentativa SaaS anterior sem uso).
+3. Cadastro aberto para outros profissionais (hoje só contas criadas no painel entram); proteção contra senhas vazadas.
+4. Versão computador definitiva, marca e ícone, Android na Play Store, iPhone na App Store.
+5. Antes de vender: teste com 2 ou 3 profissionais, termos de uso e privacidade (LGPD), preço e teste grátis,
    ícone e marca final, assinatura do app Android para a Google Play, versão iPhone.
 
 ## Observações técnicas
