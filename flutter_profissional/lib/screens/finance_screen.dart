@@ -9,8 +9,9 @@ import '../data/ids.dart';
 
 /// Financeiro: quanto entrou, quanto saiu e o que sobrou no mês.
 class FinanceScreen extends StatelessWidget {
-  const FinanceScreen({super.key, required this.onBilling});
+  const FinanceScreen({super.key, required this.onBilling, this.onReports});
   final VoidCallback onBilling;
+  final VoidCallback? onReports;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class FinanceScreen extends StatelessWidget {
                   PageTitle('Financeiro'),
                   Align(alignment: Alignment.centerLeft, child: MonthSwitcher()),
                 ]);
-          final result = _ResultCard(month: m);
+          final result = _ResultCard(month: m, onReports: onReports);
           final chart = _HistoryChart(month: m);
           final incomes = _Incomes(month: m, onBilling: onBilling);
           final expenses = _Expenses(month: m);
@@ -61,38 +62,55 @@ class FinanceScreen extends StatelessWidget {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.month});
+  const _ResultCard({required this.month, this.onReports});
   final DateTime month;
+  final VoidCallback? onReports;
 
   @override
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
-    final income = store.totalIn(month);
-    final out = store.expensesPaid(month);
-    final toPay = store.expensesOpen(month);
-    final result = income - out;
+    final f = store.forecast(month);
     final goal = store.monthlyGoal;
-    final progress = goal <= 0 ? 0.0 : (income / goal).clamp(0.0, 1.0).toDouble();
+    final progress = goal <= 0 ? 0.0 : (f.incomeNow / goal).clamp(0.0, 1.0).toDouble();
+    const red = Color(0xFFFF9AA2);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: CF.ink, borderRadius: BorderRadius.circular(24)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text('Sobrou em ${monthNames[month.month - 1]}', style: CF.body(15, color: Colors.white70)),
-        const SizedBox(height: 4),
+        Text('Previsão de ${monthNames[month.month - 1]}', style: CF.body(15, color: Colors.white70)),
+        const SizedBox(height: 2),
+        Text('Deve sobrar', style: CF.body(14, color: Colors.white54)),
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(moneyCompact(result), style: CF.score(48, color: result < 0 ? const Color(0xFFFF9AA2) : Colors.white)),
+          child: Text(moneyCompact(f.resultPlanned),
+              style: CF.score(48, color: f.resultPlanned < 0 ? red : Colors.white)),
+        ),
+        Text('Até agora sobrou ${moneyCompact(f.resultNow)}',
+            style: CF.body(14, color: f.resultNow < 0 ? red : Colors.white70)),
+        const SizedBox(height: 16),
+        _ForecastLine(
+          title: 'Faturamento',
+          total: f.incomePlanned,
+          done: f.incomeNow,
+          doneLabel: 'recebido',
+          leftLabel: 'a receber',
+          color: CF.mint,
         ),
         const SizedBox(height: 14),
-        Row(children: [
-          Expanded(child: _DarkStat(label: 'Entrou', value: moneyCompact(income), color: CF.mint)),
-          Expanded(child: _DarkStat(label: 'Saiu (pago)', value: moneyCompact(out), color: const Color(0xFFFF9AA2))),
-          Expanded(child: _DarkStat(label: 'Contas a pagar', value: moneyCompact(toPay), color: CF.lap)),
-        ]),
+        _ForecastLine(
+          title: 'Gastos',
+          total: f.expensesPlanned,
+          done: f.expensesPaid,
+          doneLabel: 'pago',
+          leftLabel: 'a pagar',
+          color: red,
+        ),
         const SizedBox(height: 16),
+        const Divider(color: Colors.white24, height: 1),
+        const SizedBox(height: 12),
         InkWell(
-          onTap: () => _editGoal(context),
+          onTap: () => editAnnualGoal(context),
           borderRadius: BorderRadius.circular(10),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -101,8 +119,8 @@ class _ResultCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     goal <= 0
-                        ? 'Defina uma meta para o mês'
-                        : 'Meta de ${moneyCompact(goal)} · ${(progress * 100).round()}% alcançada',
+                        ? 'Defina uma meta para o ano'
+                        : 'Meta do mês ${moneyCompact(goal)} · ${(progress * 100).round()}% alcançada',
                     style: CF.body(14, color: Colors.white70),
                   ),
                 ),
@@ -113,44 +131,89 @@ class _ResultCard extends StatelessWidget {
             ]),
           ),
         ),
+        if (onReports != null) ...[
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onReports,
+              style: TextButton.styleFrom(foregroundColor: CF.lap, padding: EdgeInsets.zero),
+              icon: const Icon(Icons.insights_rounded, size: 18),
+              label: const Text('Ver relatórios e meta do ano'),
+            ),
+          ),
+        ],
       ]),
     );
   }
 }
 
-class _DarkStat extends StatelessWidget {
-  const _DarkStat({required this.label, required this.value, required this.color});
-  final String label, value;
+/// Uma linha da previsão: total do mês, quanto já foi e quanto falta.
+class _ForecastLine extends StatelessWidget {
+  const _ForecastLine({
+    required this.title,
+    required this.total,
+    required this.done,
+    required this.doneLabel,
+    required this.leftLabel,
+    required this.color,
+  });
+  final String title, doneLabel, leftLabel;
+  final double total, done;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: CF.body(14, color: Colors.white70)),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(value, style: CF.score(28, color: color)),
+  Widget build(BuildContext context) {
+    final left = (total - done).clamp(0, double.infinity).toDouble();
+    final progress = total <= 0 ? 0.0 : (done / total).clamp(0.0, 1.0).toDouble();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Expanded(child: Text(title, style: CF.body(15, weight: FontWeight.w700, color: Colors.white))),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text('${moneyCompact(total)} no mês', style: CF.score(24, color: color)),
+          ),
         ),
-      ]);
+      ]),
+      const SizedBox(height: 6),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: LinearProgressIndicator(
+          value: progress,
+          minHeight: 8,
+          color: color,
+          backgroundColor: Colors.white12,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Wrap(spacing: 14, runSpacing: 2, children: [
+        Text('${moneyCompact(done)} $doneLabel', style: CF.body(13, color: Colors.white70)),
+        Text('${moneyCompact(left)} $leftLabel', style: CF.body(13, color: Colors.white70)),
+      ]),
+    ]);
+  }
 }
 
-Future<void> _editGoal(BuildContext context) async {
+/// Pergunta a meta do ano (a do mês é a anual dividida por 12).
+Future<void> editAnnualGoal(BuildContext context) async {
   final store = BillingStore.instance;
   final input = TextEditingController(
-      text: store.monthlyGoal <= 0 ? '' : store.monthlyGoal.toStringAsFixed(0));
+      text: store.annualGoal <= 0 ? '' : store.annualGoal.toStringAsFixed(0));
   final value = await showDialog<double>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Meta do mês'),
+      title: const Text('Meta do ano'),
       content: TextField(
         controller: input,
         autofocus: true,
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: const InputDecoration(
-          labelText: 'Quanto você quer receber por mês',
+          labelText: 'Quanto você quer receber no ano',
           prefixText: 'R\$ ',
-          helperText: 'Conta tudo o que entra: cobranças e ganhos extras.',
+          helperText: 'A meta do mês é este valor dividido por 12.',
         ),
       ),
       actions: [
@@ -163,7 +226,7 @@ Future<void> _editGoal(BuildContext context) async {
     ),
   );
   input.dispose();
-  if (value != null) store.setGoal(value);
+  if (value != null) store.setAnnualGoal(value);
 }
 
 /// Barras simples dos últimos 6 meses: entrou × saiu.

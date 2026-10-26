@@ -425,13 +425,72 @@ class BillingStore extends ChangeNotifier {
   final List<Expense> _expenses = [];
   final List<ExtraIncome> _incomes = [];
 
-  /// Meta de recebimento do mês.
-  double monthlyGoal = 0;
+  /// Meta de recebimento do ano (como no Coach Flow Pessoal).
+  double annualGoal = 0;
 
-  void setGoal(double value) {
-    monthlyGoal = value < 0 ? 0 : value;
-    sink?.saveProfile({'monthly_goal': monthlyGoal});
+  /// Meta do mês: a anual dividida por 12.
+  double get monthlyGoal => annualGoal / 12;
+
+  void setAnnualGoal(double value) {
+    annualGoal = value < 0 ? 0 : value;
+    sink?.saveProfile({
+      'annual_goal': annualGoal,
+      'monthly_goal': (annualGoal / 12 * 100).roundToDouble() / 100,
+    });
     _changed();
+  }
+
+  /// Compatibilidade: define a meta a partir do valor mensal.
+  void setGoal(double monthly) => setAnnualGoal(monthly * 12);
+
+  // ---- previsões e estatísticas
+
+  /// Previsão de um mês: quanto vai faturar, gastar e sobrar.
+  MonthForecast forecast(DateTime month) {
+    final m = DateTime(month.year, month.month);
+    final active = activePlans;
+    return MonthForecast(
+      billed: active.fold(0.0, (s, p) => s + bill(p, month: m).total),
+      received: clientReceived(m),
+      open: active.fold(0.0, (s, p) => s + remaining(p, month: m)),
+      extras: extraReceived(m),
+      expensesPlanned: expensesTotal(m),
+      expensesPaid: expensesPaid(m),
+    );
+  }
+
+  /// Tudo o que entrou no ano (cobranças + ganhos extras).
+  double yearIn(int year) {
+    var total = 0.0;
+    for (var mo = 1; mo <= 12; mo++) {
+      total += totalIn(DateTime(year, mo));
+    }
+    return total;
+  }
+
+  /// Atendimentos do mês somados de todos os clientes ativos.
+  SessionStats sessionStats(DateTime month) {
+    final m = DateTime(month.year, month.month);
+    var charged = 0, cancelCharged = 0, cancelWaived = 0, moved = 0, credits = 0, holidays = 0, makeUps = 0;
+    for (final p in activePlans) {
+      final b = bill(p, month: m);
+      charged += b.chargedLessons;
+      cancelCharged += b.cancelledCharged;
+      cancelWaived += b.cancelledWaived;
+      moved += b.movedOut;
+      credits += b.credits;
+      holidays += b.holidays;
+      makeUps += b.makeUps;
+    }
+    return SessionStats(
+      charged: charged,
+      cancelledCharged: cancelCharged,
+      cancelledWaived: cancelWaived,
+      moved: moved,
+      credits: credits,
+      holidays: holidays,
+      makeUps: makeUps,
+    );
   }
 
   List<Expense> expensesFor(DateTime month) {
@@ -592,7 +651,7 @@ class BillingStore extends ChangeNotifier {
     }
     // Meta: 10% acima do previsto do mês, arredondada.
     final expected = activePlans.fold(0.0, (s, p) => s + bill(p, month: DateTime(y, m)).total);
-    monthlyGoal = ((expected * 1.1) / 100).round() * 100.0;
+    annualGoal = ((expected * 1.1 * 12) / 1000).round() * 1000.0;
   }
 
   // ---------------------------------------------------------------- carregar do banco
@@ -639,7 +698,7 @@ class BillingStore extends ChangeNotifier {
       ..addAll(incomes);
     rules = billingRules;
     terms = vocabulary;
-    monthlyGoal = goal;
+    annualGoal = goal;
     pixKey = pix;
     businessName = business;
     DemoLedger.instance.setProfessionalPixKey(pix);
@@ -955,3 +1014,57 @@ class ExtraIncome {
 }
 
 enum ExpenseStatus { paid, open, overdue }
+
+/// Previsão de um mês.
+class MonthForecast {
+  const MonthForecast({
+    required this.billed,
+    required this.received,
+    required this.open,
+    required this.extras,
+    required this.expensesPlanned,
+    required this.expensesPaid,
+  });
+
+  /// Cobranças do mês (o que os clientes devem pagar).
+  final double billed;
+  final double received;
+  final double open;
+
+  /// Ganhos extras do mês (já recebidos).
+  final double extras;
+  final double expensesPlanned;
+  final double expensesPaid;
+
+  double get expensesOpen => (expensesPlanned - expensesPaid).clamp(0, double.infinity).toDouble();
+
+  /// Quanto vai entrar no mês: cobranças + ganhos extras.
+  double get incomePlanned => billed + extras;
+
+  /// Quanto já entrou.
+  double get incomeNow => received + extras;
+
+  /// Sobra prevista: tudo o que vai entrar menos tudo o que vai sair.
+  double get resultPlanned => incomePlanned - expensesPlanned;
+
+  /// Sobra até agora: o que entrou menos o que foi pago.
+  double get resultNow => incomeNow - expensesPaid;
+
+  /// Parte das cobranças que ainda não foi paga, em %.
+  int get openRate => billed <= 0 ? 0 : (open / billed * 100).round();
+}
+
+/// Atendimentos de um mês somados.
+class SessionStats {
+  const SessionStats({
+    required this.charged,
+    required this.cancelledCharged,
+    required this.cancelledWaived,
+    required this.moved,
+    required this.credits,
+    required this.holidays,
+    required this.makeUps,
+  });
+  final int charged, cancelledCharged, cancelledWaived, moved, credits, holidays, makeUps;
+  int get cancelled => cancelledCharged + cancelledWaived;
+}

@@ -99,8 +99,9 @@ void main() {
 
     store.setRules(store.rules.copyWith(cancel: CancelRule.waive));
     expect(sink.calls.last, 'profile:cancel_rule,holiday_rule,move_rule');
-    store.setGoal(5000);
-    expect(sink.calls.last, 'profile:monthly_goal');
+    store.setAnnualGoal(60000);
+    expect(sink.calls.last, 'profile:annual_goal,monthly_goal');
+    expect(store.monthlyGoal, 5000);
     store.setPixKey('pix@exemplo.com');
     expect(sink.calls.last, 'profile:pix_key');
 

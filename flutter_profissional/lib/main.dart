@@ -17,6 +17,7 @@ import 'screens/agenda_screen.dart';
 import 'screens/clients_screen.dart';
 import 'screens/finance_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
 import 'ui/login_screen.dart';
@@ -281,7 +282,7 @@ class _LoadError extends StatelessWidget {
       );
 }
 
-enum Section { inicio, agenda, cobrancas, clientes, financeiro, regras, mais }
+enum Section { inicio, agenda, cobrancas, clientes, financeiro, relatorios, regras, mais }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
@@ -290,6 +291,7 @@ extension SectionDetails on Section {
         Section.cobrancas => 'Cobranças',
         Section.clientes => ProfessionalProfile.instance.terms.clientsTitle,
         Section.financeiro => 'Financeiro',
+        Section.relatorios => 'Relatórios',
         Section.regras => 'Regras e feriados',
         Section.mais => 'Configurações',
       };
@@ -299,6 +301,7 @@ extension SectionDetails on Section {
         Section.cobrancas => Icons.receipt_long_rounded,
         Section.clientes => Icons.groups_rounded,
         Section.financeiro => Icons.account_balance_wallet_rounded,
+        Section.relatorios => Icons.insights_rounded,
         Section.regras => Icons.rule_rounded,
         Section.mais => Icons.tune_rounded,
       };
@@ -369,7 +372,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               child: Text('Mais', style: CF.body(22, weight: FontWeight.w700)),
             ),
             for (final (section, detail) in <(Section, String)>[
-              (Section.financeiro, 'Entradas, despesas e meta do mês'),
+              (Section.financeiro, 'Previsão do mês, entradas e despesas'),
+              (Section.relatorios, 'Meta do ano, relatório do mês e ano mês a mês'),
               (Section.regras, 'Faltas, feriados, remarcações e profissão'),
               (Section.mais, 'Chave Pix e sincronização de agenda'),
             ])
@@ -398,6 +402,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           onBilling: () => go(Section.cobrancas),
           onClients: () => go(Section.clientes),
           onFinance: () => go(Section.financeiro),
+          onReports: () => go(Section.relatorios),
         );
       case Section.agenda:
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -410,7 +415,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       case Section.clientes:
         return const ClientsScreen();
       case Section.financeiro:
-        return FinanceScreen(onBilling: () => go(Section.cobrancas));
+        return FinanceScreen(
+          onBilling: () => go(Section.cobrancas),
+          onReports: () => go(Section.relatorios),
+        );
+      case Section.relatorios:
+        return const ReportsScreen();
       case Section.regras:
         return RulesScreen(onChangeProfession: _changeProfession);
       case Section.mais:

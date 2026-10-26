@@ -6,6 +6,7 @@ import 'package:coachflow_profissional/profile/profession_profile.dart';
 import 'package:coachflow_profissional/screens/agenda_screen.dart';
 import 'package:coachflow_profissional/screens/clients_screen.dart';
 import 'package:coachflow_profissional/screens/finance_screen.dart';
+import 'package:coachflow_profissional/screens/reports_screen.dart';
 import 'package:coachflow_profissional/screens/home_screen.dart';
 import 'package:coachflow_profissional/ui/cf_theme.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,8 @@ void main() {
     'Agenda': () => const AgendaScreen(),
     'Cobranças': () => const BillingScreen(),
     'Pacientes': () => const ClientsScreen(),
-    'Financeiro': () => FinanceScreen(onBilling: () {}),
+    'Financeiro': () => FinanceScreen(onBilling: () {}, onReports: () {}),
+    'Relatórios': () => const ReportsScreen(),
     'Regras': () => const RulesScreen(),
   };
 

@@ -118,4 +118,20 @@ void main() {
       }
     }
   });
+
+  test('previsão do mês bate com cobranças, ganhos e despesas', () {
+    final store = BillingStore.instance;
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final m = store.selectedMonth;
+    final f = store.forecast(m);
+    final billed = store.activePlans.fold(0.0, (s, p) => s + store.bill(p, month: m).total);
+    expect(f.billed, closeTo(billed, .001));
+    expect(f.expensesPlanned, closeTo(store.expensesTotal(m), .001));
+    expect(f.expensesPaid + f.expensesOpen, closeTo(f.expensesPlanned, .001));
+    expect(f.resultPlanned, closeTo(f.billed + f.extras - f.expensesPlanned, .001));
+    expect(f.resultNow, closeTo(store.totalIn(m) - store.expensesPaid(m), .001));
+    store.setAnnualGoal(120000);
+    expect(store.monthlyGoal, 10000);
+    expect(store.yearIn(m.year), greaterThanOrEqualTo(store.totalIn(m)));
+  });
 }

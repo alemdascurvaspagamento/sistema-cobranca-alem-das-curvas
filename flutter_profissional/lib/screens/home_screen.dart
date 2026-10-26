@@ -14,9 +14,10 @@ class HomeScreen extends StatelessWidget {
     required this.onBilling,
     required this.onClients,
     this.onFinance,
+    this.onReports,
   });
   final VoidCallback onAgenda, onBilling, onClients;
-  final VoidCallback? onFinance;
+  final VoidCallback? onFinance, onReports;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class HomeScreen extends StatelessWidget {
         final summary = _DaySummary(today: today, onAgenda: onAgenda);
         final todo = _Secretary(onBilling: onBilling, onFinance: onFinance);
         final agenda = _TodayAgenda(today: today, onAgenda: onAgenda);
-        final month = _MonthGlance(onBilling: onBilling);
+        final month = _MonthGlance(onBilling: onBilling, onReports: onReports);
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
           final header = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -303,27 +304,59 @@ class _TodayAgenda extends StatelessWidget {
 }
 
 class _MonthGlance extends StatelessWidget {
-  const _MonthGlance({required this.onBilling});
+  const _MonthGlance({required this.onBilling, this.onReports});
   final VoidCallback onBilling;
+  final VoidCallback? onReports;
 
   @override
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
     final today = store.today;
     final current = DateTime(today.year, today.month);
-    final total = store.activePlans.fold(0.0, (s, p) => s + store.bill(p, month: current).total);
-    final received = store.clientReceived(current);
+    final f = store.forecast(current);
     final goal = store.monthlyGoal;
-    final progress = goal <= 0 ? 0.0 : (store.totalIn(current) / goal).clamp(0.0, 1.0).toDouble();
+    final progress = goal <= 0 ? 0.0 : (f.incomeNow / goal).clamp(0.0, 1.0).toDouble();
     return Panel(
       title: 'Seu mês de ${monthNames[today.month - 1]}',
-      action: TextButton(onPressed: onBilling, child: const Text('Cobranças')),
+      action: TextButton(onPressed: onReports ?? onBilling, child: Text(onReports != null ? 'Relatórios' : 'Cobranças')),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('Vai faturar', style: CF.body(13, weight: FontWeight.w700, color: CF.muted)),
+        const SizedBox(height: 2),
         Row(children: [
-          Expanded(child: _Stat(label: 'Recebido', value: moneyCompact(received), color: CF.green)),
-          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(total), color: CF.text)),
-          Expanded(child: _Stat(label: 'Falta', value: moneyCompact((total - received) < 0 ? 0 : total - received), color: CF.amber)),
+          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.incomePlanned), color: CF.text)),
+          Expanded(child: _Stat(label: 'Recebido', value: moneyCompact(f.incomeNow), color: CF.green)),
+          Expanded(child: _Stat(label: 'A receber', value: moneyCompact(f.open), color: CF.amber)),
         ]),
+        const SizedBox(height: 12),
+        Text('Vai gastar', style: CF.body(13, weight: FontWeight.w700, color: CF.muted)),
+        const SizedBox(height: 2),
+        Row(children: [
+          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.expensesPlanned), color: CF.text)),
+          Expanded(child: _Stat(label: 'Pago', value: moneyCompact(f.expensesPaid), color: CF.red)),
+          Expanded(child: _Stat(label: 'A pagar', value: moneyCompact(f.expensesOpen), color: CF.amber)),
+        ]),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: f.resultPlanned < 0 ? CF.redBg : CF.greenBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(children: [
+            Expanded(
+              child: Text('Deve sobrar no mês',
+                  style: CF.body(15, weight: FontWeight.w600, color: f.resultPlanned < 0 ? CF.red : CF.green)),
+            ),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(moneyCompact(f.resultPlanned),
+                    style: CF.score(24, color: f.resultPlanned < 0 ? CF.red : CF.green)),
+              ),
+            ),
+          ]),
+        ),
         if (goal > 0) ...[
           const SizedBox(height: 14),
           Text('Meta do mês: ${moneyCompact(goal)} · ${(progress * 100).round()}% alcançada',

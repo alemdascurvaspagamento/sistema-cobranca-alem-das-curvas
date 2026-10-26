@@ -293,7 +293,7 @@ class CloudService implements CloudSink {
         move: MoveRule.values.asNameMap()[pr['move_rule']] ?? MoveRule.chargeNewMonth,
       ),
       vocabulary: prof.terms,
-      goal: _num(pr['monthly_goal']),
+      goal: _num(pr['annual_goal']) > 0 ? _num(pr['annual_goal']) : _num(pr['monthly_goal']) * 12,
       pix: pr['pix_key'] as String? ?? '',
       business: pr['business_name'] as String? ?? '',
     );
