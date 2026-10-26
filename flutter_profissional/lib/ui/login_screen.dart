@@ -5,8 +5,11 @@ import 'cf_theme.dart';
 
 /// Entrar com e-mail e senha, e recuperar a senha por e-mail.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.onBack});
+  const LoginScreen({super.key, required this.onBack, this.notice});
   final VoidCallback onBack;
+
+  /// Aviso no topo (ex.: saída automática por inatividade).
+  final String? notice;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -106,6 +109,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         : 'Use o e-mail e a senha da sua conta.',
                     style: CF.body(16, color: Colors.white70, height: 1.4),
                   ),
+                  if (widget.notice != null && !forgot) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(14)),
+                      child: Row(children: [
+                        const Icon(Icons.lock_clock_rounded, color: CF.ink),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(widget.notice!, style: CF.body(15, color: CF.ink, weight: FontWeight.w600))),
+                      ]),
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   Container(
                     padding: const EdgeInsets.all(18),

@@ -20,6 +20,7 @@ import 'screens/home_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
+import 'ui/idle_guard.dart';
 import 'ui/login_screen.dart';
 import 'ui/onboarding.dart';
 import 'ui/sales_entry.dart';
@@ -92,7 +93,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
         case AuthChangeEvent.signedIn:
           if (mode == _Mode.login || mode == _Mode.entry) _load();
         case AuthChangeEvent.signedOut:
-          setState(() => mode = _Mode.entry);
+          if (mode != _Mode.login) setState(() => mode = _Mode.entry);
         default:
           break;
       }
@@ -125,12 +126,23 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     }
   }
 
-  Future<void> _signOut() async {
+  /// Aviso mostrado na tela de entrar (ex.: saída por inatividade).
+  String? loginNotice;
+
+  Future<void> _signOut({bool idle = false}) async {
     await cloud?.flush();
     BillingStore.instance.sink = null;
-    await Supabase.instance.client.auth.signOut();
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {
+      // Sem internet: a sessão local é apagada mesmo assim.
+    }
     BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
-    if (mounted) setState(() => mode = _Mode.entry);
+    if (!mounted) return;
+    setState(() {
+      loginNotice = idle ? 'Por segurança, saímos da sua conta depois de 30 minutos sem uso. Entre de novo.' : null;
+      mode = idle ? _Mode.login : _Mode.entry;
+    });
   }
 
   @override
@@ -161,7 +173,13 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
               : null,
         );
       case _Mode.login:
-        return LoginScreen(onBack: () => setState(() => mode = _Mode.entry));
+        return LoginScreen(
+          notice: loginNotice,
+          onBack: () => setState(() {
+            loginNotice = null;
+            mode = _Mode.entry;
+          }),
+        );
       case _Mode.newPassword:
         return NewPasswordScreen(onDone: _load);
       case _Mode.loading:
@@ -183,10 +201,13 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
           onDone: () {},
         );
       case _Mode.cloud:
-        return CoachFlowShell(
-          cloud: cloud,
-          email: Supabase.instance.client.auth.currentUser?.email,
-          onLeave: _signOut,
+        return IdleGuard(
+          onTimeout: () => _signOut(idle: true),
+          child: CoachFlowShell(
+            cloud: cloud,
+            email: Supabase.instance.client.auth.currentUser?.email,
+            onLeave: _signOut,
+          ),
         );
     }
   }
