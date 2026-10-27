@@ -33,7 +33,7 @@ class FinanceScreen extends StatelessWidget {
             KpiCard(icon: Icons.south_west_rounded, label: 'Entrou', value: moneyCompact(fc.incomeNow), hint: 'Inclui ganhos extras', color: CF.green, accent: true),
             KpiCard(icon: Icons.north_east_rounded, label: 'Saiu', value: moneyCompact(fc.expensesPaid), hint: 'Despesas pagas', color: CF.red, accent: true),
             KpiCard(icon: Icons.account_balance_wallet_rounded, label: 'Sobrou', value: moneyCompact(fc.resultNow), hint: 'Caixa até agora', color: fc.resultNow < 0 ? CF.red : CF.blue, accent: true),
-            KpiCard(icon: Icons.event_upcoming_rounded, label: 'A pagar', value: moneyCompact(fc.expensesOpen), hint: 'Despesas em aberto', color: CF.amber, accent: true),
+            KpiCard(icon: Icons.pending_actions_rounded, label: 'A pagar', value: moneyCompact(fc.expensesOpen), hint: 'Despesas em aberto', color: CF.amber, accent: true),
           ]);
           final result = _ResultCard(month: m, onReports: onReports);
           final chart = _HistoryChart(month: m);
