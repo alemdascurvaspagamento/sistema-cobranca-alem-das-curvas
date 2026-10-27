@@ -147,6 +147,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
         ),
       const SizedBox(height: 10),
       Panel(
+        icon: Icons.calendar_today_rounded,
+        color: CF.blue,
         title: '${capitalize(fullDate(day))}${isToday ? ' (hoje)' : ''}',
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (holiday != null) ...[

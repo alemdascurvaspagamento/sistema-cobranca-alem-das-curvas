@@ -297,6 +297,8 @@ class _ClientProfile extends StatelessWidget {
               ]),
               const SizedBox(height: 14),
               Panel(
+                icon: Icons.badge_rounded,
+                color: CF.blue,
                 title: 'Cadastro',
                 child: Column(children: [
                   _InfoRow(icon: Icons.payments_rounded, label: 'Cobrança', value: '${p.model.title} · ${planPriceText(p, t)}'),
@@ -312,6 +314,8 @@ class _ClientProfile extends StatelessWidget {
               const SizedBox(height: 14),
               if (p.active)
                 Panel(
+                  icon: Icons.bar_chart_rounded,
+                  color: CF.violet,
                   title: 'Últimos meses',
                   child: Column(children: [
                     for (final m in months)

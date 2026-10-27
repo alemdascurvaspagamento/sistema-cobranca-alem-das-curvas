@@ -80,26 +80,26 @@ class _Overview extends StatelessWidget {
     final billedSessions = st.charged;
     final ticket = billedSessions == 0 ? 0.0 : f.billed / billedSessions;
     final money = [
-      _Kpi('Receita prevista', moneyCompact(f.incomePlanned),
+      _Kpi(Icons.trending_up_rounded, 'Receita prevista', moneyCompact(f.incomePlanned),
           f.extras > 0 ? '${t.sessionsTitle} + ${moneyCompact(f.extras)} em ganhos extras' : 'O que ${t.clients} devem pagar',
           CF.blue),
-      _Kpi('Recebido no mês', moneyCompact(f.incomeNow), 'Inclui ganhos extras', CF.green),
-      _Kpi('A receber', moneyCompact(f.open),
+      _Kpi(Icons.savings_rounded, 'Recebido no mês', moneyCompact(f.incomeNow), 'Inclui ganhos extras', CF.green),
+      _Kpi(Icons.hourglass_bottom_rounded, 'A receber', moneyCompact(f.open),
           f.open <= 0 ? 'Tudo recebido' : '${f.openRate}% das cobranças ainda em aberto', CF.amber),
-      _Kpi('Despesas do mês', moneyCompact(f.expensesPlanned),
+      _Kpi(Icons.receipt_long_rounded, 'Despesas do mês', moneyCompact(f.expensesPlanned),
           f.expensesOpen <= 0 ? 'Todas pagas' : '${moneyCompact(f.expensesOpen)} ainda a pagar', CF.red),
-      _Kpi('Resultado de caixa', moneyCompact(f.resultNow), 'Recebido − despesas pagas',
+      _Kpi(Icons.account_balance_wallet_rounded, 'Resultado de caixa', moneyCompact(f.resultNow), 'Recebido − despesas pagas',
           f.resultNow < 0 ? CF.red : CF.ink),
     ];
     final ops = [
-      _Kpi('${t.clientsTitle} ativos', '${active.length}', '', CF.ink),
-      _Kpi('${t.sessionsTitle} cobrad${t.g('a', 'o')}s', '$billedSessions',
-          st.makeUps > 0 ? '${st.makeUps} reposições' : '', CF.ink),
-      _Kpi('Ticket médio', moneyCompact(ticket), 'Por ${t.session} cobrad${t.g('a', 'o')}', CF.ink),
-      _Kpi('Faltas e cancelamentos', '${st.cancelled}',
-          st.cancelled == 0 ? '' : '${st.cancelledCharged} cobrad${t.g('a', 'o')}s, ${st.cancelledWaived} sem cobrança', CF.ink),
-      _Kpi('Descontos e créditos', moneyCompact(discounts),
-          st.credits > 0 ? '${st.credits} créditos no mês' : 'Faltas do mês anterior descontadas', CF.ink),
+      _Kpi(Icons.groups_rounded, '${t.clientsTitle} ativos', '${active.length}', '', CF.violet),
+      _Kpi(Icons.event_available_rounded, '${t.sessionsTitle} cobrad${t.g('a', 'o')}s', '$billedSessions',
+          st.makeUps > 0 ? '${st.makeUps} reposições' : '', CF.blue),
+      _Kpi(Icons.sell_rounded, 'Ticket médio', moneyCompact(ticket), 'Por ${t.session} cobrad${t.g('a', 'o')}', CF.green),
+      _Kpi(Icons.event_busy_rounded, 'Faltas e cancelamentos', '${st.cancelled}',
+          st.cancelled == 0 ? '' : '${st.cancelledCharged} cobrad${t.g('a', 'o')}s, ${st.cancelledWaived} sem cobrança', CF.amber),
+      _Kpi(Icons.percent_rounded, 'Descontos e créditos', moneyCompact(discounts),
+          st.credits > 0 ? '${st.credits} créditos no mês' : 'Faltas do mês anterior descontadas', CF.violet),
     ];
     return LayoutBuilder(builder: (context, box) {
       final cols = box.maxWidth >= 900 ? 5 : (box.maxWidth >= 560 ? 3 : 2);
@@ -120,7 +120,8 @@ class _Overview extends StatelessWidget {
 }
 
 class _Kpi {
-  const _Kpi(this.label, this.value, this.hint, this.color);
+  const _Kpi(this.icon, this.label, this.value, this.hint, this.color);
+  final IconData icon;
   final String label, value, hint;
   final Color color;
 }
@@ -131,31 +132,14 @@ class _KpiTile extends StatelessWidget {
   final bool accent;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: CF.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: CF.line),
-        ),
-        foregroundDecoration: accent
-            ? BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border(top: BorderSide(color: k.color, width: 3)),
-              )
-            : null,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(k.label.toUpperCase(),
-              maxLines: 2, style: CF.body(12, weight: FontWeight.w700, color: CF.muted, height: 1.2)),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(k.value, style: CF.score(28, color: accent ? CF.text : k.color)),
-          ),
-          if (k.hint.isNotEmpty)
-            Text(k.hint, maxLines: 2, style: CF.body(12.5, color: CF.muted, height: 1.25)),
-        ]),
+  Widget build(BuildContext context) => KpiCard(
+        icon: k.icon,
+        label: k.label,
+        value: k.value,
+        hint: k.hint,
+        color: k.color,
+        accent: accent,
+        valueColor: accent ? null : CF.text,
       );
 }
 
@@ -186,6 +170,8 @@ class _AnnualGoal extends StatelessWidget {
 
     if (annual <= 0) {
       return Panel(
+        icon: Icons.flag_rounded,
+        color: CF.violet,
         title: 'Meta do ano',
         child: EmptyNote(
           icon: Icons.flag_rounded,
@@ -195,6 +181,8 @@ class _AnnualGoal extends StatelessWidget {
       );
     }
     return Panel(
+      icon: Icons.flag_rounded,
+      color: CF.violet,
       title: 'Meta de $year',
       action: TextButton.icon(
         onPressed: () => editAnnualGoal(context),
@@ -308,6 +296,8 @@ class _ByClient extends StatelessWidget {
     ]..sort((a, b) => b.left.compareTo(a.left) != 0 ? b.left.compareTo(a.left) : a.plan.name.compareTo(b.plan.name));
     int count(BillStatus s) => rows.where((r) => r.status == s).length;
     return Panel(
+      icon: Icons.groups_rounded,
+      color: CF.blue,
       title: 'Por ${t.client} em ${monthNames[month.month - 1]}',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Wrap(spacing: 8, runSpacing: 8, children: [
@@ -391,6 +381,8 @@ class _YearTable extends StatelessWidget {
           child: Row(children: cells),
         );
     return Panel(
+      icon: Icons.table_chart_rounded,
+      color: CF.green,
       title: '$year mês a mês',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         row([

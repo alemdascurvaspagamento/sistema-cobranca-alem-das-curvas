@@ -77,8 +77,15 @@ class _ResultCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: CF.ink, borderRadius: BorderRadius.circular(24)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text('Previsão de ${monthNames[month.month - 1]}', style: CF.body(15, color: Colors.white70)),
-        const SizedBox(height: 2),
+        Row(children: [
+          IconBadge(Icons.query_stats_rounded, color: CF.lap, size: 30),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('PREVISÃO DE ${monthNames[month.month - 1].toUpperCase()}',
+                style: CF.body(12.5, color: Colors.white70, weight: FontWeight.w700)),
+          ),
+        ]),
+        const SizedBox(height: 8),
         Text('Deve sobrar', style: CF.body(14, color: Colors.white54)),
         FittedBox(
           fit: BoxFit.scaleDown,
@@ -242,6 +249,8 @@ class _HistoryChart extends StatelessWidget {
     final outs = [for (final m in months) store.expensesPaid(m)];
     final top = [...ins, ...outs].fold<double>(1, (a, b) => b > a ? b : a);
     return Panel(
+      icon: Icons.bar_chart_rounded,
+      color: CF.violet,
       title: 'Últimos 6 meses',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         SizedBox(
@@ -326,6 +335,8 @@ class _Incomes extends StatelessWidget {
     final extras = store.incomesFor(month);
     final open = store.activePlans.fold(0.0, (s, p) => s + store.remaining(p, month: month));
     return Panel(
+      icon: Icons.south_west_rounded,
+      color: CF.green,
       title: 'Entradas',
       action: TextButton.icon(
         onPressed: () => _openEntrySheet(context, expense: false),
@@ -400,6 +411,8 @@ class _Expenses extends StatelessWidget {
     final list = store.expensesFor(month);
     final open = store.expensesOpen(month);
     return Panel(
+      icon: Icons.north_east_rounded,
+      color: CF.red,
       title: 'Despesas',
       action: Row(mainAxisSize: MainAxisSize.min, children: [
         IconButton(

@@ -25,9 +25,21 @@ class PageTitle extends StatelessWidget {
 
 /// Caixa branca com borda suave, usada em todas as telas.
 class Panel extends StatelessWidget {
-  const Panel({super.key, required this.child, this.title, this.action, this.padding = const EdgeInsets.all(16)});
+  const Panel({
+    super.key,
+    required this.child,
+    this.title,
+    this.action,
+    this.icon,
+    this.color = CF.blue,
+    this.padding = const EdgeInsets.all(16),
+  });
   final Widget child;
   final String? title;
+
+  /// Ícone do título, dentro de um quadradinho colorido.
+  final IconData? icon;
+  final Color color;
   final Widget? action;
   final EdgeInsets padding;
 
@@ -42,10 +54,11 @@ class Panel extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (title != null) ...[
             Row(children: [
+              if (icon != null) ...[IconBadge(icon!, color: color, size: 34), const SizedBox(width: 10)],
               Expanded(child: Text(title!, style: CF.body(18, weight: FontWeight.w700))),
               if (action != null) action!,
             ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
           ],
           child,
         ]),
@@ -277,4 +290,88 @@ class LayoutToggle extends StatelessWidget {
           side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
         ),
       );
+}
+
+/// Ícone dentro de um quadradinho de cantos arredondados com fundo suave.
+/// É a "assinatura" visual do app: aparece nos números, nos títulos e no menu.
+class IconBadge extends StatelessWidget {
+  const IconBadge(this.icon, {super.key, this.color = CF.blue, this.size = 38});
+  final IconData icon;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .13),
+          borderRadius: BorderRadius.circular(size * .32),
+        ),
+        child: Icon(icon, color: color, size: size * .54),
+      );
+}
+
+/// Cartão de número: ícone, rótulo em maiúsculas, valor grande e uma linha de explicação.
+/// A faixa colorida no topo é opcional (usada nos números de dinheiro).
+class KpiCard extends StatelessWidget {
+  const KpiCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.hint = '',
+    this.color = CF.blue,
+    this.accent = false,
+    this.valueColor,
+    this.onTap,
+  });
+  final IconData icon;
+  final String label, value, hint;
+  final Color color;
+  final Color? valueColor;
+
+  /// Mostra a faixa colorida no topo.
+  final bool accent;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: CF.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: CF.line),
+      ),
+      foregroundDecoration: accent
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border(top: BorderSide(color: color, width: 3)),
+            )
+          : null,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          IconBadge(icon, color: color, size: 32),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(label.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: CF.body(12, weight: FontWeight.w700, color: CF.muted, height: 1.2)),
+          ),
+        ]),
+        const SizedBox(height: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(value, style: CF.score(28, color: valueColor ?? (accent ? CF.text : color))),
+        ),
+        if (hint.isNotEmpty)
+          Text(hint, maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(12.5, color: CF.muted, height: 1.25)),
+      ]),
+    );
+    if (onTap == null) return card;
+    return InkWell(borderRadius: BorderRadius.circular(16), onTap: onTap, child: card);
+  }
 }

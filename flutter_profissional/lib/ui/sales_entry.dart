@@ -198,7 +198,11 @@ class _Benefit extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: CF.mint, size: 22),
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(color: CF.mint.withValues(alpha: .15), borderRadius: BorderRadius.circular(11)),
+            child: Icon(icon, color: CF.mint, size: 19),
+          ),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: CF.body(16, color: Colors.white, height: 1.4))),
         ]),

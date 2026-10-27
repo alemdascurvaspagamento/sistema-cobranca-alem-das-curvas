@@ -189,7 +189,11 @@ class _Scoreboard extends StatelessWidget {
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Recebido', style: CF.body(15, color: Colors.white70)),
+              Row(children: [
+                IconBadge(Icons.check_circle_rounded, color: CF.mint, size: 24),
+                const SizedBox(width: 8),
+                Text('RECEBIDO', style: CF.body(12.5, color: Colors.white70, weight: FontWeight.w700)),
+              ]),
               const SizedBox(height: 6),
               FittedBox(
                 fit: BoxFit.scaleDown,
@@ -201,7 +205,12 @@ class _Scoreboard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('Falta receber', style: CF.body(15, color: Colors.white70)),
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                Flexible(child: Text('FALTA RECEBER', maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: CF.body(12.5, color: Colors.white70, weight: FontWeight.w700))),
+                const SizedBox(width: 8),
+                IconBadge(Icons.hourglass_bottom_rounded, color: CF.lap, size: 24),
+              ]),
               const SizedBox(height: 6),
               FittedBox(
                 fit: BoxFit.scaleDown,

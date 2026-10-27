@@ -126,8 +126,8 @@ class _DaySummary extends StatelessWidget {
             ),
             Container(
               width: 56, height: 56,
-              decoration: BoxDecoration(color: CF.inkSoft, borderRadius: BorderRadius.circular(18)),
-              child: const Icon(Icons.calendar_today_rounded, color: Colors.white),
+              decoration: BoxDecoration(color: CF.lap.withValues(alpha: .16), borderRadius: BorderRadius.circular(18)),
+              child: const Icon(Icons.calendar_today_rounded, color: CF.lap),
             ),
           ]),
         ),
@@ -228,6 +228,8 @@ class _Secretary extends StatelessWidget {
     }
 
     return Panel(
+      icon: Icons.support_agent_rounded,
+      color: CF.amber,
       title: 'Secretária: o que precisa de você',
       child: items.isEmpty
           ? const EmptyNote(icon: Icons.task_alt_rounded, text: 'Tudo em dia por aqui.')
@@ -264,7 +266,7 @@ class _TodoItem extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Icon(icon, color: color, size: 22),
+            IconBadge(icon, color: color, size: 38),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -295,6 +297,8 @@ class _TodayAgenda extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = BillingStore.instance.terms;
     return Panel(
+      icon: Icons.calendar_today_rounded,
+      color: CF.blue,
       title: 'Agenda de hoje',
       action: TextButton(onPressed: onAgenda, child: const Text('Ver semana')),
       child: today.isEmpty
@@ -321,22 +325,28 @@ class _MonthGlance extends StatelessWidget {
     final goal = store.monthlyGoal;
     final progress = goal <= 0 ? 0.0 : (f.incomeNow / goal).clamp(0.0, 1.0).toDouble();
     return Panel(
+      icon: Icons.insights_rounded,
+      color: CF.violet,
       title: 'Seu mês de ${monthNames[today.month - 1]}',
       action: TextButton(onPressed: onReports ?? onBilling, child: Text(onReports != null ? 'Relatórios' : 'Cobranças')),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text('Vai faturar', style: CF.body(13, weight: FontWeight.w700, color: CF.muted)),
-        const SizedBox(height: 2),
+        const _GroupLabel(Icons.trending_up_rounded, 'Vai faturar', CF.green),
+        const SizedBox(height: 6),
         Row(children: [
-          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.incomePlanned), color: CF.text)),
+          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.incomePlanned), color: CF.blue)),
+          const SizedBox(width: 8),
           Expanded(child: _Stat(label: 'Recebido', value: moneyCompact(f.incomeNow), color: CF.green)),
+          const SizedBox(width: 8),
           Expanded(child: _Stat(label: 'A receber', value: moneyCompact(f.open), color: CF.amber)),
         ]),
         const SizedBox(height: 12),
-        Text('Vai gastar', style: CF.body(13, weight: FontWeight.w700, color: CF.muted)),
-        const SizedBox(height: 2),
+        const _GroupLabel(Icons.trending_down_rounded, 'Vai gastar', CF.red),
+        const SizedBox(height: 6),
         Row(children: [
-          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.expensesPlanned), color: CF.text)),
+          Expanded(child: _Stat(label: 'Previsto', value: moneyCompact(f.expensesPlanned), color: CF.violet)),
+          const SizedBox(width: 8),
           Expanded(child: _Stat(label: 'Pago', value: moneyCompact(f.expensesPaid), color: CF.red)),
+          const SizedBox(width: 8),
           Expanded(child: _Stat(label: 'A pagar', value: moneyCompact(f.expensesOpen), color: CF.amber)),
         ]),
         const SizedBox(height: 12),
@@ -376,20 +386,43 @@ class _MonthGlance extends StatelessWidget {
   }
 }
 
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.icon, this.text, this.color);
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        IconBadge(icon, color: color, size: 24),
+        const SizedBox(width: 8),
+        Text(text, style: CF.body(14, weight: FontWeight.w700)),
+      ]);
+}
+
 class _Stat extends StatelessWidget {
   const _Stat({required this.label, required this.value, required this.color});
   final String label, value;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: CF.body(14, color: CF.muted)),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(value, style: CF.score(26, color: color)),
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .07),
+          borderRadius: BorderRadius.circular(12),
+          border: Border(top: BorderSide(color: color, width: 3)),
         ),
-      ]);
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: CF.body(11.5, weight: FontWeight.w700, color: CF.muted)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: CF.score(24, color: color)),
+          ),
+        ]),
+      );
 }
 
 /// Valor em atraso, em vermelho, com um toque para ir cobrar.
@@ -422,8 +455,8 @@ class _OverdueCard extends StatelessWidget {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
-              const Icon(Icons.warning_amber_rounded, color: CF.red),
-              const SizedBox(width: 8),
+              const IconBadge(Icons.warning_amber_rounded, color: CF.red, size: 34),
+              const SizedBox(width: 10),
               Expanded(child: Text('Em atraso', style: CF.body(16, weight: FontWeight.w700, color: CF.red))),
               Flexible(
                 child: FittedBox(

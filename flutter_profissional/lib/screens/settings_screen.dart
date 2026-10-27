@@ -45,6 +45,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       AnimatedBuilder(
         animation: store,
         builder: (context, _) => Panel(
+          icon: Icons.qr_code_2_rounded,
+          color: CF.pix,
           title: 'Pix',
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text('Vai na cobrança pelo WhatsApp e gera o Pix copia e cola e o QR Code já com o valor de cada cliente.',
@@ -75,6 +77,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
       const SizedBox(height: 14),
       Panel(
+        icon: Icons.download_rounded,
+        color: CF.blue,
         title: 'Seus dados',
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text(
@@ -107,6 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       const SizedBox(height: 14),
       Panel(
+        icon: Icons.manage_accounts_rounded,
+        color: CF.ink,
         title: 'Conta',
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
@@ -179,6 +185,8 @@ class _SubscriptionPanel extends StatelessWidget {
     };
     final t = store.terms;
     return Panel(
+      icon: Icons.workspace_premium_rounded,
+      color: CF.amber,
       title: 'Assinatura',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(title, style: CF.body(18, weight: FontWeight.w700, color: color)),
