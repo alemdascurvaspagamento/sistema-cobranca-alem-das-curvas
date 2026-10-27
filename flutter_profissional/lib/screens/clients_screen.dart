@@ -38,6 +38,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           PageTitle(
             t.clientsTitle,
+            icon: Icons.groups_rounded,
+            color: CF.violet,
             subtitle: '${store.activePlans.length} ativ${store.activePlans.length == 1 ? 'o' : 'os'}',
             trailing: FilledButton.icon(
               onPressed: () => openClientForm(context),
@@ -45,6 +47,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               label: const Text('Novo'),
             ),
           ),
+          const SizedBox(height: 14),
+          KpiRow([
+            KpiCard(icon: Icons.groups_rounded, label: '${t.clientsTitle} ativos', value: '${store.activePlans.length}', color: CF.violet, accent: true),
+            KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber no mês', value: moneyCompact(store.monthRemaining), color: CF.amber, accent: true),
+            KpiCard(icon: Icons.error_rounded, label: 'Em atraso', value: '${store.countStatus(BillStatus.overdue)}', hint: 'Pagamentos vencidos', color: CF.red, accent: true),
+            KpiCard(icon: Icons.inventory_2_rounded, label: 'Arquivados', value: '${store.archivedPlans.length}', color: CF.muted, accent: true),
+          ]),
           const SizedBox(height: 14),
           TextField(
             onChanged: (v) => setState(() => query = v),

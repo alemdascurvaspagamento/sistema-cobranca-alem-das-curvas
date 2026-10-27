@@ -40,7 +40,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final cloud = store.isCloud;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const PageTitle('Configurações'),
+      const PageTitle('Configurações', icon: Icons.tune_rounded, color: CF.ink),
+      const SizedBox(height: 14),
+      AnimatedBuilder(
+        animation: store,
+        builder: (context, _) => KpiRow([
+          KpiCard(
+            icon: Icons.workspace_premium_rounded,
+            label: 'Plano',
+            value: store.subscription?.planName ?? 'Demonstração',
+            color: CF.amber,
+            accent: true,
+          ),
+          KpiCard(
+            icon: Icons.qr_code_2_rounded,
+            label: 'Pix',
+            value: store.pixKey.isEmpty ? 'Sem chave' : 'Ativo',
+            hint: store.pixKey.isEmpty ? 'Cadastre abaixo' : 'Nas cobranças pelo WhatsApp',
+            color: CF.pix,
+            accent: true,
+          ),
+          KpiCard(
+            icon: Icons.cloud_done_rounded,
+            label: 'Dados',
+            value: cloud ? 'Na nuvem' : 'Neste aparelho',
+            hint: cloud ? 'Salvos na sua conta' : 'Só na demonstração',
+            color: CF.green,
+            accent: true,
+          ),
+        ]),
+      ),
       const SizedBox(height: 14),
       AnimatedBuilder(
         animation: store,

@@ -20,6 +20,7 @@ import 'screens/home_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
+import 'ui/widgets.dart';
 import 'ui/idle_guard.dart';
 import 'ui/login_screen.dart';
 import 'ui/onboarding.dart';
@@ -319,6 +320,24 @@ class _LoadError extends StatelessWidget {
       );
 }
 
+/// Ícone do menu em quadradinho colorido (cheio quando a seção está aberta).
+class _NavBadge extends StatelessWidget {
+  const _NavBadge(this.section, {required this.selected});
+  final Section section;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: selected ? section.color : section.color.withValues(alpha: .18),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Icon(section.icon, size: 20, color: selected ? CF.ink : Colors.white.withValues(alpha: .92)),
+      );
+}
+
 enum Section { inicio, agenda, cobrancas, clientes, financeiro, relatorios, regras, mais }
 
 extension SectionDetails on Section {
@@ -331,6 +350,16 @@ extension SectionDetails on Section {
         Section.relatorios => 'Relatórios',
         Section.regras => 'Regras e feriados',
         Section.mais => 'Configurações',
+      };
+  Color get color => switch (this) {
+        Section.inicio => CF.lap,
+        Section.agenda => CF.blue,
+        Section.cobrancas => CF.green,
+        Section.clientes => CF.violet,
+        Section.financeiro => CF.green,
+        Section.relatorios => CF.violet,
+        Section.regras => CF.amber,
+        Section.mais => CF.muted,
       };
   IconData get icon => switch (this) {
         Section.inicio => Icons.home_rounded,
@@ -504,7 +533,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             ])
               ListTile(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                leading: Icon(section.icon, color: CF.ink),
+                leading: IconBadge(section.icon, color: section == Section.mais ? CF.ink : section.color, size: 40),
                 title: Text(section.label, style: CF.body(17, weight: FontWeight.w700)),
                 subtitle: Text(detail, style: CF.body(14, color: CF.muted)),
                 trailing: const Icon(Icons.chevron_right_rounded),
@@ -628,14 +657,18 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   selectedIndex: selected.index,
                   onDestinationSelected: (i) => go(Section.values[i]),
                   extended: constraints.maxWidth >= 1150,
-                  indicatorColor: CF.inkSoft,
+                  indicatorColor: Colors.transparent,
                   selectedIconTheme: const IconThemeData(color: CF.lap),
                   unselectedIconTheme: const IconThemeData(color: Color(0xFFC9D6E8)),
                   selectedLabelTextStyle: CF.body(15, color: Colors.white, weight: FontWeight.w700),
                   unselectedLabelTextStyle: CF.body(15, color: const Color(0xFFC9D6E8)),
                   destinations: [
                     for (final s in Section.values)
-                      NavigationRailDestination(icon: Icon(s.icon), label: Text(s.label)),
+                      NavigationRailDestination(
+                        icon: _NavBadge(s, selected: false),
+                        selectedIcon: _NavBadge(s, selected: true),
+                        label: Text(s.label),
+                      ),
                   ],
                 ),
               Expanded(

@@ -65,6 +65,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           PageTitle(
             'Agenda',
+            icon: Icons.calendar_month_rounded,
+            color: CF.blue,
             subtitle: _subtitle(),
             trailing: FilledButton.icon(
               onPressed: () => _openNewSession(context, day),
@@ -72,6 +74,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
               label: const Text('Marcar'),
             ),
           ),
+          const SizedBox(height: 14),
+          _AgendaKpis(weekStart: weekStart),
           const SizedBox(height: 14),
           SegmentedButton<_View>(
             showSelectedIcon: false,
@@ -758,5 +762,30 @@ class _NewSessionState extends State<_NewSession> {
         ),
       ),
     );
+  }
+}
+
+/// Números da agenda: hoje, semana e faltas do mês.
+class _AgendaKpis extends StatelessWidget {
+  const _AgendaKpis({required this.weekStart});
+  final DateTime weekStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = store.terms;
+    final today = store.today;
+    int count(DateTime d) => store.sessionsOn(d).where((e) => store.happens(e.$2.outcome)).length;
+    var week = 0;
+    for (var i = 0; i < 7; i++) {
+      week += count(weekStart.add(Duration(days: i)));
+    }
+    final st = store.sessionStats(DateTime(today.year, today.month));
+    return KpiRow([
+      KpiCard(icon: Icons.today_rounded, label: 'Hoje', value: '${count(today)}', hint: t.sessionsTitle, color: CF.blue, accent: true),
+      KpiCard(icon: Icons.view_week_rounded, label: 'Na semana', value: '$week', hint: 'Da semana mostrada', color: CF.green, accent: true),
+      KpiCard(icon: Icons.event_busy_rounded, label: 'Faltas no mês', value: '${st.cancelled}', hint: '${st.cancelledCharged} cobradas', color: CF.amber, accent: true),
+      KpiCard(icon: Icons.event_repeat_rounded, label: 'Reposições', value: '${st.makeUps}', hint: 'No mês', color: CF.violet, accent: true),
+    ]);
   }
 }

@@ -22,9 +22,9 @@ class ReportsScreen extends StatelessWidget {
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
           final title = wide
-              ? PageTitle('Relatórios', subtitle: 'Seu negócio numa leitura só', trailing: _CopyButton(month: m))
+              ? PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Seu negócio numa leitura só', trailing: _CopyButton(month: m))
               : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const PageTitle('Relatórios', subtitle: 'Seu negócio numa leitura só'),
+                  const PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Seu negócio numa leitura só'),
                   Row(children: [const MonthSwitcher(), const Spacer(), _CopyButton(month: m, compact: true)]),
                 ]);
           final overview = _Overview(month: m, wide: wide);

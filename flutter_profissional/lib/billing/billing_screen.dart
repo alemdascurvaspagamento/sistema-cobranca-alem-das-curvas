@@ -55,6 +55,17 @@ class _BillingScreenState extends State<BillingScreen> {
           _Header(store: store),
           const SizedBox(height: 14),
           _Scoreboard(store: store),
+          const SizedBox(height: 12),
+          KpiRow([
+            KpiCard(icon: Icons.groups_rounded, label: 'Cobranças', value: '${counts[_Filter.all]}', color: CF.blue, accent: true,
+                onTap: () => setState(() => filter = _Filter.all)),
+            KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber', value: '${counts[_Filter.open]}', color: CF.amber, accent: true,
+                onTap: () => setState(() => filter = _Filter.open)),
+            KpiCard(icon: Icons.error_rounded, label: 'Atrasados', value: '${counts[_Filter.overdue]}', color: CF.red, accent: true,
+                onTap: () => setState(() => filter = _Filter.overdue)),
+            KpiCard(icon: Icons.check_circle_rounded, label: 'Pagos', value: '${counts[_Filter.paid]}', color: CF.green, accent: true,
+                onTap: () => setState(() => filter = _Filter.paid)),
+          ]),
           const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -140,7 +151,11 @@ class _Header extends StatelessWidget {
     final isCurrent = m.year == store.today.year && m.month == store.today.month;
     return Row(children: [
       Expanded(
-        child: Text('Cobranças', style: CF.body(28, weight: FontWeight.w700)),
+        child: Row(children: [
+          const IconBadge(Icons.receipt_long_rounded, color: CF.green, size: 46),
+          const SizedBox(width: 12),
+          Flexible(child: Text('Cobranças', style: CF.body(28, weight: FontWeight.w700))),
+        ]),
       ),
       IconButton(
         tooltip: 'Mês anterior',

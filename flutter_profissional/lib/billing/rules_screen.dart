@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
+import '../ui/widgets.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
 import '../data/ids.dart';
@@ -31,12 +32,12 @@ class RulesScreen extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               _ProfileCard(profile: profile, onChange: onChangeProfession),
               const SizedBox(height: 22),
-              Text('Regras de cobrança', style: CF.body(28, weight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(
-                'Escolha uma vez e o Coach Flow aplica em todas as contas. '
-                'Você ainda pode ajustar cada $s, ${t.g('uma', 'um')} a ${t.g('uma', 'um')}.',
-                style: CF.body(16, color: CF.muted),
+              PageTitle(
+                'Regras de cobrança',
+                icon: Icons.rule_rounded,
+                color: CF.amber,
+                subtitle: 'Escolha uma vez e o Coach Flow aplica em todas as contas. '
+                    'Você ainda pode ajustar cada $s, ${t.g('uma', 'um')} a ${t.g('uma', 'um')}.',
               ),
               const SizedBox(height: 18),
               _RuleCard(
@@ -175,8 +176,8 @@ class _RuleCard extends StatelessWidget {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
-            Icon(icon, color: CF.ink, size: 22),
-            const SizedBox(width: 10),
+            IconBadge(icon, color: CF.amber, size: 38),
+            const SizedBox(width: 12),
             Expanded(child: Text(title, style: CF.body(19, weight: FontWeight.w700))),
           ]),
           const SizedBox(height: 12),
@@ -244,6 +245,8 @@ class _HolidayList extends StatelessWidget {
     final today = store.today;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
+        const IconBadge(Icons.celebration_rounded, color: CF.red, size: 46),
+        const SizedBox(width: 12),
         Expanded(child: Text('Feriados de $year', style: CF.body(24, weight: FontWeight.w700))),
         FilledButton.icon(
           onPressed: () => _editHoliday(context, null),
@@ -254,6 +257,12 @@ class _HolidayList extends StatelessWidget {
       const SizedBox(height: 4),
       Text('Já vêm os feriados nacionais. Inclua os da sua cidade e escolha em quais você não atende.',
           style: CF.body(15, color: CF.muted)),
+      const SizedBox(height: 12),
+      KpiRow([
+        KpiCard(icon: Icons.celebration_rounded, label: 'Feriados no ano', value: '${list.length}', color: CF.red, accent: true),
+        KpiCard(icon: Icons.event_busy_rounded, label: 'Sem atendimento', value: '${list.where((h) => h.noClass).length}', color: CF.amber, accent: true),
+        KpiCard(icon: Icons.event_available_rounded, label: 'Com atendimento', value: '${list.where((h) => !h.noClass).length}', color: CF.green, accent: true),
+      ]),
       const SizedBox(height: 12),
       Container(
         decoration: BoxDecoration(

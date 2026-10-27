@@ -23,11 +23,18 @@ class FinanceScreen extends StatelessWidget {
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
           final title = wide
-              ? const PageTitle('Financeiro', trailing: MonthSwitcher())
+              ? const PageTitle('Financeiro', icon: Icons.account_balance_wallet_rounded, color: CF.green, trailing: MonthSwitcher())
               : const Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  PageTitle('Financeiro'),
+                  PageTitle('Financeiro', icon: Icons.account_balance_wallet_rounded, color: CF.green),
                   Align(alignment: Alignment.centerLeft, child: MonthSwitcher()),
                 ]);
+          final fc = store.forecast(m);
+          final kpis = KpiRow([
+            KpiCard(icon: Icons.south_west_rounded, label: 'Entrou', value: moneyCompact(fc.incomeNow), hint: 'Inclui ganhos extras', color: CF.green, accent: true),
+            KpiCard(icon: Icons.north_east_rounded, label: 'Saiu', value: moneyCompact(fc.expensesPaid), hint: 'Despesas pagas', color: CF.red, accent: true),
+            KpiCard(icon: Icons.account_balance_wallet_rounded, label: 'Sobrou', value: moneyCompact(fc.resultNow), hint: 'Caixa até agora', color: fc.resultNow < 0 ? CF.red : CF.blue, accent: true),
+            KpiCard(icon: Icons.event_upcoming_rounded, label: 'A pagar', value: moneyCompact(fc.expensesOpen), hint: 'Despesas em aberto', color: CF.amber, accent: true),
+          ]);
           final result = _ResultCard(month: m, onReports: onReports);
           final chart = _HistoryChart(month: m);
           final incomes = _Incomes(month: m, onBilling: onBilling);
@@ -35,6 +42,8 @@ class FinanceScreen extends StatelessWidget {
           if (wide) {
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               title,
+              const SizedBox(height: 14),
+              kpis,
               const SizedBox(height: 14),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(child: Column(children: [result, const SizedBox(height: 14), chart])),
@@ -46,6 +55,8 @@ class FinanceScreen extends StatelessWidget {
           return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             title,
             const SizedBox(height: 10),
+            kpis,
+            const SizedBox(height: 14),
             result,
             const SizedBox(height: 14),
             incomes,

@@ -6,13 +6,18 @@ import 'cf_theme.dart';
 
 /// Título de página com ação opcional à direita.
 class PageTitle extends StatelessWidget {
-  const PageTitle(this.title, {super.key, this.subtitle, this.trailing});
+  const PageTitle(this.title, {super.key, this.subtitle, this.trailing, this.icon, this.color = CF.blue});
   final String title;
+
+  /// Ícone em quadradinho colorido ao lado do título.
+  final IconData? icon;
+  final Color color;
   final String? subtitle;
   final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        if (icon != null) ...[IconBadge(icon!, color: color, size: 46), const SizedBox(width: 12)],
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: CF.body(28, weight: FontWeight.w700)),
@@ -374,4 +379,20 @@ class KpiCard extends StatelessWidget {
     if (onTap == null) return card;
     return InkWell(borderRadius: BorderRadius.circular(16), onTap: onTap, child: card);
   }
+}
+
+/// Fileira de [KpiCard]: 2 por linha no celular, todos lado a lado no computador.
+class KpiRow extends StatelessWidget {
+  const KpiRow(this.cards, {super.key});
+  final List<KpiCard> cards;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
+        final cols = box.maxWidth >= 700 ? cards.length.clamp(1, 5) : 2;
+        const gap = 10.0;
+        final w = (box.maxWidth - gap * (cols - 1)) / cols;
+        return Wrap(spacing: gap, runSpacing: gap, children: [
+          for (final c in cards) SizedBox(width: w, child: c),
+        ]);
+      });
 }
