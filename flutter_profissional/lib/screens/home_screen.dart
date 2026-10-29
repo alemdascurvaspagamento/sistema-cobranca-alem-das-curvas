@@ -5,6 +5,7 @@ import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
+import 'clients_screen.dart' show openClientForm;
 
 /// Início: o dia de hoje, o que precisa de atenção e o mês em uma olhada.
 class HomeScreen extends StatelessWidget {
@@ -35,14 +36,27 @@ class HomeScreen extends StatelessWidget {
         final overdue = late.isEmpty ? null : _OverdueCard(items: late, onBilling: onBilling);
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
-          final header = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(greetingFor(now), style: CF.body(28, weight: FontWeight.w700)),
-            Text(capitalize(fullDate(now)), style: CF.body(15, color: CF.muted)),
+          final t = store.terms;
+          final header = Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(greetingFor(now), style: CF.body(28, weight: FontWeight.w700)),
+                Text(capitalize(fullDate(now)), style: CF.body(15, color: CF.muted)),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            FilledButton.icon(
+              onPressed: () => openClientForm(context),
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
+              label: Text('Novo ${t.client}'),
+            ),
           ]);
+          final starter = _StartHere(onBilling: onBilling);
           if (wide) {
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               header,
               const SizedBox(height: 16),
+              starter,
               if (overdue != null) ...[overdue, const SizedBox(height: 14)],
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(
@@ -68,6 +82,7 @@ class HomeScreen extends StatelessWidget {
           return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             header,
             const SizedBox(height: 16),
+            starter,
             if (overdue != null) ...[overdue, const SizedBox(height: 14)],
             summary,
             const SizedBox(height: 14),
@@ -495,3 +510,121 @@ class _OverdueCard extends StatelessWidget {
   }
 }
 
+
+/// "Comece por aqui": guia a conta nova pelos primeiros passos e some quando termina.
+class _StartHere extends StatefulWidget {
+  const _StartHere({required this.onBilling});
+  final VoidCallback onBilling;
+
+  /// Vale só enquanto o app está aberto: quem dispensa não vê de novo na sessão.
+  static bool dismissed = false;
+  static bool seenBilling = false;
+
+  @override
+  State<_StartHere> createState() => _StartHereState();
+}
+
+class _StartHereState extends State<_StartHere> {
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final t = store.terms;
+    final hasClient = store.plans.isNotEmpty;
+    final hasPix = store.pixKey.isNotEmpty;
+    final seen = _StartHere.seenBilling;
+    if (_StartHere.dismissed || (hasClient && hasPix && seen)) return const SizedBox.shrink();
+    final done = [hasClient, hasPix, seen].where((e) => e).length;
+    Widget step({
+      required int n,
+      required bool ok,
+      required bool enabled,
+      required String title,
+      required String detail,
+      required String action,
+      required VoidCallback onTap,
+    }) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(children: [
+            ok
+                ? const IconBadge(Icons.check_rounded, color: CF.green, size: 38)
+                : Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(color: CF.blue.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)),
+                    alignment: Alignment.center,
+                    child: Text('$n', style: CF.score(20, color: CF.blue)),
+                  ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('$n. $title',
+                    style: CF.body(16, weight: FontWeight.w700, color: ok ? CF.muted : CF.text)
+                        .copyWith(decoration: ok ? TextDecoration.lineThrough : null)),
+                Text(detail, style: CF.body(14, color: CF.muted, height: 1.3)),
+              ]),
+            ),
+            if (!ok) ...[
+              const SizedBox(width: 8),
+              enabled
+                  ? FilledButton(
+                      onPressed: onTap,
+                      style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 14)),
+                      child: Text(action),
+                    )
+                  : OutlinedButton(onPressed: null, child: Text(action)),
+            ],
+          ]),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Panel(
+        icon: Icons.rocket_launch_rounded,
+        color: CF.amber,
+        title: 'Comece por aqui ($done de 3)',
+        action: IconButton(
+          tooltip: 'Dispensar',
+          onPressed: () => setState(() => _StartHere.dismissed = true),
+          icon: const Icon(Icons.close_rounded, size: 20),
+        ),
+        child: Column(children: [
+          step(
+            n: 1,
+            ok: hasClient,
+            enabled: true,
+            title: 'Cadastre seu primeiro ${t.client}',
+            detail: 'Nome, telefone, dias, horários e valor combinado.',
+            action: 'Cadastrar',
+            onTap: () => openClientForm(context),
+          ),
+          const Divider(height: 1),
+          step(
+            n: 2,
+            ok: hasPix,
+            enabled: true,
+            title: 'Cadastre sua chave Pix',
+            detail: 'A cobrança já vai com QR Code e copia e cola.',
+            action: 'Cadastrar Pix',
+            onTap: () async {
+              await openPixSettings(context);
+              if (mounted) setState(() {});
+            },
+          ),
+          const Divider(height: 1),
+          step(
+            n: 3,
+            ok: seen,
+            enabled: hasClient,
+            title: 'Veja a cobrança do mês',
+            detail: hasClient ? 'O valor de cada ${t.client}, com a conta explicada.' : 'Libera depois do primeiro cadastro.',
+            action: 'Ver cobranças',
+            onTap: () {
+              _StartHere.seenBilling = true;
+              widget.onBilling();
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+}

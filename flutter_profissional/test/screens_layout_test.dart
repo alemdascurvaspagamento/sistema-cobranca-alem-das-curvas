@@ -75,6 +75,29 @@ void main() {
     }
   }
 
+  // Conta nova (sem clientes): o Início guia o começo e tem o botão de cadastro rápido.
+  for (final size in const [Size(390, 900), Size(1400, 1000)]) {
+    testWidgets('Início de conta nova em ${size.width.toInt()} px', (tester) async {
+      final store = BillingStore.instance;
+      store.seed(professionById('psico'), BillingModel.perSession);
+      store.plans.clear();
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpWidget(MaterialApp(
+        theme: CF.theme(),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: HomeScreen(onAgenda: () {}, onBilling: () {}, onClients: () {}),
+          ),
+        ),
+      ));
+      await tester.pump();
+      expect(find.text('Novo ${store.terms.client}'), findsOneWidget);
+      expect(find.text('Comece por aqui (0 de 3)'), findsOneWidget);
+      expect(find.text('Cadastrar'), findsOneWidget);
+    });
+  }
+
   testWidgets('Agenda: visões semana e mês no computador', (tester) async {
     BillingStore.instance.seed(professionById('psico'), BillingModel.perSession);
     await tester.binding.setSurfaceSize(const Size(1400, 1400));
