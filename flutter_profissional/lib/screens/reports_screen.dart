@@ -25,7 +25,13 @@ class ReportsScreen extends StatelessWidget {
               ? PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Seu negócio numa leitura só', trailing: _CopyButton(month: m))
               : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   const PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Seu negócio numa leitura só'),
-                  Row(children: [const MonthSwitcher(), const Spacer(), _CopyButton(month: m, compact: true)]),
+                  Row(children: [
+                    const Flexible(
+                      child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: MonthSwitcher()),
+                    ),
+                    const SizedBox(width: 8),
+                    _CopyButton(month: m, compact: true),
+                  ]),
                 ]);
           final overview = _Overview(month: m, wide: wide);
           final goal = _AnnualGoal(month: m);
