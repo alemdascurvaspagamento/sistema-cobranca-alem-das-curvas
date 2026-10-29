@@ -76,7 +76,13 @@ class MonthSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Escuta o mês escolhido por conta própria: nas telas ele é `const`,
+    // e o Flutter não redesenha widget `const` quando o pai muda.
     final store = BillingStore.instance;
+    return AnimatedBuilder(animation: store, builder: (context, _) => _content(store));
+  }
+
+  Widget _content(BillingStore store) {
     final m = store.selectedMonth;
     final isCurrent = m.year == store.today.year && m.month == store.today.month;
     return Row(mainAxisSize: MainAxisSize.min, children: [

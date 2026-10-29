@@ -47,6 +47,34 @@ void main() {
     }
   }
 
+  // Setinhas de mês: o título tem que acompanhar o mês escolhido (antes ficava parado).
+  for (final entry in {'Financeiro': () => FinanceScreen(onBilling: () {}, onReports: () {}), 'Relatórios': () => const ReportsScreen()}.entries) {
+    for (final size in const [Size(390, 900), Size(1400, 1000)]) {
+      testWidgets('${entry.key}: setinhas mudam o mês em ${size.width.toInt()} px', (tester) async {
+        final store = BillingStore.instance;
+        store.seed(professionById('personal'), BillingModel.perSession);
+        await tester.binding.setSurfaceSize(size);
+        await tester.pumpWidget(MaterialApp(
+          theme: CF.theme(),
+          home: Scaffold(body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: entry.value())),
+        ));
+        await tester.pump();
+        String label(DateTime d) => '${capitalize(monthNames[d.month - 1])} ${d.year}';
+        final start = store.selectedMonth;
+        expect(find.text(label(start)), findsWidgets);
+        await tester.tap(find.byTooltip('Próximo mês'));
+        await tester.pump();
+        final next = DateTime(start.year, start.month + 1);
+        expect(find.text(label(next)), findsOneWidget);
+        expect(find.text(label(start)), findsNothing);
+        await tester.tap(find.byTooltip('Mês anterior'));
+        await tester.tap(find.byTooltip('Mês anterior'));
+        await tester.pump();
+        expect(find.text(label(DateTime(start.year, start.month - 1))), findsOneWidget);
+      });
+    }
+  }
+
   testWidgets('Agenda: visões semana e mês no computador', (tester) async {
     BillingStore.instance.seed(professionById('psico'), BillingModel.perSession);
     await tester.binding.setSurfaceSize(const Size(1400, 1400));
