@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
@@ -432,6 +433,43 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   }
 
   /// Faixa da assinatura: teste grátis, atraso ou somente leitura.
+  bool _betaDismissed = false;
+
+  /// Faixa discreta avisando que o app está em teste e como mandar sugestões.
+  Widget _betaBanner() {
+    if (widget.demo || _betaDismissed) return const SizedBox.shrink();
+    final c = AppConfig.supportContact.trim();
+    Uri? link;
+    if (c.contains('@')) {
+      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Coach Flow Profissional: feedback'});
+    } else if (c.isNotEmpty) {
+      link = Uri.parse('https://wa.me/${c.replaceAll(RegExp(r'[^0-9]'), '')}');
+    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+      decoration: BoxDecoration(color: CF.violetBg, borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        const IconBadge(Icons.science_rounded, color: CF.violet, size: 30),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text('Versão em teste. Achou algo estranho ou tem uma ideia? Conta pra gente.',
+              style: CF.body(14, color: CF.ink, weight: FontWeight.w600, height: 1.3)),
+        ),
+        if (link != null)
+          TextButton(
+            onPressed: () => launchUrl(link!, mode: LaunchMode.externalApplication),
+            child: const Text('Enviar'),
+          ),
+        IconButton(
+          tooltip: 'Fechar',
+          onPressed: () => setState(() => _betaDismissed = true),
+          icon: const Icon(Icons.close_rounded, size: 18),
+        ),
+      ]),
+    );
+  }
+
   Widget _subscriptionBanner() {
     if (widget.demo) return const SizedBox.shrink();
     final store = BillingStore.instance;
@@ -680,6 +718,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                     ),
                     children: [
                       if (widget.demo) _DemoBanner(onLogin: widget.onLogin),
+                      _betaBanner(),
                       _subscriptionBanner(),
                       _syncBanner(),
                       Center(

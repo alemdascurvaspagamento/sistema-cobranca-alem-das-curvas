@@ -14,6 +14,10 @@ class AppConfig {
     defaultValue: 'sb_publishable_cfk3k9kcgmbvUp-oUmoNfw_rYLUzIge',
   );
 
+  /// Contato para os testadores falarem com a gente (WhatsApp com DDI+DDD, ex.: 5511999999999,
+  /// ou e-mail). Vazio: a faixa de teste aparece sem o botão de contato.
+  static const supportContact = String.fromEnvironment('SUPPORT_CONTACT', defaultValue: '');
+
   /// Desliga o login (usado nos testes automáticos, que não têm internet).
   static const offline = bool.fromEnvironment('CF_OFFLINE');
 
