@@ -44,7 +44,7 @@ class CoachFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Coach Flow Profissional',
+        title: 'Coach Flow Professional',
         debugShowCheckedModeBanner: false,
         theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
@@ -441,7 +441,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     final c = AppConfig.supportContact.trim();
     Uri? link;
     if (c.contains('@')) {
-      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Coach Flow Profissional: feedback'});
+      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Coach Flow Professional: feedback'});
     } else if (c.isNotEmpty) {
       link = Uri.parse('https://wa.me/${c.replaceAll(RegExp(r'[^0-9]'), '')}');
     }
@@ -684,7 +684,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 Text('Coach Flow', style: CF.body(19, color: Colors.white, weight: FontWeight.w700)),
                 if (!narrowPhone) ...[
                   const SizedBox(width: 6),
-                  Text('Profissional', style: CF.body(19, color: Colors.white60)),
+                  Text('Professional', style: CF.body(19, color: Colors.white60)),
                 ],
               ]),
             ),

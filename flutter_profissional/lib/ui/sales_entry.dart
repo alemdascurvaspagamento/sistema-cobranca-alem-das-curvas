@@ -72,7 +72,7 @@ class _Pitch extends StatelessWidget {
           child: Text.rich(
             TextSpan(children: [
               TextSpan(text: 'Coach Flow ', style: CF.body(20, color: Colors.white, weight: FontWeight.w700)),
-              TextSpan(text: 'Profissional', style: CF.body(20, color: Colors.white60)),
+              TextSpan(text: 'Professional', style: CF.body(20, color: Colors.white60)),
             ]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
