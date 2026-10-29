@@ -318,7 +318,11 @@ class _TodayAgenda extends StatelessWidget {
       action: TextButton(onPressed: onAgenda, child: const Text('Ver semana')),
       child: today.isEmpty
           ? EmptyNote(icon: Icons.event_available_rounded, text: 'Nenhum${t.g('a', '')} ${t.session} hoje.')
-          : Column(children: [
+          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('Toque num atendimento para anotar ou alterar.', style: CF.body(13.5, color: CF.muted)),
+              ),
               for (final (p, line) in today)
                 SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line)),
             ]),

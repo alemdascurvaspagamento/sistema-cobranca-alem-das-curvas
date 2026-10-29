@@ -148,38 +148,103 @@ class SessionRow extends StatelessWidget {
     final label = line.isExtra && line.outcome == LessonOutcome.charged
         ? t.g('Marcada', 'Marcado')
         : line.outcome.label(t);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        child: Row(children: [
-          SizedBox(
-            width: 58,
-            child: Text(line.time.isEmpty ? '—' : line.time, style: CF.score(22, color: struck ? CF.muted : CF.text)),
-          ),
-          Container(width: 4, height: 40, decoration: BoxDecoration(color: fg, borderRadius: BorderRadius.circular(4))),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(plan.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: CF.body(16, weight: FontWeight.w700, color: struck ? CF.muted : CF.text)
-                      .copyWith(decoration: struck ? TextDecoration.lineThrough : null)),
-              Text(plan.service, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(14, color: CF.muted)),
-            ]),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-            child: Text(label, style: CF.body(13, color: fg, weight: FontWeight.w700)),
-          ),
-          if (trailing != null) trailing!,
-        ]),
+    final note = line.record?.note.trim() ?? '';
+    final store = BillingStore.instance;
+    final quick = line.outcome == LessonOutcome.charged &&
+        line.record?.status != LessonStatus.completed &&
+        !dateOnly(line.date).isAfter(store.today);
+
+    void register(LessonStatus status, String done) {
+      final err = store.saveLesson(
+        plan.id,
+        line.date,
+        LessonRecord(status: status, extra: line.isExtra, time: line.record?.time, note: line.record?.note ?? ''),
+      );
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(err ?? '${plan.name}: $done. Toque no atendimento para mudar.')));
+    }
+
+    return LayoutBuilder(builder: (context, box) {
+    // Em colunas estreitas (semana no computador) fica só o essencial.
+    final compact = box.maxWidth < 300;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          child: Row(children: [
+            SizedBox(
+              width: 58,
+              child: Text(line.time.isEmpty ? '—' : line.time, style: CF.score(22, color: struck ? CF.muted : CF.text)),
+            ),
+            Container(width: 4, height: 40, decoration: BoxDecoration(color: fg, borderRadius: BorderRadius.circular(4))),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(plan.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CF.body(16, weight: FontWeight.w700, color: struck ? CF.muted : CF.text)
+                        .copyWith(decoration: struck ? TextDecoration.lineThrough : null)),
+                Text(plan.service, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(14, color: CF.muted)),
+                if (note.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(children: [
+                      const Icon(Icons.sticky_note_2_rounded, size: 14, color: CF.amber),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(note,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CF.body(13, color: CF.text, weight: FontWeight.w600)),
+                      ),
+                    ]),
+                  ),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+              child: Text(label, style: CF.body(13, color: fg, weight: FontWeight.w700)),
+            ),
+            if (trailing != null) trailing!,
+            if (!compact) ...[
+              const SizedBox(width: 2),
+              const Icon(Icons.edit_note_rounded, color: CF.muted, size: 24),
+            ],
+          ]),
+        ),
       ),
-    );
+      if (quick && !compact)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Wrap(spacing: 8, runSpacing: 6, children: [
+            OutlinedButton.icon(
+              onPressed: () => register(LessonStatus.completed, t.g('realizada', 'realizado')),
+              icon: const Icon(Icons.check_rounded, size: 18, color: CF.green),
+              label: Text(t.g('Realizada', 'Realizado')),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => register(LessonStatus.cancelled, 'falta registrada'),
+              icon: const Icon(Icons.close_rounded, size: 18, color: CF.red),
+              label: const Text('Faltou'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
+            ),
+            TextButton.icon(
+              onPressed: onTap,
+              icon: const Icon(Icons.edit_note_rounded, size: 18),
+              label: const Text('Anotar ou alterar'),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 38)),
+            ),
+          ]),
+        ),
+    ]);
+    });
   }
 }
 

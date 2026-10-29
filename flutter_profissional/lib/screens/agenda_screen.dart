@@ -166,7 +166,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
               action: TextButton(onPressed: () => _openNewSession(context, day), child: Text('Marcar ${t.session}')),
             )
           else ...[
-            Text(t.count(happening), style: CF.body(14, color: CF.muted)),
+            Text('${t.count(happening)}. Toque num atendimento para anotar ou alterar.', style: CF.body(14, color: CF.muted)),
             for (final (p, line) in sessions)
               SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line)),
           ],
