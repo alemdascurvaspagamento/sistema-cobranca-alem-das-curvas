@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cf_theme.dart';
+import 'legal.dart';
 
 /// Entrar com e-mail e senha, e recuperar a senha por e-mail.
 class LoginScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   late bool signup = widget.startSignup;
   final password2 = TextEditingController();
   bool hide = true;
+  bool accepted = false;
   String? error;
   String? info;
 
@@ -80,6 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => error = 'As duas senhas precisam ser iguais.');
       return;
     }
+    if (!accepted) {
+      setState(() => error = 'Para criar a conta, marque que leu os termos de uso e a política de privacidade.');
+      return;
+    }
     setState(() {
       busy = true;
       error = null;
@@ -90,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email.text.trim(),
         password: password.text,
         emailRedirectTo: kIsWeb ? Uri.base.origin : null,
+        data: {'terms_version': legalVersion, 'terms_accepted_at': DateTime.now().toUtc().toIso8601String()},
       );
       if (res.session == null && mounted) {
         setState(() => info = 'Quase lá! Enviamos um e-mail para ${email.text.trim()}. '
@@ -220,6 +227,34 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: const InputDecoration(labelText: 'Repita a senha'),
                             onChanged: (_) => setState(() => error = null),
                           ),
+                          const SizedBox(height: 8),
+                          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Checkbox(
+                              value: accepted,
+                              onChanged: (v) => setState(() {
+                                accepted = v ?? false;
+                                error = null;
+                              }),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                                  Text('Li e aceito os ', style: CF.body(14, color: CF.muted)),
+                                  InkWell(
+                                    onTap: () => openLegal(context, LegalDoc.terms),
+                                    child: Text('Termos de uso', style: CF.body(14, color: CF.blue, weight: FontWeight.w700)),
+                                  ),
+                                  Text(' e a ', style: CF.body(14, color: CF.muted)),
+                                  InkWell(
+                                    onTap: () => openLegal(context, LegalDoc.privacy),
+                                    child: Text('Política de privacidade', style: CF.body(14, color: CF.blue, weight: FontWeight.w700)),
+                                  ),
+                                  Text('.', style: CF.body(14, color: CF.muted)),
+                                ]),
+                              ),
+                            ),
+                          ]),
                         ],
                       ],
                       if (error != null) ...[
