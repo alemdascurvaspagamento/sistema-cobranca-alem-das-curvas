@@ -87,12 +87,43 @@ class BillingStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Segunda chave Pix (ex.: uma no CNPJ e outra no CPF). Cada cliente escolhe a sua.
+  String pixLabel = '';
+  String pixKey2 = '';
+  String pixName2 = '';
+  String pixLabel2 = '';
+
+  bool get hasSecondPix => pixKey2.isNotEmpty;
+
+  String pixLabelOf(int choice) => choice == 2
+      ? (pixLabel2.isNotEmpty ? pixLabel2 : 'Segunda chave')
+      : (pixLabel.isNotEmpty ? pixLabel : 'Chave principal');
+
+  /// Chave, nome de quem recebe e apelido da chave usada por um cliente.
+  ({String key, String name, String label}) pixFor(StudentPlan p) {
+    final main = pixName.isNotEmpty ? pixName : businessName;
+    if (p.pixChoice == 2 && hasSecondPix) {
+      return (key: pixKey2, name: pixName2.isNotEmpty ? pixName2 : main, label: pixLabelOf(2));
+    }
+    return (key: pixKey, name: main, label: pixLabelOf(1));
+  }
+
+  void setSecondPix({required String label1, required String key, required String name, required String label2}) {
+    pixLabel = label1.trim();
+    pixKey2 = key.trim();
+    pixName2 = name.trim();
+    pixLabel2 = label2.trim();
+    sink?.saveProfile({'pix_label': pixLabel, 'pix_key_2': pixKey2, 'pix_name_2': pixName2, 'pix_label_2': pixLabel2});
+    notifyListeners();
+  }
+
   /// Código Pix "copia e cola" com o valor que falta de um cliente no mês.
   String pixCodeFor(StudentPlan p, {DateTime? month}) {
     final m = month ?? selectedMonth;
+    final pix = pixFor(p);
     return pixPayload(
-      key: pixKey,
-      name: pixName.isNotEmpty ? pixName : businessName,
+      key: pix.key,
+      name: pix.name,
       city: pixCity,
       amount: remaining(p, month: m),
       message: '${terms.sessionsTitle} ${monthNames[m.month - 1]}',
@@ -876,6 +907,10 @@ class BillingStore extends ChangeNotifier {
     required double goal,
     String pixHolder = '',
     String pixTown = '',
+    String pixLabel1 = '',
+    String pix2 = '',
+    String pixHolder2 = '',
+    String pixLabel2nd = '',
     required String pix,
     required String business,
   }) {
@@ -911,6 +946,10 @@ class BillingStore extends ChangeNotifier {
     businessName = business;
     pixName = pixHolder;
     pixCity = pixTown;
+    pixLabel = pixLabel1;
+    pixKey2 = pix2;
+    pixName2 = pixHolder2;
+    pixLabel2 = pixLabel2nd;
     DemoLedger.instance.setProfessionalPixKey(pix);
     selectedMonth = DateTime(today.year, today.month);
     _syncDashboard();
@@ -976,6 +1015,10 @@ class BillingStore extends ChangeNotifier {
     businessName = '';
     pixName = '';
     pixCity = '';
+    pixLabel = '';
+    pixKey2 = '';
+    pixName2 = '';
+    pixLabel2 = '';
     plans.clear();
     _events.clear();
     holidays.clear();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../billing/billing_screen.dart' show openPixSettings;
+import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
 import '../data/export.dart';
 import '../ui/cf_theme.dart';
@@ -85,19 +85,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (store.pixKey.isEmpty)
               Text('Nenhuma chave cadastrada.', style: CF.body(15, weight: FontWeight.w600))
             else ...[
-              Text('Chave: ${store.pixKey}', style: CF.body(15, weight: FontWeight.w600)),
+              Text('${store.hasSecondPix ? '${store.pixLabelOf(1)}: ' : 'Chave: '}${store.pixKey}',
+                  style: CF.body(15, weight: FontWeight.w600)),
               if (store.pixName.isNotEmpty || store.pixCity.isNotEmpty)
                 Text([store.pixName, store.pixCity].where((e) => e.isNotEmpty).join(' · '),
                     style: CF.body(14, color: CF.muted)),
+              if (store.hasSecondPix) ...[
+                const SizedBox(height: 6),
+                Text('${store.pixLabelOf(2)}: ${store.pixKey2}', style: CF.body(15, weight: FontWeight.w600)),
+                Text('Usada por ${store.plans.where((p) => p.active && p.pixChoice == 2).length} '
+                    'de ${store.plans.where((p) => p.active).length} ${store.terms.clients}. Escolha na ficha de cada um.',
+                    style: CF.body(14, color: CF.muted)),
+              ],
             ],
             const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton(
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              FilledButton(
                 onPressed: () => openPixSettings(context),
                 child: Text(store.pixKey.isEmpty ? 'Cadastrar Pix' : 'Alterar dados do Pix'),
               ),
-            ),
+              if (store.pixKey.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () => openSecondPixSettings(context),
+                  icon: Icon(store.hasSecondPix ? Icons.edit_rounded : Icons.add_rounded, size: 18),
+                  label: Text(store.hasSecondPix ? 'Alterar segunda chave' : 'Adicionar segunda chave'),
+                ),
+            ]),
           ]),
         ),
       ),

@@ -74,6 +74,7 @@ class CloudService implements CloudSink {
         'package_start': p.packageStart == null ? null : _d(p.packageStart!),
         'due_day': p.dueDay,
         'active': p.active,
+        'pix_choice': p.pixChoice,
       };
 
   @override
@@ -223,6 +224,7 @@ class CloudService implements CloudSink {
           packageStart: _date(c['package_start']),
           dueDay: (c['due_day'] as num?)?.toInt() ?? 5,
           active: c['active'] as bool? ?? true,
+          pixChoice: (c['pix_choice'] as num?)?.toInt() ?? 1,
         ),
     ];
 
@@ -304,6 +306,10 @@ class CloudService implements CloudSink {
       business: pr['business_name'] as String? ?? '',
       pixHolder: pr['pix_name'] as String? ?? '',
       pixTown: pr['pix_city'] as String? ?? '',
+      pixLabel1: pr['pix_label'] as String? ?? '',
+      pix2: pr['pix_key_2'] as String? ?? '',
+      pixHolder2: pr['pix_name_2'] as String? ?? '',
+      pixLabel2nd: pr['pix_label_2'] as String? ?? '',
     );
     store.sink = this;
     await refreshSubscription(store);

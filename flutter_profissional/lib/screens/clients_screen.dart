@@ -339,6 +339,8 @@ class _ClientProfile extends StatelessWidget {
                     value: p.hasRoutine ? routineText(p) : 'Sem dias fixos (${t.sessions} avuls${t.g('as', 'os')})',
                   ),
                   _InfoRow(icon: Icons.event_rounded, label: 'Vencimento', value: 'Todo dia ${p.dueDay}'),
+                  if (store.hasSecondPix)
+                    _InfoRow(icon: Icons.pix_rounded, label: 'Pix', value: '${store.pixFor(p).label} · ${store.pixFor(p).key}'),
                   _InfoRow(icon: Icons.phone_rounded, label: 'Telefone', value: p.phone.isEmpty ? 'Não informado' : _formatPhone(p.phone)),
                 ]),
               ),
@@ -477,6 +479,7 @@ class _ClientFormState extends State<_ClientForm> {
   String _timeFor(int day) => times[day] ?? _lastTime;
   late int duration = widget.plan?.durationMinutes ?? ProfessionalProfile.instance.profession.duration;
   late int dueDay = widget.plan?.dueDay ?? 10;
+  late int pixChoice = widget.plan?.pixChoice ?? 1;
   String? error;
 
   @override
@@ -554,6 +557,7 @@ class _ClientFormState extends State<_ClientForm> {
       packageStart: widget.plan?.packageStart ?? DateTime(today.year, today.month),
       dueDay: dueDay,
       active: widget.plan?.active ?? true,
+      pixChoice: pixChoice,
     );
     store.savePlan(p);
     Navigator.pop(context);
@@ -708,6 +712,17 @@ class _ClientFormState extends State<_ClientForm> {
                 icon: const Icon(Icons.add_rounded),
               ),
             ]),
+            if (store.hasSecondPix) ...[
+              const SizedBox(height: 18),
+              Text('Recebe o Pix em', style: CF.body(16, weight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final i in const [1, 2])
+                  _chip(store.pixLabelOf(i), pixChoice == i, () => setState(() => pixChoice = i)),
+              ]),
+              const SizedBox(height: 4),
+              Text('Chave: ${pixChoice == 2 ? store.pixKey2 : store.pixKey}', style: CF.body(14, color: CF.muted)),
+            ],
             if (error != null) ...[
               const SizedBox(height: 12),
               Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),

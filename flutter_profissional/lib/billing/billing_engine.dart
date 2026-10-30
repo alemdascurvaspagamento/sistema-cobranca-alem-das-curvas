@@ -138,6 +138,7 @@ class StudentPlan {
     this.durationMinutes = 60,
     this.packageSize = 10,
     this.packageStart,
+    this.pixChoice = 1,
   });
 
   final String id;
@@ -168,6 +169,9 @@ class StudentPlan {
   /// Mês em que o primeiro pacote foi comprado.
   final DateTime? packageStart;
 
+  /// Em qual chave Pix este cliente paga: 1 = principal, 2 = segunda chave.
+  final int pixChoice;
+
   bool get hasRoutine => weekdays.isNotEmpty;
 
   /// Valor de cada atendimento (por atendimento ou por hora).
@@ -187,6 +191,7 @@ class StudentPlan {
         durationMinutes: durationMinutes,
         packageSize: packageSize,
         packageStart: packageStart,
+        pixChoice: pixChoice,
       );
 }
 

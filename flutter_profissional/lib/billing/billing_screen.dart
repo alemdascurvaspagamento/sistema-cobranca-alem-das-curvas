@@ -409,6 +409,18 @@ class StudentBillCard extends StatelessWidget {
                   ]),
                   const SizedBox(height: 4),
                   Text(detail, style: CF.body(14, color: CF.muted)),
+                  if (store.hasSecondPix)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(children: [
+                        const Icon(Icons.pix_rounded, size: 14, color: CF.pix),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text('Pix: ${store.pixFor(plan).label}',
+                              style: CF.body(13.5, color: CF.pix, weight: FontWeight.w700)),
+                        ),
+                      ]),
+                    ),
                 ]),
               ),
               if (status != BillStatus.nothing)
@@ -1744,7 +1756,7 @@ String billingMessage(StudentPlan plan) {
   final received = store.received(plan.id);
   final remaining = store.remaining(plan);
   final due = store.dueDate(plan);
-  final pix = BillingStore.instance.pixKey;
+  final pix = BillingStore.instance.pixFor(plan).key;
   final first = plan.name.split(' ').first;
   final b = StringBuffer()
     ..writeln('Olá, $first! Tudo bem?')
@@ -1919,7 +1931,7 @@ Future<void> openPixSheet(BuildContext context, StudentPlan plan) async {
                 const SizedBox(height: 4),
                 TextButton(
                   onPressed: () => openPixSettings(sheet),
-                  child: Text('Chave: ${store.pixKey} · alterar'),
+                  child: Text('Chave: ${store.pixFor(plan).key}${store.hasSecondPix ? ' (${store.pixFor(plan).label})' : ''} · alterar'),
                 ),
               ]),
             ),
@@ -1978,3 +1990,78 @@ Future<bool?> openPixSettings(BuildContext context) {
   );
 }
 
+
+/// Segunda chave Pix (ex.: CNPJ e pessoal). Retorna `true` se salvou.
+Future<bool?> openSecondPixSettings(BuildContext context) {
+  final store = BillingStore.instance;
+  final label1 = TextEditingController(text: store.pixLabel);
+  final key = TextEditingController(text: store.pixKey2);
+  final name = TextEditingController(text: store.pixName2);
+  final label2 = TextEditingController(text: store.pixLabel2);
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Segunda chave Pix'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Para quem recebe em duas contas, por exemplo uma no CNPJ e outra no pessoal. '
+              'Na ficha de cada cliente você escolhe em qual ele paga.',
+              style: CF.body(14, color: CF.muted, height: 1.35)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: label1,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: 'Apelido da chave principal',
+              hintText: 'Ex.: CNPJ',
+              helperText: 'Chave principal: ${store.pixKey.isEmpty ? 'ainda não cadastrada' : store.pixKey}',
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: key,
+            decoration: const InputDecoration(
+              labelText: 'Segunda chave Pix',
+              helperText: 'CPF, CNPJ, e-mail, celular com DDD ou chave aleatória',
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: label2,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(labelText: 'Apelido da segunda chave', hintText: 'Ex.: Pessoal'),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: name,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Nome do titular desta chave',
+              helperText: 'Deixe vazio para usar o mesmo da chave principal',
+            ),
+          ),
+        ]),
+      ),
+      actions: [
+        if (store.hasSecondPix)
+          TextButton(
+            onPressed: () {
+              store.setSecondPix(label1: label1.text, key: '', name: '', label2: '');
+              Navigator.pop(ctx, true);
+            },
+            style: TextButton.styleFrom(foregroundColor: CF.red),
+            child: const Text('Remover'),
+          ),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () {
+            if (key.text.trim().isEmpty) return;
+            store.setSecondPix(label1: label1.text, key: key.text, name: name.text, label2: label2.text);
+            Navigator.pop(ctx, true);
+          },
+          child: const Text('Salvar'),
+        ),
+      ],
+    ),
+  );
+}
