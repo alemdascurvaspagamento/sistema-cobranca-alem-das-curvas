@@ -53,6 +53,14 @@ else:
     note("Grupo interno", "Equipe criado, com acesso a todas as versões")
 
 gid = group["id"]
+attrs = group["attributes"]
+note("Grupo: acesso automático", str(attrs.get("hasAccessToAllBuilds")))
+if not attrs.get("hasAccessToAllBuilds"):
+    ids = [b["id"] for b in builds if b["attributes"]["processingState"] == "VALID" and not b["attributes"].get("expired")]
+    if ids:
+        r = call("POST", f"/betaGroups/{gid}/relationships/builds", {"data": [{"type": "builds", "id": i} for i in ids]})
+        if r is not None:
+            note("Versões liberadas para o grupo", ", ".join(b["attributes"]["version"] for b in builds if b["id"] in ids))
 current = call("GET", f"/betaGroups/{gid}/betaTesters?limit=200")["data"]
 emails = {t["attributes"].get("email", "").lower() for t in current}
 note("Testadores no grupo", ", ".join(sorted(emails)) or "nenhum")
