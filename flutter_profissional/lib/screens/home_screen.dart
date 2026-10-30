@@ -123,7 +123,10 @@ class _DaySummary extends StatelessWidget {
         : 'Próxim${t.g('a', 'o')}: ${next.first.$2.time} · ${next.first.$1.name}';
     return Material(
       color: CF.ink,
-      borderRadius: BorderRadius.circular(24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: CF.lap.withValues(alpha: .7), width: 1.5),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: onAgenda,
@@ -374,6 +377,7 @@ class _MonthGlance extends StatelessWidget {
           decoration: BoxDecoration(
             color: f.resultPlanned < 0 ? CF.redBg : CF.greenBg,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: (f.resultPlanned < 0 ? CF.red : CF.green).withValues(alpha: .35)),
           ),
           child: Row(children: [
             Expanded(
@@ -428,8 +432,12 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: .07),
-          borderRadius: BorderRadius.circular(12),
+          color: CF.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: CF.line, width: 1.5),
+        ),
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
           border: Border(top: BorderSide(color: color, width: 3)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

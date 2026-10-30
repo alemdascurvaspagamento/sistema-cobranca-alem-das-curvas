@@ -407,16 +407,19 @@ class StudentBillCard extends StatelessWidget {
               _PartialBar(received: received, total: bill.total, remaining: remaining),
             ],
             const SizedBox(height: 12),
-            Row(children: [
-              Flexible(
-                child: Text('Ver ${_t.sessions} e cálculo',
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
-              ),
-              const Icon(Icons.chevron_right_rounded, size: 20, color: CF.blue),
-              const Spacer(),
-              if (!unpaid) _MoreMenu(plan: plan),
-            ]),
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 8,
+              children: [
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text('Ver ${_t.sessions} e cálculo',
+                      style: CF.body(15, color: CF.blue, weight: FontWeight.w600)),
+                  const Icon(Icons.chevron_right_rounded, size: 20, color: CF.blue),
+                ]),
+                if (!unpaid) _MoreMenu(plan: plan),
+              ],
+            ),
             if (unpaid) ...[
               const SizedBox(height: 10),
               Row(children: [
