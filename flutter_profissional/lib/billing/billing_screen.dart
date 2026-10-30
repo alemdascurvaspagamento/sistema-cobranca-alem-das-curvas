@@ -738,7 +738,19 @@ class _MoreMenu extends StatelessWidget {
     final hasPayments = store.payments(plan.id).isNotEmpty;
     return PopupMenuButton<String>(
       tooltip: 'Mais ações',
-      icon: const Icon(Icons.more_vert_rounded, color: CF.muted),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: CF.blue.withValues(alpha: .08),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: CF.blue.withValues(alpha: .35)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text('Mais ações', style: CF.body(14, color: CF.blue, weight: FontWeight.w700)),
+          const SizedBox(width: 2),
+          const Icon(Icons.expand_more_rounded, size: 20, color: CF.blue),
+        ]),
+      ),
       onSelected: (v) {
         switch (v) {
           case 'pay':

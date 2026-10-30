@@ -215,6 +215,24 @@ class _ClientTile extends StatelessWidget {
               ]),
             ),
             if (status != null) ...[const SizedBox(width: 8), StatusPill(status)],
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Editar cadastro',
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => openClientForm(context, plan: plan),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: CF.violet.withValues(alpha: .1),
+                    border: Border.all(color: CF.violet.withValues(alpha: .35)),
+                  ),
+                  child: const Icon(Icons.edit_rounded, size: 20, color: CF.violet),
+                ),
+              ),
+            ),
           ]),
         ),
       ),

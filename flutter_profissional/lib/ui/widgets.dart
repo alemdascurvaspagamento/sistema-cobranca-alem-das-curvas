@@ -168,12 +168,19 @@ class SessionRow extends StatelessWidget {
     return LayoutBuilder(builder: (context, box) {
     // Em colunas estreitas (semana no computador) fica só o essencial.
     final compact = box.maxWidth < 300;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: CF.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: CF.line),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           child: Row(children: [
             SizedBox(
               width: 58,
@@ -221,7 +228,7 @@ class SessionRow extends StatelessWidget {
       ),
       if (quick && !compact)
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           child: Wrap(spacing: 8, runSpacing: 6, children: [
             OutlinedButton.icon(
               onPressed: () => register(LessonStatus.completed, t.g('realizada', 'realizado')),
@@ -235,15 +242,10 @@ class SessionRow extends StatelessWidget {
               label: const Text('Faltou'),
               style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
             ),
-            TextButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.edit_note_rounded, size: 18),
-              label: const Text('Anotar ou alterar'),
-              style: TextButton.styleFrom(minimumSize: const Size(0, 38)),
-            ),
           ]),
         ),
-    ]);
+    ]),
+    );
     });
   }
 }
