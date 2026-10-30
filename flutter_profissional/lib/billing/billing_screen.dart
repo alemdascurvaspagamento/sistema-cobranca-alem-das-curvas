@@ -352,6 +352,10 @@ class StudentBillCard extends StatelessWidget {
             border: Border.all(color: status == BillStatus.overdue ? CF.red.withValues(alpha: .45) : CF.line),
           ),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border(top: BorderSide(color: fg, width: 3)),
+          ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               CircleAvatar(

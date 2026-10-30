@@ -56,6 +56,10 @@ class Panel extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: CF.line),
         ),
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border(top: BorderSide(color: color, width: 3)),
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (title != null) ...[
             Row(children: [
@@ -175,6 +179,10 @@ class SessionRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: CF.line),
       ),
+      foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border(top: BorderSide(color: fg, width: 3)),
+        ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       InkWell(
         onTap: onTap,

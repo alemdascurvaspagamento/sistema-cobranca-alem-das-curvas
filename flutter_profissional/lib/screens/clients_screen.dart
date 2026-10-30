@@ -195,6 +195,10 @@ class _ClientTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: CF.line)),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border(top: BorderSide(color: status == null ? CF.muted : CF.forStatus(status).$1, width: 3)),
+          ),
           child: Row(children: [
             CircleAvatar(
               radius: 22,
