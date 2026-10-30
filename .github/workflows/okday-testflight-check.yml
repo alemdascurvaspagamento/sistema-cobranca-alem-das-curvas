@@ -1,0 +1,26 @@
+# Confere o TestFlight do Okday e prepara o teste interno (grupo "Equipe").
+# Roda quando o arquivo flutter_profissional/testflight_check.txt muda.
+name: Okday TestFlight (conferir)
+
+on:
+  push:
+    paths:
+      - 'flutter_profissional/testflight_check.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conferir:
+    name: Conferir TestFlight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install --quiet pyjwt cryptography
+      - env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: python3 flutter_profissional/tool/asc_testflight.py
