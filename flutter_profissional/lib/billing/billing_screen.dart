@@ -149,14 +149,18 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final m = store.selectedMonth;
     final isCurrent = m.year == store.today.year && m.month == store.today.month;
-    return Row(children: [
-      Expanded(
-        child: Row(children: [
-          const IconBadge(Icons.receipt_long_rounded, color: CF.green, size: 46),
-          const SizedBox(width: 12),
-          Flexible(child: Text('Cobranças', style: CF.body(28, weight: FontWeight.w700))),
-        ]),
+    final title = Row(children: [
+      const IconBadge(Icons.receipt_long_rounded, color: CF.green, size: 46),
+      const SizedBox(width: 12),
+      Flexible(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text('Cobranças', maxLines: 1, softWrap: false, style: CF.body(28, weight: FontWeight.w700)),
+        ),
       ),
+    ]);
+    final month = Row(mainAxisSize: MainAxisSize.min, children: [
       IconButton(
         tooltip: 'Mês anterior',
         onPressed: () => store.shiftMonth(-1),
@@ -182,6 +186,18 @@ class _Header extends StatelessWidget {
         icon: const Icon(Icons.chevron_right_rounded),
       ),
     ]);
+    // No celular (e com letra maior, comum no Android) o mês desce para a linha de baixo.
+    return LayoutBuilder(builder: (context, box) {
+      final scale = MediaQuery.textScalerOf(context).scale(1);
+      if (box.maxWidth < 520 * scale) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          title,
+          const SizedBox(height: 6),
+          Center(child: month),
+        ]);
+      }
+      return Row(children: [Expanded(child: title), month]);
+    });
   }
 }
 
