@@ -125,7 +125,7 @@ jobs:
           sed -i -E 's/applicationId = "[^"]*"/applicationId = "br.com.alemdascurvas.coachflow"/' android/app/build.gradle.kts
           grep applicationId android/app/build.gradle.kts
           flutter pub get
-          dart run flutter_launcher_icons
+          dart run flutter_launcher_icons > "$RUNNER_TEMP/icons.txt" 2>&1 || { echo "::error title=Ícone::$(tail -15 "$RUNNER_TEMP/icons.txt" | tr '\n' ' ')"; exit 1; }
           manifest=android/app/src/main/AndroidManifest.xml
           # Nome que aparece no celular.
           sed -i 's/android:label="[^"]*"/android:label="Coach Flow"/' "$manifest"
