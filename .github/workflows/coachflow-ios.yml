@@ -1,0 +1,139 @@
+# App de iPhone do Coach Flow Professional -> TestFlight.
+#
+# Roda quando alguém (eu) envia uma etiqueta "ios-..." ou aperta "Run workflow".
+# 1. Confere a conta da Apple (identificador do app, time, app criado).
+# 2. Monta o app num Mac do GitHub, assina e envia para o TestFlight.
+# Usa os segredos ASC_ISSUER_ID, ASC_KEY_ID e ASC_PRIVATE_KEY (chave da App Store Connect).
+# Não mexe no Coach Flow Pessoal nem no site.
+
+name: Coach Flow iPhone (TestFlight)
+
+on:
+  push:
+    tags: ['ios-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coachflow-ios
+  cancel-in-progress: false
+
+env:
+  BUNDLE_ID: br.com.alemdascurvas.coachflow
+
+jobs:
+  apple:
+    name: Conferir a conta da Apple
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      team_id: ${{ steps.asc.outputs.team_id }}
+      app_ready: ${{ steps.asc.outputs.app_ready }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Conferir chaves
+        env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          missing=""
+          [ -n "$ASC_ISSUER_ID" ] || missing="$missing ASC_ISSUER_ID"
+          [ -n "$ASC_KEY_ID" ] || missing="$missing ASC_KEY_ID"
+          [ -n "$ASC_PRIVATE_KEY" ] || missing="$missing ASC_PRIVATE_KEY"
+          if [ -n "$missing" ]; then echo "::error title=Faltam segredos::$missing"; exit 1; fi
+      - run: pip install --quiet pyjwt cryptography
+      - name: Preparar a App Store Connect
+        id: asc
+        env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: python3 flutter_profissional/tool/asc_prepare.py
+
+  iphone:
+    name: Montar e enviar para o TestFlight
+    needs: apple
+    if: needs.apple.outputs.app_ready == 'true'
+    runs-on: macos-15
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar o Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar o projeto iPhone
+        run: |
+          flutter create --platforms=ios --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
+          flutter pub get
+          dart run flutter_launcher_icons
+          # Identificador definitivo do app.
+          sed -i '' -E "s/PRODUCT_BUNDLE_IDENTIFIER = [^;]*RunnerTests;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID}.RunnerTests;/; s/PRODUCT_BUNDLE_IDENTIFIER = br\.com\.alemdascurvas\.[A-Za-z_]*;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID};/" ios/Runner.xcodeproj/project.pbxproj
+          grep PRODUCT_BUNDLE_IDENTIFIER ios/Runner.xcodeproj/project.pbxproj | sort -u
+          plist=ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Coach Flow" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes array" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes:0 string https" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes:1 string whatsapp" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes:2 string mailto" "$plist"
+
+      - name: Chave da Apple
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s\n' "$ASC_PRIVATE_KEY" > "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"
+
+      - name: Montar o app
+        env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          TEAM_ID: ${{ needs.apple.outputs.team_id }}
+        run: |
+          flutter build ios --config-only --release --build-name=1.0.0 --build-number=${{ github.run_number }}
+          (cd ios && pod install)
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Runner.xcarchive" archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic | tail -40
+
+      - name: Enviar para o TestFlight
+        env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          TEAM_ID: ${{ needs.apple.outputs.team_id }}
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          echo "::notice title=TestFlight::Versão 1.0.0 (${{ github.run_number }}) enviada. A Apple processa em 10 a 30 minutos."
+
+      - name: Apagar a chave
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"

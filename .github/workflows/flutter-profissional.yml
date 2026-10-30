@@ -121,6 +121,11 @@ jobs:
         run: |
           # A pasta android é gerada aqui, só para montar o app de teste.
           flutter create --platforms=android --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
+          # Identificador definitivo (o mesmo do iPhone) e ícone do app.
+          sed -i -E 's/applicationId = "[^"]*"/applicationId = "br.com.alemdascurvas.coachflow"/' android/app/build.gradle.kts
+          grep applicationId android/app/build.gradle.kts
+          flutter pub get
+          dart run flutter_launcher_icons
           manifest=android/app/src/main/AndroidManifest.xml
           # Nome que aparece no celular.
           sed -i 's/android:label="[^"]*"/android:label="Coach Flow"/' "$manifest"
