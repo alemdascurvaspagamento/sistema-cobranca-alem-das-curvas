@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../ui/cf_theme.dart';
+import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
@@ -229,7 +230,7 @@ class _Scoreboard extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(moneyCompact(received), style: CF.score(40, color: Colors.white)),
+                child: CountUpText(moneyCompact(received), style: CF.score(40, color: Colors.white)),
               ),
             ]),
           ),
@@ -246,7 +247,7 @@ class _Scoreboard extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(moneyCompact(remaining), style: CF.score(40, color: CF.lap)),
+                child: CountUpText(moneyCompact(remaining), style: CF.score(40, color: CF.lap)),
               ),
             ]),
           ),
@@ -498,14 +499,10 @@ class _PartialBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: total <= 0 ? 0 : (received / total).clamp(0.0, 1.0).toDouble(),
-            minHeight: 8,
-            backgroundColor: CF.amberBg,
-            color: CF.green,
-          ),
+        GrowingBar(
+          value: total <= 0 ? 0 : (received / total).clamp(0.0, 1.0).toDouble(),
+          backgroundColor: CF.amberBg,
+          color: CF.green,
         ),
         const SizedBox(height: 6),
         Text('Recebido ${money(received)} · falta ${money(remaining)}',

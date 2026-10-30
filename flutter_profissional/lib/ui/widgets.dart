@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import 'cf_theme.dart';
+import 'confirmations.dart';
+import 'motion.dart';
 
 /// Título de página com ação opcional à direita.
 class PageTitle extends StatelessWidget {
@@ -49,7 +51,7 @@ class Panel extends StatelessWidget {
   final EdgeInsets padding;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => FadeInUp(child: Container(
         padding: padding,
         decoration: BoxDecoration(
           color: CF.surface,
@@ -71,7 +73,7 @@ class Panel extends StatelessWidget {
           ],
           child,
         ]),
-      );
+      ));
 }
 
 /// Seletor de mês compartilhado (o mesmo mês em Cobranças e Financeiro).
@@ -166,10 +168,19 @@ class SessionRow extends StatelessWidget {
       );
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(err ?? '${plan.name}: $done. Toque no atendimento para mudar.')));
+        ..showSnackBar(SnackBar(
+          content: err != null
+              ? Text(err)
+              : Row(children: [
+                  if (status == LessonStatus.completed) ...[const PopCheck(), const SizedBox(width: 10)],
+                  Expanded(child: Text('${plan.name}: $done. Toque no atendimento para mudar.')),
+                ]),
+        ));
     }
 
-    return LayoutBuilder(builder: (context, box) {
+    final confirm = Confirmations.canConfirm(plan, line, store.today);
+
+    return ListenableBuilder(listenable: Confirmations.instance, builder: (context, _) => LayoutBuilder(builder: (context, box) {
     // Em colunas estreitas (semana no computador) fica só o essencial.
     final compact = box.maxWidth < 300;
     return Container(
@@ -235,10 +246,33 @@ class SessionRow extends StatelessWidget {
           ]),
         ),
       ),
-      if (quick && !compact)
+      if ((quick || confirm) && !compact)
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           child: Wrap(spacing: 8, runSpacing: 6, children: [
+            if (confirm)
+              Confirmations.instance.sent(plan.id, line.date)
+                  ? OutlinedButton.icon(
+                      onPressed: () => Confirmations.instance.send(context, plan, line),
+                      icon: const Icon(Icons.done_all_rounded, size: 18, color: CF.whatsapp),
+                      label: const Text('Confirmação enviada'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: CF.whatsapp,
+                        minimumSize: const Size(0, 38),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    )
+                  : FilledButton.icon(
+                      onPressed: () => Confirmations.instance.send(context, plan, line),
+                      icon: const Icon(Icons.chat_rounded, size: 18),
+                      label: const Text('Confirmar'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: CF.whatsapp,
+                        minimumSize: const Size(0, 38),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                      ),
+                    ),
+            if (quick) ...[
             OutlinedButton.icon(
               onPressed: () => register(LessonStatus.completed, t.g('realizada', 'realizado')),
               icon: const Icon(Icons.check_rounded, size: 18, color: CF.green),
@@ -251,11 +285,12 @@ class SessionRow extends StatelessWidget {
               label: const Text('Faltou'),
               style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
             ),
+            ],
           ]),
         ),
     ]),
     );
-    });
+    }));
   }
 }
 
@@ -452,7 +487,7 @@ class KpiCard extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(value, style: CF.score(28, color: valueColor ?? (accent ? CF.text : color))),
+          child: CountUpText(value, style: CF.score(28, color: valueColor ?? (accent ? CF.text : color))),
         ),
         if (hint.isNotEmpty)
           Text(hint, maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(12.5, color: CF.muted, height: 1.25)),

@@ -4,6 +4,8 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
+import '../ui/confirmations.dart';
+import '../ui/motion.dart';
 import '../ui/start_guide.dart';
 import '../ui/widgets.dart';
 import 'clients_screen.dart' show openClientForm;
@@ -323,6 +325,7 @@ class _TodayAgenda extends StatelessWidget {
       child: today.isEmpty
           ? EmptyNote(icon: Icons.event_available_rounded, text: 'Nenhum${t.g('a', '')} ${t.session} hoje.')
           : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _ConfirmBar(today: today),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text('Toque num atendimento para anotar ou alterar.', style: CF.body(13.5, color: CF.muted)),
@@ -389,7 +392,7 @@ class _MonthGlance extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(moneyCompact(f.resultPlanned),
+                child: CountUpText(moneyCompact(f.resultPlanned),
                     style: CF.score(24, color: f.resultPlanned < 0 ? CF.red : CF.green)),
               ),
             ),
@@ -400,10 +403,7 @@ class _MonthGlance extends StatelessWidget {
           Text('Meta do mês: ${moneyCompact(goal)} · ${(progress * 100).round()}% alcançada',
               style: CF.body(14, color: CF.muted)),
           const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(value: progress, minHeight: 8, backgroundColor: CF.greyBg, color: CF.green),
-          ),
+          GrowingBar(value: progress, backgroundColor: CF.greyBg, color: CF.green),
         ],
       ]),
     );
@@ -447,7 +447,7 @@ class _Stat extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(value, style: CF.score(24, color: color)),
+            child: CountUpText(value, style: CF.score(24, color: color)),
           ),
         ]),
       );
@@ -483,7 +483,7 @@ class _OverdueCard extends StatelessWidget {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
-              const IconBadge(Icons.warning_amber_rounded, color: CF.red, size: 34),
+              const Ringing(child: IconBadge(Icons.warning_amber_rounded, color: CF.red, size: 34)),
               const SizedBox(width: 10),
               Expanded(child: Text('Em atraso', style: CF.body(16, weight: FontWeight.w700, color: CF.red))),
               Flexible(
@@ -645,4 +645,59 @@ class _StartHereState extends State<_StartHere> {
       ),
     );
   }
+}
+
+/// "3 de 6 confirmados" + botão para confirmar o próximo pelo WhatsApp.
+class _ConfirmBar extends StatelessWidget {
+  const _ConfirmBar({required this.today});
+  final List<(StudentPlan, LessonLine)> today;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Confirmations.instance,
+        builder: (context, _) {
+          final c = Confirmations.instance;
+          final now = BillingStore.instance.today;
+          final list = [for (final e in today) if (Confirmations.canConfirm(e.$1, e.$2, now)) e];
+          if (list.isEmpty) return const SizedBox.shrink();
+          final done = list.where((e) => c.sent(e.$1.id, e.$2.date)).length;
+          final pending = [for (final e in list) if (!c.sent(e.$1.id, e.$2.date)) e];
+          final all = pending.isEmpty;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+            decoration: BoxDecoration(
+              color: CF.whatsapp.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: CF.whatsapp.withValues(alpha: .35)),
+            ),
+            child: Row(children: [
+              Ringing(
+                active: !all,
+                child: Icon(all ? Icons.verified_rounded : Icons.phone_in_talk_rounded, color: CF.whatsapp, size: 26),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(all ? 'Todos confirmados' : '$done de ${list.length} confirmados',
+                      style: CF.body(15, weight: FontWeight.w700)),
+                  Text(all ? 'Mensagens enviadas pelo WhatsApp.' : 'Confirme pelo WhatsApp e evite faltas.',
+                      style: CF.body(13, color: CF.muted)),
+                ]),
+              ),
+              if (!all)
+                FilledButton.icon(
+                  onPressed: () => c.send(context, pending.first.$1, pending.first.$2),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: CF.whatsapp,
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  icon: const Icon(Icons.chat_rounded, size: 18),
+                  label: Text(done == 0 ? 'Confirmar' : 'Próximo'),
+                ),
+            ]),
+          );
+        },
+      );
 }

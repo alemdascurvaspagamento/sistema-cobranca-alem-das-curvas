@@ -221,7 +221,18 @@ class LaneTrack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double p = progress.isNaN ? 0.0 : progress.clamp(0.0, 1.0).toDouble();
+    final double target = progress.isNaN ? 0.0 : progress.clamp(0.0, 1.0).toDouble();
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    // Na primeira vez a barra "corre" do zero até o valor.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: target),
+      duration: reduce ? Duration.zero : const Duration(milliseconds: 1100),
+      curve: Curves.easeOutCubic,
+      builder: (context, p, _) => _lane(p),
+    );
+  }
+
+  Widget _lane(double p) {
     return LayoutBuilder(builder: (context, box) {
       final w = box.maxWidth;
       return SizedBox(
@@ -244,9 +255,7 @@ class LaneTrack extends StatelessWidget {
               left: w * f - 1, top: 4,
               child: Container(width: 2, height: 18, color: CF.inkLine),
             ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
+          Positioned(
             left: 0, top: 6,
             width: (w * p).clamp(0.0, w).toDouble(),
             child: Container(
@@ -254,9 +263,7 @@ class LaneTrack extends StatelessWidget {
               decoration: BoxDecoration(color: CF.mint, borderRadius: BorderRadius.circular(999)),
             ),
           ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
+          Positioned(
             left: (w * p - 13).clamp(-2.0, w - 24).toDouble(),
             top: 0,
             child: Container(

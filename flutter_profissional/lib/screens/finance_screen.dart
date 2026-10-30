@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
+import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import '../data/ids.dart';
 
@@ -196,15 +197,7 @@ class _ForecastLine extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 6),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(999),
-        child: LinearProgressIndicator(
-          value: progress,
-          minHeight: 8,
-          color: color,
-          backgroundColor: Colors.white12,
-        ),
-      ),
+      GrowingBar(value: progress, color: color, backgroundColor: Colors.white12),
       const SizedBox(height: 6),
       Wrap(spacing: 14, runSpacing: 2, children: [
         Text('${moneyCompact(done)} $doneLabel', style: CF.body(13, color: Colors.white70)),
