@@ -4,6 +4,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../ui/cf_theme.dart';
+import '../ui/start_guide.dart';
 import '../ui/widgets.dart';
 import 'clients_screen.dart' show openClientForm;
 
@@ -528,10 +529,6 @@ class _StartHere extends StatefulWidget {
   const _StartHere({required this.onBilling});
   final VoidCallback onBilling;
 
-  /// Vale só enquanto o app está aberto: quem dispensa não vê de novo na sessão.
-  static bool dismissed = false;
-  static bool seenBilling = false;
-
   @override
   State<_StartHere> createState() => _StartHereState();
 }
@@ -543,8 +540,14 @@ class _StartHereState extends State<_StartHere> {
     final t = store.terms;
     final hasClient = store.plans.isNotEmpty;
     final hasPix = store.pixKey.isNotEmpty;
-    final seen = _StartHere.seenBilling;
-    if (_StartHere.dismissed || (hasClient && hasPix && seen)) return const SizedBox.shrink();
+    final guide = StartGuide.instance;
+    final seen = guide.seenBilling;
+    if (guide.closed) return const SizedBox.shrink();
+    if (hasClient && hasPix && seen) {
+      // Tudo feito: guarda na conta para não voltar a aparecer.
+      WidgetsBinding.instance.addPostFrameCallback((_) => guide.close());
+      return const SizedBox.shrink();
+    }
     final done = [hasClient, hasPix, seen].where((e) => e).length;
     Widget step({
       required int n,
@@ -596,7 +599,10 @@ class _StartHereState extends State<_StartHere> {
         title: 'Comece por aqui ($done de 3)',
         action: IconButton(
           tooltip: 'Dispensar',
-          onPressed: () => setState(() => _StartHere.dismissed = true),
+          onPressed: () async {
+            await StartGuide.instance.close();
+            if (mounted) setState(() {});
+          },
           icon: const Icon(Icons.close_rounded, size: 20),
         ),
         child: Column(children: [
@@ -631,7 +637,7 @@ class _StartHereState extends State<_StartHere> {
             detail: hasClient ? 'O valor de cada ${t.client}, com a conta explicada.' : 'Libera depois do primeiro cadastro.',
             action: 'Ver cobranças',
             onTap: () {
-              _StartHere.seenBilling = true;
+              StartGuide.instance.markBillingSeen();
               widget.onBilling();
             },
           ),

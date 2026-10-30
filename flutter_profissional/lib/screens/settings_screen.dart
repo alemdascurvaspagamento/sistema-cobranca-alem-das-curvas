@@ -4,6 +4,7 @@ import '../billing/billing_screen.dart' show openPixSettings;
 import '../billing/billing_store.dart';
 import '../data/export.dart';
 import '../ui/cf_theme.dart';
+import '../ui/start_guide.dart';
 import '../ui/widgets.dart';
 
 /// Configurações: chave Pix, conta e sincronização de agenda.
@@ -157,6 +158,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
           const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () async {
+                await StartGuide.instance.showAgain();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(const SnackBar(content: Text('Pronto. O guia "Comece por aqui" voltou para o Início.')));
+              },
+              icon: const Icon(Icons.rocket_launch_rounded, size: 18),
+              label: const Text('Mostrar o guia de início de novo'),
+            ),
+          ),
+          const SizedBox(height: 4),
           if (widget.onSignOut != null)
             Align(
               alignment: Alignment.centerLeft,
