@@ -140,7 +140,7 @@ class _DaySummary extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Hoje', style: CF.body(15, color: Colors.white70)),
                 const SizedBox(height: 4),
-                Text(t.count(active.length), style: CF.score(44, color: Colors.white)),
+                CountUpText(t.count(active.length), style: CF.score(44, color: Colors.white)),
                 const SizedBox(height: 8),
                 Text(nextText, style: CF.body(15, color: CF.lap, weight: FontWeight.w600)),
               ]),
@@ -252,11 +252,12 @@ class _Secretary extends StatelessWidget {
       icon: Icons.support_agent_rounded,
       color: CF.amber,
       title: 'Secretária: o que precisa de você',
+      ringing: items.isNotEmpty,
       child: items.isEmpty
           ? const EmptyNote(icon: Icons.task_alt_rounded, text: 'Tudo em dia por aqui.')
           : Column(children: [
               for (var i = 0; i < items.length; i++) ...[
-                items[i],
+                FadeInUp(delayMs: 140 * (i + 1), child: items[i]),
                 if (i < items.length - 1) const Divider(height: 1),
               ],
             ]),

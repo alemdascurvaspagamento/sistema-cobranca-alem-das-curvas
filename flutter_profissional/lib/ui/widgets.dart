@@ -40,9 +40,13 @@ class Panel extends StatelessWidget {
     this.icon,
     this.color = CF.blue,
     this.padding = const EdgeInsets.all(16),
+    this.ringing = false,
   });
   final Widget child;
   final String? title;
+
+  /// O ícone do título "toca" de tempos em tempos (há algo pendente).
+  final bool ringing;
 
   /// Ícone do título, dentro de um quadradinho colorido.
   final IconData? icon;
@@ -65,7 +69,12 @@ class Panel extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (title != null) ...[
             Row(children: [
-              if (icon != null) ...[IconBadge(icon!, color: color, size: 34), const SizedBox(width: 10)],
+              if (icon != null) ...[
+                ringing
+                    ? RingingLoop(child: IconBadge(icon!, color: color, size: 34))
+                    : IconBadge(icon!, color: color, size: 34),
+                const SizedBox(width: 10),
+              ],
               Expanded(child: Text(title!, style: CF.body(18, weight: FontWeight.w700))),
               if (action != null) action!,
             ]),

@@ -10,9 +10,59 @@ bool reduceMotion(BuildContext context) => MediaQuery.maybeDisableAnimationsOf(c
 
 Duration motion(BuildContext context, int ms) => reduceMotion(context) ? Duration.zero : Duration(milliseconds: ms);
 
+/// Começa o movimento só quando o item aparece na tela (ao rolar até ele).
+class WhenVisible extends StatefulWidget {
+  const WhenVisible({super.key, required this.builder});
+  final Widget Function(BuildContext context, bool visible) builder;
+
+  @override
+  State<WhenVisible> createState() => _WhenVisibleState();
+}
+
+class _WhenVisibleState extends State<WhenVisible> {
+  bool visible = false;
+  ScrollPosition? position;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (visible) return;
+    if (reduceMotion(context)) {
+      visible = true;
+      return;
+    }
+    position?.removeListener(_check);
+    position = Scrollable.maybeOf(context)?.position;
+    position?.addListener(_check);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  void _check() {
+    if (visible || !mounted) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return;
+    final top = box.localToGlobal(Offset.zero).dy;
+    final screen = MediaQuery.sizeOf(context).height;
+    if (top < screen - 24 && top + box.size.height > 0) {
+      position?.removeListener(_check);
+      setState(() => visible = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    position?.removeListener(_check);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, visible);
+}
+
 /// Número que "conta" até o valor certo (R$ 0 → R$ 13.952,50).
-/// Aceita o texto já formatado: valores em reais e números inteiros animam;
-/// qualquer outro texto aparece normal.
+/// Aceita o texto já formatado: valores em reais, números inteiros e
+/// "6 aulas" animam; qualquer outro texto aparece normal.
+/// Começa quando o número aparece na tela.
 class CountUpText extends StatelessWidget {
   const CountUpText(this.text, {super.key, this.style, this.textAlign});
   final String text;
@@ -20,7 +70,7 @@ class CountUpText extends StatelessWidget {
   final TextAlign? textAlign;
 
   static final _moneyRe = RegExp(r'^(−?)R\$ ([\d.]+)(,(\d{2}))?$');
-  static final _intRe = RegExp(r'^\d{1,6}$');
+  static final _intRe = RegExp(r'^(\d{1,6})(\s.*)?$');
 
   @override
   Widget build(BuildContext context) {
@@ -34,25 +84,29 @@ class CountUpText extends StatelessWidget {
       final compact = m.group(3) == null;
       target = value;
       format = compact ? (v) => moneyCompact(v.round()) : (v) => money(v);
-    } else if (_intRe.hasMatch(text)) {
-      target = double.parse(text);
-      format = (v) => v.round().toString();
+    } else if (_intRe.firstMatch(text) case final i?) {
+      target = double.parse(i.group(1)!);
+      final suffix = i.group(2) ?? '';
+      format = (v) => '${v.round()}$suffix';
     }
     if (target == null || format == null || target == 0) {
       return Text(text, style: style, textAlign: textAlign);
     }
     final f = format;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: target),
-      duration: motion(context, 900),
-      curve: Curves.easeOutCubic,
-      // No fim mostra exatamente o texto original.
-      builder: (context, v, _) => Text(v == target ? text : f(v), style: style, textAlign: textAlign),
+    final end = target;
+    return WhenVisible(
+      builder: (context, visible) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: visible ? end : 0),
+        duration: motion(context, 1000),
+        curve: Curves.easeOutCubic,
+        // No fim mostra exatamente o texto original.
+        builder: (context, v, _) => Text(v == end ? text : f(v), style: style, textAlign: textAlign),
+      ),
     );
   }
 }
 
-/// Barra que enche até o valor (meta, recebido).
+/// Barra que enche até o valor (meta, recebido), quando aparece na tela.
 class GrowingBar extends StatelessWidget {
   const GrowingBar({super.key, required this.value, this.minHeight = 8, this.color, this.backgroundColor});
   final double value;
@@ -62,14 +116,68 @@ class GrowingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final v = value.isNaN ? 0.0 : value.clamp(0.0, 1.0).toDouble();
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: v),
-      duration: motion(context, 1100),
-      curve: Curves.easeOutCubic,
-      builder: (context, x, _) => ClipRRect(
-        borderRadius: BorderRadius.circular(999),
-        child: LinearProgressIndicator(value: x, minHeight: minHeight, color: color, backgroundColor: backgroundColor),
+    return WhenVisible(
+      builder: (context, visible) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: visible ? v : 0),
+        duration: motion(context, 1200),
+        curve: Curves.easeOutCubic,
+        builder: (context, x, _) => ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(value: x, minHeight: minHeight, color: color, backgroundColor: backgroundColor),
+        ),
       ),
+    );
+  }
+}
+
+/// Ícone que "toca" de tempos em tempos enquanto houver algo pendente
+/// (três toques, pausa, e para depois de algumas vezes para não cansar).
+class RingingLoop extends StatefulWidget {
+  const RingingLoop({super.key, required this.child, this.active = true, this.times = 4});
+  final Widget child;
+  final bool active;
+  final int times;
+
+  @override
+  State<RingingLoop> createState() => _RingingLoopState();
+}
+
+class _RingingLoopState extends State<RingingLoop> with SingleTickerProviderStateMixin {
+  // Cada ciclo: 1,4 s tocando + 3,6 s parado.
+  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 5000));
+  int done = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    c.addStatusListener((s) {
+      if (s == AnimationStatus.completed && ++done < widget.times && mounted) c.forward(from: 0);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.active && !reduceMotion(context) && !c.isAnimating && done == 0) c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active || reduceMotion(context)) return widget.child;
+    return AnimatedBuilder(
+      animation: c,
+      builder: (context, child) {
+        final t = (c.value * 5000 / 1400).clamp(0.0, 1.0);
+        final angle = t >= 1 ? 0.0 : math.sin(t * math.pi * 12) * .24 * (1 - t);
+        return Transform.rotate(angle: angle, child: child);
+      },
+      child: widget.child,
     );
   }
 }
