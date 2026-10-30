@@ -179,10 +179,11 @@ class SessionRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: CF.line),
       ),
+      // Na agenda a cor fica na lateral: lê-se como uma linha do tempo.
       foregroundDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border(top: BorderSide(color: fg, width: 3)),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border(left: BorderSide(color: fg, width: 5)),
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       InkWell(
         onTap: onTap,
@@ -194,7 +195,7 @@ class SessionRow extends StatelessWidget {
               width: 58,
               child: Text(line.time.isEmpty ? '—' : line.time, style: CF.score(22, color: struck ? CF.muted : CF.text)),
             ),
-            Container(width: 4, height: 40, decoration: BoxDecoration(color: fg, borderRadius: BorderRadius.circular(4))),
+            Container(width: 1, height: 36, color: CF.line),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
