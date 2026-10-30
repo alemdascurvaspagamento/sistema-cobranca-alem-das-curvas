@@ -478,3 +478,18 @@ class KpiRow extends StatelessWidget {
         ]);
       });
 }
+
+/// Marca do Okday: agenda com check, em quadrado amarelo (igual ao ícone do app).
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, this.size = 30});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(size * .28)),
+        child: Icon(Icons.event_available_rounded, size: size * .72, color: CF.ink),
+      );
+}

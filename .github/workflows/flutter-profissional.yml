@@ -128,7 +128,7 @@ jobs:
           dart run flutter_launcher_icons -f tool/icons_android.yaml > "$RUNNER_TEMP/icons.txt" 2>&1 || { echo "::error title=Ícone::$(tail -15 "$RUNNER_TEMP/icons.txt" | tr '\n' ' ')"; exit 1; }
           manifest=android/app/src/main/AndroidManifest.xml
           # Nome que aparece no celular.
-          sed -i 's/android:label="[^"]*"/android:label="Coach Flow"/' "$manifest"
+          sed -i 's/android:label="[^"]*"/android:label="Okday"/' "$manifest"
           # Acesso à internet (fontes, WhatsApp) e permissão para abrir links.
           grep -q 'android.permission.INTERNET' "$manifest" || \
             sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$manifest"
@@ -156,7 +156,7 @@ jobs:
             --target "${GITHUB_SHA}" \
             --prerelease \
             --title "Android - versão de teste" \
-            --notes "App de teste do Coach Flow Profissional, gerado automaticamente.
+            --notes "App de teste do Okday (antigo Coach Flow Professional), gerado automaticamente.
 
           Ramo: ${GITHUB_REF_NAME} · versão ${GITHUB_RUN_NUMBER} · ${GITHUB_SHA::7}
 

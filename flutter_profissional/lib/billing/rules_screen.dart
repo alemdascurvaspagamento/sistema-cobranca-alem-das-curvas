@@ -36,7 +36,7 @@ class RulesScreen extends StatelessWidget {
                 'Regras de cobrança',
                 icon: Icons.rule_rounded,
                 color: CF.amber,
-                subtitle: 'Escolha uma vez e o Coach Flow aplica em todas as contas. '
+                subtitle: 'Escolha uma vez e o Okday aplica em todas as contas. '
                     'Você ainda pode ajustar cada $s, ${t.g('uma', 'um')} a ${t.g('uma', 'um')}.',
               ),
               const SizedBox(height: 18),

@@ -73,7 +73,7 @@ class _OnboardingState extends State<Onboarding> {
             ),
           ),
           _BottomBar(
-            label: step == 0 ? 'Continuar' : 'Ver meu Coach Flow',
+            label: step == 0 ? 'Continuar' : 'Ver meu Okday',
             onPressed: profession == null
                 ? null
                 : () {
@@ -93,7 +93,7 @@ class _OnboardingState extends State<Onboarding> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text('Qual é a sua profissão?', style: CF.score(38)),
       const SizedBox(height: 6),
-      Text('O Coach Flow passa a falar a sua língua: alunos e aulas, pacientes e consultas, '
+      Text('O Okday passa a falar a sua língua: alunos e aulas, pacientes e consultas, '
           'clientes e sessões.', style: CF.body(16, color: CF.muted, height: 1.4)),
       const SizedBox(height: 18),
       LayoutBuilder(builder: (context, box) {

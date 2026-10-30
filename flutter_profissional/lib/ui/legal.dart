@@ -18,7 +18,7 @@ String get _contact => AppConfig.supportContact.contains('@') ? AppConfig.suppor
 List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
     ? [
         _Item('1. Quem somos',
-            'O Coach Flow Professional é um aplicativo de agenda e cobrança para profissionais liberais, '
+            'O Okday é um aplicativo de agenda e cobrança para profissionais liberais, '
                 'oferecido pela Além das Curvas (Daniel Barsottini). Fale com a gente: $_contact.'),
         _Item('2. O que o app faz',
             'Ajuda você a organizar agenda, calcular cobranças, acompanhar pagamentos, ganhos e despesas. '

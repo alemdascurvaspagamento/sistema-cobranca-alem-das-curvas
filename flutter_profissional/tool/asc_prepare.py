@@ -17,6 +17,8 @@ import urllib.request
 
 import jwt  # PyJWT
 
+APP_NAME = os.environ.get("APP_NAME", "")  # nome na App Store (opcional)
+
 BUNDLE_ID = os.environ.get("BUNDLE_ID", "br.com.alemdascurvas.coachflow")
 API = "https://api.appstoreconnect.apple.com/v1"
 
@@ -31,7 +33,7 @@ def token():
     )
 
 
-def call(method, path, body=None):
+def call(method, path, body=None, soft=False):
     req = urllib.request.Request(
         API + path,
         method=method,
@@ -43,6 +45,9 @@ def call(method, path, body=None):
             return json.loads(r.read() or b"{}")
     except urllib.error.HTTPError as e:
         detail = e.read().decode(errors="replace")
+        if soft:
+            print(f"::warning title=App Store Connect ({e.code})::{method} {path} -> {detail[:900]}")
+            return None
         print(f"::error title=App Store Connect ({e.code})::{method} {path} -> {detail[:900]}")
         sys.exit(1)
 
@@ -72,7 +77,25 @@ q = urllib.parse.urlencode({"filter[bundleId]": BUNDLE_ID})
 apps = call("GET", f"/apps?{q}")["data"]
 if apps:
     out("app_ready", "true")
-    print(f"App na App Store Connect: {apps[0]['attributes']['name']} ({apps[0]['id']})")
+    app = apps[0]
+    print(f"App na App Store Connect: {app['attributes']['name']} ({app['id']})")
+    if APP_NAME and app["attributes"]["name"] != APP_NAME:
+        locale = app["attributes"].get("primaryLocale", "pt-BR")
+        infos = call("GET", f"/apps/{app['id']}/appInfos")["data"]
+        done = False
+        for info in infos:
+            locs = call("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]
+            for loc in locs:
+                if loc["attributes"]["locale"] != locale:
+                    continue
+                r = call("PATCH", f"/appInfoLocalizations/{loc['id']}", {
+                    "data": {"type": "appInfoLocalizations", "id": loc["id"], "attributes": {"name": APP_NAME}}
+                }, soft=True)
+                if r:
+                    done = True
+                    print(f"::notice title=Nome na App Store::{APP_NAME}")
+        if not done:
+            print(f"::warning title=Nome na App Store::Não consegui trocar para {APP_NAME} (veja o aviso acima).")
 else:
     out("app_ready", "false")
     print(f"::warning title=Falta criar o app::Crie o app na App Store Connect com o identificador {BUNDLE_ID}.")

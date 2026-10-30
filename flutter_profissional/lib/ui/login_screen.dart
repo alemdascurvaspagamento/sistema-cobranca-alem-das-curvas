@@ -159,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(forgot ? 'Recuperar senha' : (signup ? 'Criar conta grátis' : 'Entrar no Coach Flow'),
+                  Text(forgot ? 'Recuperar senha' : (signup ? 'Criar conta grátis' : 'Entrar no Okday'),
                       style: CF.score(40, color: Colors.white)),
                   const SizedBox(height: 6),
                   Text(

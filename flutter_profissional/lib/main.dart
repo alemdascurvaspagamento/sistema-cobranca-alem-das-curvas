@@ -44,7 +44,7 @@ class CoachFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Coach Flow Professional',
+        title: 'Okday',
         debugShowCheckedModeBanner: false,
         theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
@@ -441,7 +441,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     final c = AppConfig.supportContact.trim();
     Uri? link;
     if (c.contains('@')) {
-      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Coach Flow Professional: feedback'});
+      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Okday: feedback'});
     } else if (c.isNotEmpty) {
       link = Uri.parse('https://wa.me/${c.replaceAll(RegExp(r'[^0-9]'), '')}');
     }
@@ -674,18 +674,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               centerTitle: !desktop,
               automaticallyImplyLeading: false,
               title: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 30, height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(9)),
-                  child: Text('cf', style: CF.score(18, color: CF.ink)),
-                ),
+                const BrandMark(size: 30),
                 const SizedBox(width: 10),
-                Text('Coach Flow', style: CF.body(19, color: Colors.white, weight: FontWeight.w700)),
-                if (!narrowPhone) ...[
-                  const SizedBox(width: 6),
-                  Text('Professional', style: CF.body(19, color: Colors.white60)),
-                ],
+                Text.rich(TextSpan(children: [
+                  TextSpan(text: 'Ok', style: CF.body(21, color: CF.lap, weight: FontWeight.w800)),
+                  TextSpan(text: 'day', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
+                ])),
               ]),
             ),
             body: Row(children: [

@@ -1,4 +1,4 @@
-# App de iPhone do Coach Flow Professional -> TestFlight.
+# App de iPhone do Okday (antigo Coach Flow Professional) -> TestFlight.
 #
 # Roda quando o arquivo flutter_profissional/ios_build.txt muda, ou em "Run workflow".
 # 1. Confere a conta da Apple (identificador do app, time, app criado).
@@ -24,6 +24,7 @@ concurrency:
 
 env:
   BUNDLE_ID: br.com.alemdascurvas.coachflow
+  APP_NAME: "Okday: Agenda e Cobrança"
 
 jobs:
   apple:
@@ -90,7 +91,7 @@ jobs:
           sed -i '' -E "s/PRODUCT_BUNDLE_IDENTIFIER = [^;]*RunnerTests;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID}.RunnerTests;/; s/PRODUCT_BUNDLE_IDENTIFIER = br\.com\.alemdascurvas\.[A-Za-z_]*;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID};/" ios/Runner.xcodeproj/project.pbxproj
           grep PRODUCT_BUNDLE_IDENTIFIER ios/Runner.xcodeproj/project.pbxproj | sort -u
           plist=ios/Runner/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Coach Flow" "$plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Okday" "$plist"
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$plist"
           /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes array" "$plist"
           /usr/libexec/PlistBuddy -c "Add :LSApplicationQueriesSchemes:0 string https" "$plist"
