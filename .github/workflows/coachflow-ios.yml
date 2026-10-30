@@ -67,6 +67,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Usar o Xcode mais novo (a Apple exige o SDK do iOS 26)
+        run: |
+          ls -d /Applications/Xcode*.app
+          x=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$x" ]; then echo "::error title=Xcode::Nenhum Xcode 26 neste Mac do GitHub"; exit 1; fi
+          sudo xcode-select -s "$x/Contents/Developer"
+          xcodebuild -version
+
       - name: Instalar o Flutter
         uses: subosito/flutter-action@v2
         with:
