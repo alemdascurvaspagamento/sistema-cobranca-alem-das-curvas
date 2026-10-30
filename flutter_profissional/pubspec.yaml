@@ -23,12 +23,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# Ícone do app (iPhone e Android): gerado na montagem pelo GitHub.
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/icon/icon.png"
-  min_sdk_android: 21
-  adaptive_icon_background: "#FFC23D"
-  adaptive_icon_foreground: "assets/icon/foreground.png"

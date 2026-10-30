@@ -75,7 +75,7 @@ jobs:
         run: |
           flutter create --platforms=ios --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
           flutter pub get
-          dart run flutter_launcher_icons
+          dart run flutter_launcher_icons -f tool/icons_ios.yaml
           # Identificador definitivo do app.
           sed -i '' -E "s/PRODUCT_BUNDLE_IDENTIFIER = [^;]*RunnerTests;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID}.RunnerTests;/; s/PRODUCT_BUNDLE_IDENTIFIER = br\.com\.alemdascurvas\.[A-Za-z_]*;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID};/" ios/Runner.xcodeproj/project.pbxproj
           grep PRODUCT_BUNDLE_IDENTIFIER ios/Runner.xcodeproj/project.pbxproj | sort -u
