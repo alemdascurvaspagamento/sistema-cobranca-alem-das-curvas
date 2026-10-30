@@ -75,3 +75,20 @@ for u in (users or {}).get("data", []):
              "relationships": {"betaGroups": {"data": [{"type": "betaGroups", "id": gid}]}}}})
     if r:
         note("Convite enviado", email)
+
+
+# Situação de cada versão para o teste interno e do convite de cada testador.
+for b in builds[:2]:
+    d = call("GET", f"/builds/{b['id']}/buildBetaDetail")
+    if d:
+        a = d["data"]["attributes"]
+        note(f"Versão {b['attributes']['version']} - teste interno", f"{a.get('internalBuildState')} / externo: {a.get('externalBuildState')}")
+testers = call("GET", f"/betaTesters?" + urllib.parse.urlencode({"filter[apps]": aid, "limit": 50}))
+for t in (testers or {}).get("data", []):
+    a = t["attributes"]
+    note("Testador", f"{a.get('email')} · convite: {a.get('inviteType')} · situação: {a.get('state')}")
+    if os.environ.get("RESEND_INVITE") == "1":
+        r = call("POST", "/betaTesterInvitations", {"data": {"type": "betaTesterInvitations", "relationships": {
+            "app": {"data": {"type": "apps", "id": aid}}, "betaTester": {"data": {"type": "betaTesters", "id": t["id"]}}}}})
+        if r is not None:
+            note("Convite reenviado", a.get("email"))
