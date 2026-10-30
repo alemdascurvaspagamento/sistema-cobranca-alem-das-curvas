@@ -1,6 +1,6 @@
 # App de iPhone do Coach Flow Professional -> TestFlight.
 #
-# Roda quando alguém (eu) envia uma etiqueta "ios-..." ou aperta "Run workflow".
+# Roda quando o arquivo flutter_profissional/ios_build.txt muda, ou em "Run workflow".
 # 1. Confere a conta da Apple (identificador do app, time, app criado).
 # 2. Monta o app num Mac do GitHub, assina e envia para o TestFlight.
 # Usa os segredos ASC_ISSUER_ID, ASC_KEY_ID e ASC_PRIVATE_KEY (chave da App Store Connect).
@@ -10,7 +10,9 @@ name: Coach Flow iPhone (TestFlight)
 
 on:
   push:
-    tags: ['ios-*']
+    paths:
+      # Para gerar uma versão nova, basta mudar este arquivo.
+      - 'flutter_profissional/ios_build.txt'
   workflow_dispatch:
 
 permissions:
