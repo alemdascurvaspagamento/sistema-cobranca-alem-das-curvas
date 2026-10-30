@@ -109,7 +109,7 @@ jobs:
             lines=$(grep -E 'error:|Error|ERROR|failed|No profiles|requires a provisioning|Signing' "$log" | tail -25)
             [ -n "$lines" ] || lines=$(tail -25 "$log")
             echo "::error title=$1::$(printf '%s' "$lines" | sed -e 's/%/%25/g' | tr '\n' '|')"; exit 1; }
-          flutter build ios --config-only --release --build-name=1.0.0 --build-number=${{ github.run_number }} > "$log" 2>&1 || fail "Preparar o Flutter"
+          flutter build ios --config-only --no-codesign --release --build-name=1.0.0 --build-number=${{ github.run_number }} > "$log" 2>&1 || fail "Preparar o Flutter"
           (cd ios && pod install) >> "$log" 2>&1 || fail "Bibliotecas do iPhone (pod install)"
           xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
             -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Runner.xcarchive" archive \
