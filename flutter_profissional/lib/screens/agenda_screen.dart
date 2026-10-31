@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../agenda_events.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
@@ -59,7 +60,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: store,
+      animation: Listenable.merge([store, AgendaEvents.instance]),
       builder: (context, _) {
         final t = store.terms;
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -69,7 +70,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             color: CF.blue,
             subtitle: _subtitle(),
             trailing: FilledButton.icon(
-              onPressed: () => _openNewSession(context, day),
+              onPressed: () => _chooseNew(context, day),
               icon: const Icon(Icons.add_rounded, size: 20),
               label: const Text('Marcar'),
             ),
@@ -134,6 +135,14 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final holiday = store.holidayOn(day);
     final isToday = dateOnly(day) == store.today;
     final happening = sessions.where((e) => store.happens(e.$2.outcome)).length;
+    final events = AgendaEvents.instance.on(day);
+    // Atendimentos e compromissos juntos, em ordem de horário.
+    final rows = <(int, Widget)>[
+      for (final (p, line) in sessions)
+        (line.time.isEmpty ? 24 * 60 : minutesOf(line.time),
+            SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line))),
+      for (final e in events) (e.startMinute, EventRow(event: e, day: day)),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _WeekStrip(
         start: weekStart,
@@ -159,17 +168,28 @@ class _AgendaScreenState extends State<AgendaScreen> {
             _HolidayNote(holiday: holiday),
             const SizedBox(height: 8),
           ],
-          if (sessions.isEmpty)
+          if (rows.isEmpty)
             EmptyNote(
               icon: Icons.event_available_rounded,
               text: 'Nenhum${t.g('a', '')} ${t.session} neste dia.',
-              action: TextButton(onPressed: () => _openNewSession(context, day), child: Text('Marcar ${t.session}')),
+              action: TextButton(onPressed: () => _chooseNew(context, day), child: const Text('Marcar')),
             )
           else ...[
-            Text('${t.count(happening)}. Toque num atendimento para anotar ou alterar.', style: CF.body(14, color: CF.muted)),
-            for (final (p, line) in sessions)
-              SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line)),
+            Text(
+                '${t.count(happening)}${events.isEmpty ? '' : ' e ${events.length} compromisso${events.length == 1 ? '' : 's'}'}. '
+                'Toque para anotar ou alterar.',
+                style: CF.body(14, color: CF.muted)),
+            for (final r in rows) r.$2,
           ],
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => openEventForm(context, day: day),
+              icon: const Icon(Icons.event_note_rounded, size: 18),
+              label: const Text('Adicionar compromisso'),
+            ),
+          ),
         ]),
       ),
     ]);
@@ -332,14 +352,19 @@ class _WeekView extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text('Feriado: ${store.holidayOn(d)!.name}', style: CF.body(13, color: CF.muted)),
                     ),
-                  if ((data[d] ?? const []).isEmpty)
+                  if ((data[d] ?? const []).isEmpty && AgendaEvents.instance.on(d).isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Text('Sem ${t.sessions} neste dia', style: CF.body(14, color: CF.muted)),
                     )
                   else
-                    for (final (p, line) in data[d]!)
-                      SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line)),
+                    for (final r in <(int, Widget)>[
+                      for (final (p, line) in data[d] ?? const <(StudentPlan, LessonLine)>[])
+                        (line.time.isEmpty ? 24 * 60 : minutesOf(line.time),
+                            SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line))),
+                      for (final e in AgendaEvents.instance.on(d)) (e.startMinute, EventRow(event: e, day: d)),
+                    ]..sort((a, b) => a.$1.compareTo(b.$1)))
+                      r.$2,
                 ]),
               ),
             ),
@@ -381,8 +406,13 @@ class _WeekColumn extends StatelessWidget {
             child: Text(holiday.name, maxLines: 2, textAlign: TextAlign.center, style: CF.body(11, color: CF.muted)),
           ),
         const SizedBox(height: 4),
-        for (final (p, line) in items)
-          Padding(padding: const EdgeInsets.only(bottom: 4), child: _MiniSession(plan: p, line: line)),
+        for (final r in <(int, Widget)>[
+          for (final (p, line) in items)
+            (line.time.isEmpty ? 24 * 60 : minutesOf(line.time),
+                Padding(padding: const EdgeInsets.only(bottom: 4), child: _MiniSession(plan: p, line: line))),
+          for (final e in AgendaEvents.instance.on(day)) (e.startMinute, EventRow(event: e, day: day, compact: true)),
+        ]..sort((a, b) => a.$1.compareTo(b.$1)))
+          r.$2,
       ]),
     );
   }
@@ -652,6 +682,40 @@ class _DayPill extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Marcar atendimento avulso
 // ---------------------------------------------------------------------------
+
+/// "Marcar": atendimento de um cliente ou compromisso pessoal.
+Future<void> _chooseNew(BuildContext context, DateTime day) {
+  final t = BillingStore.instance.terms;
+  return showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    builder: (sheet) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('O que você quer marcar?', style: CF.body(20, weight: FontWeight.w700)),
+        const SizedBox(height: 10),
+        ListTile(
+          leading: const Icon(Icons.person_rounded, color: CF.blue),
+          title: Text('${capitalize(t.session)} com ${t.client}', style: CF.body(16, weight: FontWeight.w700)),
+          subtitle: Text('Avuls${t.g('a', 'o')}, reposição ou extra. Entra na cobrança.', style: CF.body(14, color: CF.muted)),
+          onTap: () {
+            Navigator.pop(sheet);
+            _openNewSession(context, day);
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.event_note_rounded, color: CF.muted),
+          title: Text('Compromisso pessoal', style: CF.body(16, weight: FontWeight.w700)),
+          subtitle: Text('Reunião, médico, folga... Só ocupa o horário.', style: CF.body(14, color: CF.muted)),
+          onTap: () {
+            Navigator.pop(sheet);
+            openEventForm(context, day: day);
+          },
+        ),
+      ]),
+    ),
+  );
+}
 
 Future<void> _openNewSession(BuildContext context, DateTime initial) => showModalBottomSheet<void>(
       context: context,

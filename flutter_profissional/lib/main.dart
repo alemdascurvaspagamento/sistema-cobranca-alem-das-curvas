@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'agenda_events.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
@@ -143,6 +144,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
       // Sem internet: a sessão local é apagada mesmo assim.
     }
     BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
+    AgendaEvents.instance.clear();
     if (!mounted) return;
     setState(() {
       loginNotice = idle ? 'Por segurança, saímos da sua conta depois de 30 minutos sem uso. Entre de novo.' : null;
@@ -405,6 +407,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   void initState() {
     super.initState();
     BillingStore.instance.onLocked = _showLocked;
+    AgendaEvents.instance.onError = (msg) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    };
     scroll.addListener(() => showTop.value = scroll.hasClients && scroll.offset > 500);
   }
 

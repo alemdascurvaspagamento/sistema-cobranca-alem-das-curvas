@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../agenda_events.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
@@ -27,7 +28,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = BillingStore.instance;
     return AnimatedBuilder(
-      animation: store,
+      animation: Listenable.merge([store, AgendaEvents.instance]),
       builder: (context, _) {
         final now = DateTime.now();
         final today = store.sessionsOn(now);
@@ -331,6 +332,8 @@ class _TodayAgenda extends StatelessWidget {
           ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               _ConfirmBar(today: tomorrow, tomorrow: true),
               EmptyNote(icon: Icons.event_available_rounded, text: 'Nenhum${t.g('a', '')} ${t.session} hoje.'),
+              for (final e in AgendaEvents.instance.on(BillingStore.instance.today))
+                EventRow(event: e, day: BillingStore.instance.today),
             ])
           : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               _ConfirmBar(today: tomorrow, tomorrow: true),
@@ -339,8 +342,14 @@ class _TodayAgenda extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text('Toque num atendimento para anotar ou alterar.', style: CF.body(13.5, color: CF.muted)),
               ),
-              for (final (p, line) in today)
-                SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line)),
+              for (final r in <(int, Widget)>[
+                for (final (p, line) in today)
+                  (line.time.isEmpty ? 24 * 60 : minutesOf(line.time),
+                      SessionRow(plan: p, line: line, onTap: () => openLessonEditor(context, p, line))),
+                for (final e in AgendaEvents.instance.on(BillingStore.instance.today))
+                  (e.startMinute, EventRow(event: e, day: BillingStore.instance.today)),
+              ]..sort((a, b) => a.$1.compareTo(b.$1)))
+                r.$2,
             ]),
     );
   }
