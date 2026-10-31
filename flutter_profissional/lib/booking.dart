@@ -34,7 +34,9 @@ class BookingSettings {
     this.slotMinutes = 60,
     this.daysAhead = 14,
     List<String>? services,
-  })  : weekdays = weekdays ?? {1, 2, 3, 4, 5},
+    Map<int, List<BookingWindow>>? days,
+  })  : days = days ?? {},
+        weekdays = weekdays ?? {1, 2, 3, 4, 5},
         windows = windows ?? const [BookingWindow('08:00', '12:00'), BookingWindow('14:00', '19:00')],
         services = services ?? [];
 
@@ -43,6 +45,20 @@ class BookingSettings {
   String title;
   Set<int> weekdays;
   List<BookingWindow> windows;
+
+  /// Faixas de cada dia da semana (1 = segunda ... 7 = domingo). Sem faixas = fechado.
+  Map<int, List<BookingWindow>> days;
+
+  /// Garante uma entrada por dia, a partir do jeito antigo (mesmas faixas nos dias marcados).
+  void fillDays() {
+    if (days.values.any((l) => l.isNotEmpty)) {
+      for (var d = 1; d <= 7; d++) {
+        days.putIfAbsent(d, () => []);
+      }
+      return;
+    }
+    days = {for (var d = 1; d <= 7; d++) d: weekdays.contains(d) ? [...windows] : <BookingWindow>[]};
+  }
   int slotMinutes;
   int daysAhead;
   List<String> services;
@@ -138,7 +154,13 @@ class Booking extends ChangeNotifier {
         slotMinutes: (r['slot_minutes'] as num?)?.toInt() ?? 60,
         daysAhead: (r['days_ahead'] as num?)?.toInt() ?? 14,
         services: [for (final s in (r['services'] as List? ?? const [])) '$s'],
-      );
+        days: {
+          for (final e in ((r['day_windows'] as Map?) ?? const {}).entries)
+            int.parse('${e.key}'): [
+              for (final w in (e.value as List? ?? const [])) BookingWindow('${(w as Map)['start']}', '${w['end']}'),
+            ],
+        },
+      )..fillDays();
 
   Future<void> loadRequests() async {
     if (!_cloud && settings == null) return;
@@ -178,8 +200,11 @@ class Booking extends ChangeNotifier {
       await _db.from('cf_booking_settings').update({
         'enabled': s.enabled,
         'title': s.title,
-        'weekdays': (s.weekdays.toList()..sort()),
+        'weekdays': [for (var d = 1; d <= 7; d++) if ((s.days[d] ?? const []).isNotEmpty) d],
         'windows': [for (final w in s.windows) w.toJson()],
+        'day_windows': {
+          for (final e in s.days.entries) '${e.key}': [for (final w in e.value) w.toJson()],
+        },
         'slot_minutes': s.slotMinutes,
         'days_ahead': s.daysAhead,
         'services': s.services,
@@ -353,7 +378,8 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
       slotMinutes: cur?.slotMinutes ?? 60,
       daysAhead: cur?.daysAhead ?? 14,
       services: [...?cur?.services],
-    );
+      days: {for (final e in (cur?.days ?? const <int, List<BookingWindow>>{}).entries) e.key: [...e.value]},
+    )..fillDays();
   }
 
   @override
@@ -452,51 +478,10 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                       color: CF.green,
                       title: 'Quando atendo',
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Wrap(spacing: 6, runSpacing: 6, children: [
-                          for (var d = 1; d <= 7; d++)
-                            _chip(weekdayShort[d - 1], s.weekdays.contains(d), () => setState(() {
-                                  s.weekdays.contains(d) ? s.weekdays.remove(d) : s.weekdays.add(d);
-                                })),
-                        ]),
-                        const SizedBox(height: 14),
-                        for (var i = 0; i < s.windows.length; i++)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(children: [
-                              Text('Das ', style: CF.body(15)),
-                              OutlinedButton(
-                                onPressed: () async {
-                                  final t = await _pickTime(s.windows[i].start);
-                                  if (t != null) setState(() => s.windows[i] = BookingWindow(t, s.windows[i].end));
-                                },
-                                child: Text(s.windows[i].start),
-                              ),
-                              Text(' às ', style: CF.body(15)),
-                              OutlinedButton(
-                                onPressed: () async {
-                                  final t = await _pickTime(s.windows[i].end);
-                                  if (t != null) setState(() => s.windows[i] = BookingWindow(s.windows[i].start, t));
-                                },
-                                child: Text(s.windows[i].end),
-                              ),
-                              const Spacer(),
-                              if (s.windows.length > 1)
-                                IconButton(
-                                  tooltip: 'Remover faixa',
-                                  onPressed: () => setState(() => s.windows.removeAt(i)),
-                                  icon: const Icon(Icons.close_rounded),
-                                ),
-                            ]),
-                          ),
-                        if (s.windows.length < 3)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: () => setState(() => s.windows.add(const BookingWindow('18:00', '21:00'))),
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('Adicionar faixa de horário'),
-                            ),
-                          ),
+                        Text('Abra só as faixas que quiser em cada dia. Dia sem faixa fica fechado.',
+                            style: CF.body(14, color: CF.muted)),
+                        const SizedBox(height: 10),
+                        for (var d = 1; d <= 7; d++) _dayBlock(d),
                         const SizedBox(height: 8),
                         Text('Duração de cada horário', style: CF.body(15, weight: FontWeight.w700)),
                         const SizedBox(height: 6),
@@ -553,6 +538,111 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
               ),
             ]),
     );
+  }
+
+  Widget _dayBlock(int d) {
+    final list = s.days[d] ??= [];
+    final open = list.isNotEmpty;
+    Widget timeBtn(String v, ValueChanged<String> set) => OutlinedButton(
+          onPressed: () async {
+            final t = await _pickTime(v);
+            if (t != null) setState(() => set(t));
+          },
+          style: OutlinedButton.styleFrom(minimumSize: const Size(72, 40), padding: const EdgeInsets.symmetric(horizontal: 10)),
+          child: Text(v),
+        );
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 6, 6, 8),
+      decoration: BoxDecoration(
+        color: open ? CF.surface : CF.greyBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: open ? CF.green.withValues(alpha: .45) : CF.line),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(
+            child: Text(weekdayLong[d - 1], style: CF.body(16, weight: FontWeight.w700, color: open ? CF.text : CF.muted)),
+          ),
+          if (!open) Text('Fechado', style: CF.body(14, color: CF.muted)),
+          Switch(
+            value: open,
+            onChanged: (v) => setState(() {
+              if (v) {
+                list.add(const BookingWindow('08:00', '12:00'));
+              } else {
+                list.clear();
+              }
+            }),
+          ),
+        ]),
+        for (var i = 0; i < list.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 6, children: [
+              Text('Das', style: CF.body(15)),
+              timeBtn(list[i].start, (t) => list[i] = BookingWindow(t, list[i].end)),
+              Text('às', style: CF.body(15)),
+              timeBtn(list[i].end, (t) => list[i] = BookingWindow(list[i].start, t)),
+              IconButton(
+                tooltip: 'Remover faixa',
+                onPressed: () => setState(() => list.removeAt(i)),
+                icon: const Icon(Icons.close_rounded, size: 20),
+              ),
+            ]),
+          ),
+        if (open)
+          Wrap(spacing: 4, children: [
+            if (list.length < 3)
+              TextButton.icon(
+                onPressed: () => setState(() => list.add(BookingWindow(list.last.end, list.last.end == '23:00' ? '23:59' : _later(list.last.end)))),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Outra faixa'),
+              ),
+            TextButton.icon(
+              onPressed: () => _copyToOthers(d),
+              icon: const Icon(Icons.copy_all_rounded, size: 18),
+              label: const Text('Copiar para os outros dias'),
+            ),
+          ]),
+      ]),
+    );
+  }
+
+  static String _later(String hhmm) {
+    final m = (minutesOf(hhmm) + 120).clamp(0, 23 * 60 + 59);
+    return _hhmm(m);
+  }
+
+  Future<void> _copyToOthers(int from) async {
+    final chosen = <int>{};
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => AlertDialog(
+          title: Text('Copiar ${weekdayLong[from - 1].toLowerCase()} para'),
+          content: Wrap(spacing: 6, runSpacing: 6, children: [
+            for (var d = 1; d <= 7; d++)
+              if (d != from)
+                FilterChip(
+                  label: Text(weekdayShort[d - 1]),
+                  selected: chosen.contains(d),
+                  onSelected: (v) => set(() => v ? chosen.add(d) : chosen.remove(d)),
+                ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Copiar')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || chosen.isEmpty) return;
+    setState(() {
+      for (final d in chosen) {
+        s.days[d] = [...s.days[from]!];
+      }
+    });
   }
 
   void _addService() {
@@ -713,8 +803,16 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
   /// Horários livres de um dia.
   List<String> _slots(DateTime d) {
     final m = data!;
-    final weekdays = {for (final x in (m['weekdays'] as List)) (x as num).toInt()};
-    if (!weekdays.contains(d.weekday)) return const [];
+    // Faixas do dia: por dia da semana (novo) ou as mesmas para os dias marcados (antigo).
+    final byDay = (m['day_windows'] as Map?) ?? const {};
+    final List windows;
+    if (byDay.values.any((v) => (v as List?)?.isNotEmpty ?? false)) {
+      windows = (byDay['${d.weekday}'] as List?) ?? const [];
+    } else {
+      final weekdays = {for (final x in (m['weekdays'] as List)) (x as num).toInt()};
+      windows = weekdays.contains(d.weekday) ? (m['windows'] as List) : const [];
+    }
+    if (windows.isEmpty) return const [];
     final slot = (m['slot_minutes'] as num).toInt();
     final key = _d(d);
     final busy = <(int, int)>[];
@@ -731,7 +829,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
     final isToday = d.year == now.year && d.month == now.month && d.day == now.day;
     final nowMin = now.hour * 60 + now.minute + 60; // pelo menos 1 h de antecedência
     final out = <String>[];
-    for (final w in (m['windows'] as List)) {
+    for (final w in windows) {
       final ww = w as Map;
       var t = minutesOf('${ww['start']}');
       final end = minutesOf('${ww['end']}');
