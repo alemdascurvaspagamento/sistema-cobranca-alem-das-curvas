@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../agenda_events.dart';
+import '../booking.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
@@ -64,6 +65,7 @@ class HomeScreen extends StatelessWidget {
               header,
               const SizedBox(height: 16),
               starter,
+              const BookingRequestsPanel(),
               if (overdue != null) ...[overdue, const SizedBox(height: 14)],
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(
@@ -90,6 +92,7 @@ class HomeScreen extends StatelessWidget {
             header,
             const SizedBox(height: 16),
             starter,
+            const BookingRequestsPanel(),
             if (overdue != null) ...[overdue, const SizedBox(height: 14)],
             summary,
             const SizedBox(height: 14),

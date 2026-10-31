@@ -4,6 +4,7 @@ import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSetti
 import '../billing/billing_store.dart';
 import '../data/export.dart';
 import '../ui/cf_theme.dart';
+import '../booking.dart';
 import '../ui/confirmations.dart';
 import '../ui/start_guide.dart';
 import '../ui/widgets.dart';
@@ -141,6 +142,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ]),
+      ),
+      const SizedBox(height: 14),
+      Panel(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        color: CF.whatsapp,
+        child: ListTile(
+          leading: const Icon(Icons.share_rounded, color: CF.violet),
+          title: Text('Link de horários', style: CF.body(16, weight: FontWeight.w700)),
+          subtitle: Text('Clientes veem seus horários livres e pedem para marcar', style: CF.body(14, color: CF.muted)),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => openBookingSettings(context),
+        ),
       ),
       const SizedBox(height: 14),
       Panel(

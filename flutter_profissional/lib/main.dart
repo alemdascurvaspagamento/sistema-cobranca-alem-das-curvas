@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'agenda_events.dart';
+import 'booking.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
@@ -55,7 +56,11 @@ class CoachFlowApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: Uri.base.queryParameters['agendar'] == 'demo' ? const BookingPublicDemo() : const CoachFlowEntry(),
+        home: switch (Uri.base.queryParameters['agendar']) {
+          'demo' => const BookingPublicDemo(),
+          final String slug when slug.isNotEmpty => BookingPublicPage(slug: slug),
+          _ => const CoachFlowEntry(),
+        },
       );
 }
 
@@ -145,6 +150,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     }
     BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
     AgendaEvents.instance.clear();
+    Booking.instance.clear();
     if (!mounted) return;
     setState(() {
       loginNotice = idle ? 'Por segurança, saímos da sua conta depois de 30 minutos sem uso. Entre de novo.' : null;
@@ -410,6 +416,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     AgendaEvents.instance.onError = (msg) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     };
+    Booking.instance.onError = AgendaEvents.instance.onError;
     scroll.addListener(() => showTop.value = scroll.hasClients && scroll.offset > 500);
   }
 

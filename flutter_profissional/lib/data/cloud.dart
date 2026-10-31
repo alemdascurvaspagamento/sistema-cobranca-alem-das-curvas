@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../agenda_events.dart';
+import '../booking.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
@@ -315,6 +316,7 @@ class CloudService implements CloudSink {
     store.sink = this;
     await refreshSubscription(store);
     await AgendaEvents.instance.load();
+    await Booking.instance.load();
     return true;
   }
 

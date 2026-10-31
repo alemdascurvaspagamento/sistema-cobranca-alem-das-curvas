@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../agenda_events.dart';
+import '../booking.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
@@ -75,7 +76,23 @@ class _AgendaScreenState extends State<AgendaScreen> {
               label: const Text('Marcar'),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                final s = Booking.instance.settings;
+                if (s != null && s.enabled) {
+                  Booking.instance.shareLink(context);
+                } else {
+                  openBookingSettings(context);
+                }
+              },
+              icon: const Icon(Icons.share_rounded, size: 18),
+              label: const Text('Enviar link de horários'),
+            ),
+          ),
+          const SizedBox(height: 10),
           _AgendaKpis(weekStart: weekStart),
           const SizedBox(height: 14),
           SegmentedButton<_View>(
