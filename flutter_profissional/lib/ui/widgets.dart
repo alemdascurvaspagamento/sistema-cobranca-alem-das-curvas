@@ -537,3 +537,67 @@ class BrandMark extends StatelessWidget {
         child: Icon(Icons.event_available_rounded, size: size * .72, color: CF.ink),
       );
 }
+
+/// Páginas 1, 2, 3 no fim de listas longas.
+class Pager extends StatelessWidget {
+  const Pager({super.key, required this.page, required this.pages, required this.onChanged, this.total, this.perPage});
+  final int page, pages;
+  final ValueChanged<int> onChanged;
+  final int? total, perPage;
+
+  @override
+  Widget build(BuildContext context) {
+    if (pages <= 1) return const SizedBox.shrink();
+    // Mostra no máximo 5 números em volta da página atual.
+    var first = (page - 2).clamp(0, (pages - 5).clamp(0, pages));
+    final last = (first + 5).clamp(0, pages);
+    Widget num(int i) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3),
+          child: i == page
+              ? FilledButton(
+                  onPressed: null,
+                  style: FilledButton.styleFrom(
+                    disabledBackgroundColor: CF.ink,
+                    disabledForegroundColor: Colors.white,
+                    minimumSize: const Size(44, 44),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: Text('${i + 1}'),
+                )
+              : OutlinedButton(
+                  onPressed: () => onChanged(i),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44), padding: EdgeInsets.zero),
+                  child: Text('${i + 1}'),
+                ),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(children: [
+        Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 6, children: [
+          IconButton(
+            tooltip: 'Página anterior',
+            onPressed: page > 0 ? () => onChanged(page - 1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          for (var i = first; i < last; i++) num(i),
+          IconButton(
+            tooltip: 'Próxima página',
+            onPressed: page < pages - 1 ? () => onChanged(page + 1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ]),
+        if (total != null && perPage != null)
+          Text('${page * perPage! + 1} a ${((page + 1) * perPage!).clamp(0, total!)} de $total',
+              style: CF.body(13, color: CF.muted)),
+      ]),
+    );
+  }
+}
+
+/// Leva a tela até o começo da lista quando muda de página.
+void scrollToKey(GlobalKey key) {
+  final ctx = key.currentContext;
+  if (ctx != null) {
+    Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+  }
+}

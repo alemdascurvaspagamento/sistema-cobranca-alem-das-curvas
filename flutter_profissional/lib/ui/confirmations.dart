@@ -17,8 +17,8 @@ class Confirmations extends ChangeNotifier {
   static const _sentKey = 'cf_confirm_sent';
   static const _templateKey = 'cf_confirm_template';
 
-  /// Texto padrão. {nome}, {atendimento} e {hora} são trocados na hora.
-  static const defaultTemplate = 'Oi, {nome}! Passando para confirmar {atendimento} de hoje às {hora}. Tudo certo? 👍';
+  /// Texto padrão. {nome}, {atendimento}, {quando} (hoje/amanhã) e {hora} são trocados na hora.
+  static const defaultTemplate = 'Oi, {nome}! Passando para confirmar {atendimento} de {quando} às {hora}. Tudo certo? 👍';
 
   Map<String, List<String>>? _sent;
   String? _template;
@@ -46,8 +46,11 @@ class Confirmations extends ChangeNotifier {
   bool sent(String planId, DateTime date) => _sentMap[_day(date)]?.contains(planId) ?? false;
 
   /// Atendimentos de hoje que dá para confirmar: marcados, ainda não feitos e com telefone.
-  static bool canConfirm(StudentPlan plan, LessonLine line, DateTime today) =>
-      dateOnly(line.date) == dateOnly(today) &&
+  static bool canConfirm(StudentPlan plan, LessonLine line, DateTime today) => canConfirmOn(plan, line, today);
+
+  /// O mesmo para um dia qualquer (usado para confirmar amanhã, à noite).
+  static bool canConfirmOn(StudentPlan plan, LessonLine line, DateTime day) =>
+      dateOnly(line.date) == dateOnly(day) &&
       line.outcome == LessonOutcome.charged &&
       line.record?.status != LessonStatus.completed &&
       plan.phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 10;
@@ -56,9 +59,15 @@ class Confirmations extends ChangeNotifier {
     final t = BillingStore.instance.terms;
     final first = plan.name.split(' ').first;
     final what = '${t.g('nossa', 'nosso')} ${t.session}';
-    return template
+    final today = dateOnly(BillingStore.instance.today);
+    final tomorrow = dateOnly(line.date).isAfter(today);
+    var text = template;
+    // Texto antigo, salvo antes de existir {quando}: troca "hoje" por "amanhã".
+    if (tomorrow && !text.contains('{quando}')) text = text.replaceAll('hoje', 'amanhã');
+    return text
         .replaceAll('{nome}', first)
         .replaceAll('{atendimento}', what)
+        .replaceAll('{quando}', tomorrow ? 'amanhã' : 'hoje')
         .replaceAll('{hora}', line.time.isEmpty ? 'no horário combinado' : line.time);
   }
 
@@ -115,7 +124,7 @@ Future<void> openConfirmTemplate(BuildContext context) {
       title: const Text('Mensagem de confirmação'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Use {nome}, {atendimento} e {hora}: o Okday troca pelos dados de cada um.'),
+          const Text('Use {nome}, {atendimento}, {quando} e {hora}: o Okday troca pelos dados de cada um ({quando} vira "hoje" ou "amanhã").'),
           const SizedBox(height: 12),
           TextField(controller: controller, minLines: 3, maxLines: 6),
         ]),

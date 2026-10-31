@@ -33,7 +33,10 @@ class HomeScreen extends StatelessWidget {
         final today = store.sessionsOn(now);
         final summary = _DaySummary(today: today, onAgenda: onAgenda);
         final todo = _Secretary(onBilling: onBilling, onFinance: onFinance);
-        final agenda = _TodayAgenda(today: today, onAgenda: onAgenda);
+        // À noite (a partir das 18h) já dá para confirmar os atendimentos de amanhã.
+        final tomorrowDay = DateTime(now.year, now.month, now.day + 1);
+        final tomorrow = now.hour >= 18 ? store.sessionsOn(tomorrowDay) : const <(StudentPlan, LessonLine)>[];
+        final agenda = _TodayAgenda(today: today, tomorrow: tomorrow, onAgenda: onAgenda);
         final month = _MonthGlance(onBilling: onBilling, onReports: onReports);
         final late = store.overdueByMonth();
         final overdue = late.isEmpty ? null : _OverdueCard(items: late, onBilling: onBilling);
@@ -311,8 +314,9 @@ class _TodoItem extends StatelessWidget {
 }
 
 class _TodayAgenda extends StatelessWidget {
-  const _TodayAgenda({required this.today, required this.onAgenda});
+  const _TodayAgenda({required this.today, required this.onAgenda, this.tomorrow = const []});
   final List<(StudentPlan, LessonLine)> today;
+  final List<(StudentPlan, LessonLine)> tomorrow;
   final VoidCallback onAgenda;
 
   @override
@@ -324,8 +328,12 @@ class _TodayAgenda extends StatelessWidget {
       title: 'Agenda de hoje',
       action: TextButton(onPressed: onAgenda, child: const Text('Ver semana')),
       child: today.isEmpty
-          ? EmptyNote(icon: Icons.event_available_rounded, text: 'Nenhum${t.g('a', '')} ${t.session} hoje.')
+          ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _ConfirmBar(today: tomorrow, tomorrow: true),
+              EmptyNote(icon: Icons.event_available_rounded, text: 'Nenhum${t.g('a', '')} ${t.session} hoje.'),
+            ])
           : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _ConfirmBar(today: tomorrow, tomorrow: true),
               _ConfirmBar(today: today),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -650,16 +658,18 @@ class _StartHereState extends State<_StartHere> {
 
 /// "3 de 6 confirmados" + botão para confirmar o próximo pelo WhatsApp.
 class _ConfirmBar extends StatelessWidget {
-  const _ConfirmBar({required this.today});
+  const _ConfirmBar({required this.today, this.tomorrow = false});
   final List<(StudentPlan, LessonLine)> today;
+  final bool tomorrow;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: Confirmations.instance,
         builder: (context, _) {
           final c = Confirmations.instance;
-          final now = BillingStore.instance.today;
-          final list = [for (final e in today) if (Confirmations.canConfirm(e.$1, e.$2, now)) e];
+          final base = BillingStore.instance.today;
+          final day = tomorrow ? DateTime(base.year, base.month, base.day + 1) : base;
+          final list = [for (final e in today) if (Confirmations.canConfirmOn(e.$1, e.$2, day)) e];
           if (list.isEmpty) return const SizedBox.shrink();
           final done = list.where((e) => c.sent(e.$1.id, e.$2.date)).length;
           final pending = [for (final e in list) if (!c.sent(e.$1.id, e.$2.date)) e];
@@ -680,9 +690,19 @@ class _ConfirmBar extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(all ? 'Todos confirmados' : '$done de ${list.length} confirmados',
+                  Text(
+                      tomorrow
+                          ? (all ? 'Amanhã: todos confirmados' : 'Amanhã: $done de ${list.length} confirmados')
+                          : (all ? 'Todos confirmados' : '$done de ${list.length} confirmados'),
                       style: CF.body(15, weight: FontWeight.w700)),
-                  Text(all ? 'Mensagens enviadas pelo WhatsApp.' : 'Confirme pelo WhatsApp e evite faltas.',
+                  Text(
+                      all
+                          ? 'Mensagens enviadas pelo WhatsApp.'
+                          : tomorrow
+                              ? 'Próximo: ${pending.first.$2.time} · ${pending.first.$1.name.split(' ').first}'
+                              : 'Confirme pelo WhatsApp e evite faltas.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: CF.body(13, color: CF.muted)),
                 ]),
               ),

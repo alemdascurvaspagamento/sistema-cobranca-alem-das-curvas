@@ -398,17 +398,32 @@ class CoachFlowShell extends StatefulWidget {
 class _CoachFlowShellState extends State<CoachFlowShell> {
   Section selected = Section.inicio;
   bool calendarSettings = false;
+  final scroll = ScrollController();
+  final showTop = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
     BillingStore.instance.onLocked = _showLocked;
+    scroll.addListener(() => showTop.value = scroll.hasClients && scroll.offset > 500);
   }
 
   @override
   void dispose() {
     if (BillingStore.instance.onLocked == _showLocked) BillingStore.instance.onLocked = null;
+    scroll.dispose();
+    showTop.dispose();
     super.dispose();
+  }
+
+  void _toTop() {
+    if (!scroll.hasClients) return;
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (reduce) {
+      scroll.jumpTo(0);
+    } else {
+      scroll.animateTo(0, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
+    }
   }
 
   void _showLocked(String message) {
@@ -524,10 +539,14 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     );
   }
 
-  void go(Section s) => setState(() {
-        selected = s;
-        calendarSettings = false;
-      });
+  void go(Section s) {
+    setState(() {
+      selected = s;
+      calendarSettings = false;
+    });
+    // Cada tela começa do topo.
+    if (scroll.hasClients) scroll.jumpTo(0);
+  }
 
   void _changeProfession() {
     Navigator.of(context).push(MaterialPageRoute<void>(
@@ -705,7 +724,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 ),
               Expanded(
                 child: SafeArea(
-                  child: ListView(
+                  child: Stack(children: [
+                  ListView(
+                    controller: scroll,
                     padding: EdgeInsets.symmetric(
                       horizontal: desktop ? 24 : (narrowPhone ? 12 : 16),
                       vertical: desktop ? 20 : 14,
@@ -723,6 +744,28 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                       ),
                     ],
                   ),
+                  // Botão para voltar ao topo: aparece depois de rolar um pouco.
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: showTop,
+                      builder: (context, show, _) => AnimatedScale(
+                        scale: show ? 1 : 0,
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutBack,
+                        child: FloatingActionButton.small(
+                          heroTag: 'topo',
+                          tooltip: 'Voltar ao topo',
+                          backgroundColor: CF.ink,
+                          foregroundColor: Colors.white,
+                          onPressed: show ? _toTop : null,
+                          child: const Icon(Icons.arrow_upward_rounded),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ]),
                 ),
               ),
             ]),

@@ -22,6 +22,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
   String query = '';
   bool archived = false;
   bool table = true;
+  int page = 0;
+  static const perPage = 15;
+  final listKey = GlobalKey();
+
+  void _goTo(int p) {
+    setState(() => page = p);
+    WidgetsBinding.instance.addPostFrameCallback((_) => scrollToKey(listKey));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +43,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
             .where((p) => q.isEmpty || p.name.toLowerCase().contains(q) || p.service.toLowerCase().contains(q))
             .toList()
           ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        final pages = (list.length / perPage).ceil();
+        final current = pages == 0 ? 0 : page.clamp(0, pages - 1);
+        final pageList = list.skip(current * perPage).take(perPage).toList();
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           PageTitle(
             t.clientsTitle,
@@ -56,7 +67,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ]),
           const SizedBox(height: 14),
           TextField(
-            onChanged: (v) => setState(() => query = v),
+            onChanged: (v) => setState(() {
+              query = v;
+              page = 0;
+            }),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search_rounded),
               hintText: 'Buscar por nome ou serviço',
@@ -70,7 +84,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
               showCheckmark: false,
               selectedColor: CF.ink,
               labelStyle: CF.body(15, weight: FontWeight.w600, color: !archived ? Colors.white : CF.text),
-              onSelected: (_) => setState(() => archived = false),
+              onSelected: (_) => setState(() {
+                archived = false;
+                page = 0;
+              }),
             ),
             const SizedBox(width: 8),
             ChoiceChip(
@@ -79,10 +96,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               showCheckmark: false,
               selectedColor: CF.ink,
               labelStyle: CF.body(15, weight: FontWeight.w600, color: archived ? Colors.white : CF.text),
-              onSelected: (_) => setState(() => archived = true),
+              onSelected: (_) => setState(() {
+                archived = true;
+                page = 0;
+              }),
             ),
           ]),
-          const SizedBox(height: 12),
+          SizedBox(key: listKey, height: 12),
           if (list.isEmpty)
             Panel(
               child: EmptyNote(
@@ -106,7 +126,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   toggle,
                   const SizedBox(height: 10),
-                  _ClientsTable(plans: list),
+                  _ClientsTable(plans: pageList),
                 ]);
               }
               final columns = wide ? 2 : 1;
@@ -115,10 +135,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
               return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 if (wide) ...[toggle, const SizedBox(height: 10)],
                 Wrap(spacing: gap, runSpacing: gap, children: [
-                  for (final p in list) SizedBox(width: w, child: _ClientTile(plan: p)),
+                  for (final p in pageList) SizedBox(width: w, child: _ClientTile(plan: p)),
                 ]),
               ]);
             }),
+          Pager(page: current, pages: pages, onChanged: _goTo, total: list.length, perPage: perPage),
         ]);
       },
     );

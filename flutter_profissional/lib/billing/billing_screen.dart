@@ -27,6 +27,14 @@ class _BillingScreenState extends State<BillingScreen> {
   final store = BillingStore.instance;
   _Filter filter = _Filter.all;
   bool table = true;
+  int page = 0;
+  static const perPage = 15;
+  final listKey = GlobalKey();
+
+  void _goTo(int p) {
+    setState(() => page = p);
+    WidgetsBinding.instance.addPostFrameCallback((_) => scrollToKey(listKey));
+  }
 
   bool _matches(StudentPlan p) {
     final s = store.status(p);
@@ -46,6 +54,9 @@ class _BillingScreenState extends State<BillingScreen> {
         final plans = store.activePlans;
         final shown = plans.where(_matches).toList()
           ..sort((a, b) => _order(store.status(a)).compareTo(_order(store.status(b))));
+        final pages = (shown.length / perPage).ceil();
+        final current = pages == 0 ? 0 : page.clamp(0, pages - 1);
+        final pageList = shown.skip(current * perPage).take(perPage).toList();
         final counts = {
           _Filter.all: plans.length,
           _Filter.open: store.countStatus(BillStatus.pending) + store.countStatus(BillStatus.partial),
@@ -59,13 +70,13 @@ class _BillingScreenState extends State<BillingScreen> {
           const SizedBox(height: 12),
           KpiRow([
             KpiCard(icon: Icons.groups_rounded, label: 'Cobranças', value: '${counts[_Filter.all]}', color: CF.blue, accent: true,
-                onTap: () => setState(() => filter = _Filter.all)),
+                onTap: () => setState(() { filter = _Filter.all; page = 0; })),
             KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber', value: '${counts[_Filter.open]}', color: CF.amber, accent: true,
-                onTap: () => setState(() => filter = _Filter.open)),
+                onTap: () => setState(() { filter = _Filter.open; page = 0; })),
             KpiCard(icon: Icons.error_rounded, label: 'Atrasados', value: '${counts[_Filter.overdue]}', color: CF.red, accent: true,
-                onTap: () => setState(() => filter = _Filter.overdue)),
+                onTap: () => setState(() { filter = _Filter.overdue; page = 0; })),
             KpiCard(icon: Icons.check_circle_rounded, label: 'Pagos', value: '${counts[_Filter.paid]}', color: CF.green, accent: true,
-                onTap: () => setState(() => filter = _Filter.paid)),
+                onTap: () => setState(() { filter = _Filter.paid; page = 0; })),
           ]),
           const SizedBox(height: 16),
           SingleChildScrollView(
@@ -81,12 +92,12 @@ class _BillingScreenState extends State<BillingScreen> {
                     selectedColor: CF.ink,
                     labelStyle: CF.body(15,
                         weight: FontWeight.w600, color: filter == f ? Colors.white : CF.text),
-                    onSelected: (_) => setState(() => filter = f),
+                    onSelected: (_) => setState(() { filter = f; page = 0; }),
                   ),
                 ),
             ]),
           ),
-          const SizedBox(height: 12),
+          SizedBox(key: listKey, height: 12),
           if (shown.isEmpty)
             _EmptyState(filter: filter, onShowAll: () => setState(() => filter = _Filter.all))
           else
@@ -99,7 +110,7 @@ class _BillingScreenState extends State<BillingScreen> {
                     child: LayoutToggle(table: table, onChanged: (v) => setState(() => table = v)),
                   ),
                   const SizedBox(height: 10),
-                  _BillingTable(plans: shown),
+                  _BillingTable(plans: pageList),
                 ]);
               }
               final columns = wide ? 2 : 1;
@@ -114,10 +125,11 @@ class _BillingScreenState extends State<BillingScreen> {
                   const SizedBox(height: 10),
                 ],
                 Wrap(spacing: gap, runSpacing: gap, children: [
-                  for (final p in shown) SizedBox(width: w, child: StudentBillCard(plan: p)),
+                  for (final p in pageList) SizedBox(width: w, child: StudentBillCard(plan: p)),
                 ]),
               ]);
             }),
+          Pager(page: current, pages: pages, onChanged: _goTo, total: shown.length, perPage: perPage),
           const SizedBox(height: 16),
           _RulesHint(store: store, onOpenRules: widget.onOpenRules),
           const SizedBox(height: 8),
