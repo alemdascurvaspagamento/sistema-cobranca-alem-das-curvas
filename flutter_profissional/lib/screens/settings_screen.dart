@@ -5,6 +5,7 @@ import '../billing/billing_store.dart';
 import '../data/export.dart';
 import '../ui/cf_theme.dart';
 import '../booking.dart';
+import '../calendar_feed.dart';
 import '../ui/confirmations.dart';
 import '../ui/start_guide.dart';
 import '../ui/widgets.dart';
@@ -172,10 +173,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: ListTile(
           leading: const Icon(Icons.sync_rounded, color: CF.ink),
-          title: Text('Sincronização de calendários', style: CF.body(16, weight: FontWeight.w700)),
-          subtitle: Text('Apple, Google e privacidade dos compromissos', style: CF.body(14, color: CF.muted)),
+          title: Text('Ver no seu calendário', style: CF.body(16, weight: FontWeight.w700)),
+          subtitle: Text('Office 365/Outlook, Google Agenda e iPhone', style: CF.body(14, color: CF.muted)),
           trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: widget.onCalendarSync,
+          onTap: () => openCalendarFeed(context),
         ),
       ),
       const SizedBox(height: 14),

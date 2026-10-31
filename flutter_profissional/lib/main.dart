@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'agenda_events.dart';
 import 'booking.dart';
+import 'calendar_feed.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
@@ -151,6 +152,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
     AgendaEvents.instance.clear();
     Booking.instance.clear();
+    CalendarFeed.instance.clear();
     if (!mounted) return;
     setState(() {
       loginNotice = idle ? 'Por segurança, saímos da sua conta depois de 30 minutos sem uso. Entre de novo.' : null;
