@@ -1295,7 +1295,7 @@ class _LessonEditorState extends State<_LessonEditor> {
                   label: Text(s.label(_t)),
                   selected: status == s,
                   showCheckmark: false,
-                  selectedColor: CF.ink,
+                  selectedColor: CF.brand,
                   labelStyle: CF.body(15, weight: FontWeight.w600, color: status == s ? Colors.white : CF.text),
                   onSelected: (_) => setState(() {
                     status = s;
@@ -1428,7 +1428,7 @@ class _SwitchBox extends StatelessWidget {
         child: SwitchListTile(
           value: value,
           onChanged: onChanged,
-          activeTrackColor: CF.ink,
+          activeTrackColor: CF.brand,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(title, style: CF.body(16, weight: FontWeight.w700)),
           subtitle: Text(subtitle, style: CF.body(14, color: CF.muted)),
@@ -1521,7 +1521,7 @@ class _VacationSheetState extends State<_VacationSheet> {
                   label: Text(r),
                   selected: reason == r,
                   showCheckmark: false,
-                  selectedColor: CF.ink,
+                  selectedColor: CF.brand,
                   labelStyle: CF.body(15, weight: FontWeight.w600, color: reason == r ? Colors.white : CF.text),
                   onSelected: (_) => setState(() => reason = r),
                 ),
@@ -1666,7 +1666,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                   label: Text(m),
                   selected: method == m,
                   showCheckmark: false,
-                  selectedColor: CF.ink,
+                  selectedColor: CF.brand,
                   labelStyle: CF.body(15, weight: FontWeight.w600, color: method == m ? Colors.white : CF.text),
                   onSelected: (_) => setState(() => method = m),
                 ),

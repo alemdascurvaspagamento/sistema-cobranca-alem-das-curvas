@@ -14,7 +14,8 @@ class CF {
   static const ink = Color(0xFF0F2236);
   static const inkSoft = Color(0xFF1D3757);
   static const inkLine = Color(0xFF2E4A6E);
-  static const blue = Color(0xFF2459C7);
+  static const blue = Color(0xFF0A7E8C); // turquesa da marca (antes azul)
+  static const brand = blue;
   static const bg = Color(0xFFF2F5F9);
   static const surface = Color(0xFFFFFFFF);
   static const line = Color(0xFFDDE4EE);
@@ -23,7 +24,7 @@ class CF {
 
   static const green = Color(0xFF0E7C55);
   static const greenBg = Color(0xFFE2F4EB);
-  static const mint = Color(0xFF3DDC97);
+  static const mint = Color(0xFF22C7D6);
   static const amber = Color(0xFF8F5300);
   static const amberBg = Color(0xFFFFF0D2);
   static const red = Color(0xFFB42330);
@@ -75,14 +76,14 @@ class CF {
   static (Color fg, Color bg) forStatus(BillStatus s) => switch (s) {
         BillStatus.paid => (green, greenBg),
         BillStatus.partial => (amber, amberBg),
-        BillStatus.pending => (blue, const Color(0xFFE6EEFC)),
+        BillStatus.pending => (blue, const Color(0xFFDDF3F5)),
         BillStatus.overdue => (red, redBg),
         BillStatus.nothing => (grey, greyBg),
       };
 
   static (Color fg, Color bg) forOutcome(LessonOutcome o) => switch (o) {
-        LessonOutcome.charged => (blue, const Color(0xFFE6EEFC)),
-        LessonOutcome.makeUpCharged => (blue, const Color(0xFFE6EEFC)),
+        LessonOutcome.charged => (blue, const Color(0xFFDDF3F5)),
+        LessonOutcome.makeUpCharged => (blue, const Color(0xFFDDF3F5)),
         LessonOutcome.cancelledCharged => (amber, amberBg),
         LessonOutcome.movedChargedHere => (amber, amberBg),
         LessonOutcome.cancelledWaived => (red, redBg),
@@ -98,7 +99,7 @@ class CF {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: ink,
-        primary: ink,
+        primary: brand,
         secondary: blue,
         surface: surface,
         brightness: Brightness.light,
@@ -126,7 +127,7 @@ class CF {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ink,
+          backgroundColor: brand,
           foregroundColor: Colors.white,
           disabledBackgroundColor: const Color(0xFFDCE4EF),
           disabledForegroundColor: const Color(0xFF718096),

@@ -417,7 +417,7 @@ class LayoutToggle extends StatelessWidget {
           foregroundColor:
               WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : CF.ink),
           backgroundColor:
-              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? CF.ink : CF.surface),
+              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? CF.brand : CF.surface),
           side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
         ),
       );
@@ -597,7 +597,7 @@ class Pager extends StatelessWidget {
               ? FilledButton(
                   onPressed: null,
                   style: FilledButton.styleFrom(
-                    disabledBackgroundColor: CF.ink,
+                    disabledBackgroundColor: CF.brand,
                     disabledForegroundColor: Colors.white,
                     minimumSize: const Size(44, 44),
                     padding: EdgeInsets.zero,
@@ -644,7 +644,7 @@ void scrollToKey(GlobalKey key) {
 
 /// Botão em forma de pílula, para opções e filtros em grade alinhada.
 class Pill extends StatelessWidget {
-  const Pill({super.key, required this.label, required this.onTap, this.selected = false, this.count, this.color = CF.ink});
+  const Pill({super.key, required this.label, required this.onTap, this.selected = false, this.count, this.color = CF.brand});
   final String label;
   final VoidCallback onTap;
   final bool selected;

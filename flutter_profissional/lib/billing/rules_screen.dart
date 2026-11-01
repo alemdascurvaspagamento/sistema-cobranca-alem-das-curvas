@@ -213,11 +213,11 @@ class _OptionTile extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: on ? CF.ink : Colors.transparent, width: 2),
+              border: Border.all(color: on ? CF.brand : Colors.transparent, width: 2),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Icon(on ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                  color: on ? CF.ink : CF.muted, size: 22),
+                  color: on ? CF.brand : CF.muted, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -318,7 +318,7 @@ class _HolidayRow extends StatelessWidget {
           ),
           Switch(
             value: holiday.noClass,
-            activeTrackColor: CF.ink,
+            activeTrackColor: CF.brand,
             onChanged: (v) => store.saveHoliday(holiday.copyWith(noClass: v)),
           ),
         ]),
@@ -364,7 +364,7 @@ Future<void> _editHoliday(BuildContext context, Holiday? holiday) async {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: noClass,
-              activeTrackColor: CF.ink,
+              activeTrackColor: CF.brand,
               onChanged: (v) => refresh(() => noClass = v),
               title: const Text('Não atendo neste dia'),
             ),

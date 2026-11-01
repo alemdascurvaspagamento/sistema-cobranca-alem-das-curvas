@@ -167,7 +167,7 @@ class _TopBar extends StatelessWidget {
               width: 28, height: 6,
               margin: const EdgeInsets.only(left: 4),
               decoration: BoxDecoration(
-                color: i <= step ? CF.ink : CF.line,
+                color: i <= step ? CF.brand : CF.line,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -214,7 +214,7 @@ class _ProfessionTile extends StatelessWidget {
         selected: selected,
         button: true,
         child: Material(
-          color: selected ? CF.ink : CF.surface,
+          color: selected ? CF.brand : CF.surface,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -224,10 +224,10 @@ class _ProfessionTile extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: selected ? CF.ink : CF.line),
+                border: Border.all(color: selected ? CF.brand : CF.line),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(profile.icon, color: selected ? CF.lap : CF.ink, size: 24),
+                Icon(profile.icon, color: selected ? Colors.white : CF.ink, size: 24),
                 const SizedBox(height: 8),
                 Text(
                   profile.name,
@@ -291,7 +291,7 @@ class _ModelTile extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: selected ? CF.ink : CF.line, width: selected ? 2 : 1),
+                border: Border.all(color: selected ? CF.brand : CF.line, width: selected ? 2 : 1),
               ),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Icon(_icon, color: CF.ink, size: 26),
@@ -316,7 +316,7 @@ class _ModelTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                    color: selected ? CF.ink : CF.muted),
+                    color: selected ? CF.brand : CF.muted),
               ]),
             ),
           ),
