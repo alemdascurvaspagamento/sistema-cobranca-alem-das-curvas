@@ -12,7 +12,7 @@ class SalesEntry extends StatelessWidget {
   /// "Já tenho conta": abre a tela de entrar. Sem ele, o botão não aparece.
   final VoidCallback? onLogin;
 
-  /// "Criar conta grátis": abre o cadastro com teste de 14 dias.
+  /// "Criar conta grátis": abre o cadastro com teste de 60 dias.
   final VoidCallback? onSignup;
 
   @override
@@ -54,7 +54,7 @@ class _Pitch extends StatelessWidget {
   final VoidCallback onStart;
   final VoidCallback? onLogin;
 
-  /// "Criar conta grátis": abre o cadastro com teste de 14 dias.
+  /// "Criar conta grátis": abre o cadastro com teste de 60 dias.
   final VoidCallback? onSignup;
   final bool wide;
 
@@ -177,7 +177,7 @@ class _Pitch extends StatelessWidget {
       const SizedBox(height: 12),
       Text(
           onSignup != null
-              ? '14 dias grátis, sem cartão. Depois, a partir de R\$ 29,90 por mês. '
+              ? '60 dias grátis, sem cartão. Depois, a partir de R\$ 29,90 por mês. '
                   'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros profissionais.'
               : 'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros '
                   'profissionais. Sem cadastro: você escolhe a profissão e entra numa conta de exemplo.',

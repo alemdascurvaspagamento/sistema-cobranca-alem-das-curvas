@@ -30,7 +30,7 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
             'Você é responsável pelas informações que cadastra e por manter a senha em segredo. '
                 'Cada conta é de uma pessoa. É preciso ter 18 anos ou mais.'),
         _Item('5. Teste grátis e planos',
-            'O teste grátis dura 14 dias. Depois, para continuar editando, é preciso assinar um plano. '
+            'O teste grátis dura 60 dias. Depois, para continuar editando, é preciso assinar um plano. '
                 'Sem assinatura, a conta fica só para consulta e nada é apagado. '
                 'Durante a fase de testes, nenhuma cobrança é feita. Os valores dos planos serão informados antes de qualquer cobrança.'),
         _Item('6. O que pode e o que não pode',
