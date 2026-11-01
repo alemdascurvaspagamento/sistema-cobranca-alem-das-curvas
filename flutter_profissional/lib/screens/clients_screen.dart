@@ -77,26 +77,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Wrap(spacing: 0, runSpacing: 8, children: [
-            ChoiceChip(
-              label: Text('Ativos ${store.activePlans.length}'),
+          PillGrid(columns: 2, children: [
+            Pill(
+              label: 'Ativos',
+              count: '${store.activePlans.length}',
               selected: !archived,
-              showCheckmark: false,
-              selectedColor: CF.ink,
-              labelStyle: CF.body(15, weight: FontWeight.w600, color: !archived ? Colors.white : CF.text),
-              onSelected: (_) => setState(() {
+              onTap: () => setState(() {
                 archived = false;
                 page = 0;
               }),
             ),
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: Text('Arquivados ${store.archivedPlans.length}'),
+            Pill(
+              label: 'Arquivados',
+              count: '${store.archivedPlans.length}',
               selected: archived,
-              showCheckmark: false,
-              selectedColor: CF.ink,
-              labelStyle: CF.body(15, weight: FontWeight.w600, color: archived ? Colors.white : CF.text),
-              onSelected: (_) => setState(() {
+              onTap: () => setState(() {
                 archived = true;
                 page = 0;
               }),

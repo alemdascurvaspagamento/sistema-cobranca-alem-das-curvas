@@ -78,20 +78,15 @@ class _BillingScreenState extends State<BillingScreen> {
             KpiCard(icon: Icons.check_circle_rounded, label: 'Pagos', value: '${counts[_Filter.paid]}', color: CF.green, accent: true,
                 selected: filter == _Filter.paid, onTap: () => setState(() { filter = _Filter.paid; page = 0; })),
           ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            const Icon(Icons.touch_app_rounded, size: 16, color: CF.muted),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                filter == _Filter.all
-                    ? 'Toque num quadro para filtrar a lista.'
-                    : 'Mostrando: ${_filterLabel(filter).toLowerCase()} (${counts[filter]})',
-                style: CF.body(14, color: CF.muted),
+          const SizedBox(height: 14),
+          PillGrid(columns: 4, narrowColumns: 2, children: [
+            for (final f in _Filter.values)
+              Pill(
+                label: _filterLabel(f),
+                count: '${counts[f]}',
+                selected: filter == f,
+                onTap: () => setState(() { filter = f; page = 0; }),
               ),
-            ),
-            if (filter != _Filter.all)
-              TextButton(onPressed: () => setState(() { filter = _Filter.all; page = 0; }), child: const Text('Ver todos')),
           ]),
           SizedBox(key: listKey, height: 12),
           if (shown.isEmpty)

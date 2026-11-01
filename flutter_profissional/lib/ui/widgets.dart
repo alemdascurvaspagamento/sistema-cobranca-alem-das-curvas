@@ -609,3 +609,73 @@ void scrollToKey(GlobalKey key) {
     Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
   }
 }
+
+/// Botão em forma de pílula, para opções e filtros em grade alinhada.
+class Pill extends StatelessWidget {
+  const Pill({super.key, required this.label, required this.onTap, this.selected = false, this.count, this.color = CF.ink});
+  final String label;
+  final VoidCallback onTap;
+  final bool selected;
+  final String? count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: selected ? color : CF.surface,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: selected ? color : CF.line, width: 1.5),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(text: label),
+                  if (count != null)
+                    TextSpan(text: '  $count', style: TextStyle(color: selected ? Colors.white70 : CF.muted)),
+                ]),
+                maxLines: 1,
+                style: CF.body(15, weight: FontWeight.w600, color: selected ? Colors.white : CF.text),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// Grade de pílulas com a mesma largura, sem rolar para o lado.
+/// [columns] por linha (no celular estreito pode diminuir com [narrowColumns]).
+class PillGrid extends StatelessWidget {
+  const PillGrid({super.key, required this.children, this.columns = 3, this.narrowColumns, this.gap = 8});
+  final List<Widget> children;
+  final int columns;
+  final int? narrowColumns;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
+        final cols = (narrowColumns != null && box.maxWidth < 380) ? narrowColumns! : columns;
+        final rows = <Widget>[];
+        for (var i = 0; i < children.length; i += cols) {
+          final slice = children.sublist(i, (i + cols).clamp(0, children.length));
+          rows.add(Row(children: [
+            for (var j = 0; j < cols; j++) ...[
+              if (j > 0) SizedBox(width: gap),
+              Expanded(child: j < slice.length ? slice[j] : const SizedBox.shrink()),
+            ],
+          ]));
+        }
+        return Column(children: [
+          for (var i = 0; i < rows.length; i++) ...[if (i > 0) SizedBox(height: gap), rows[i]],
+        ]);
+      });
+}

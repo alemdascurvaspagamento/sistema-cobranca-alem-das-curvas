@@ -5,6 +5,7 @@ import 'billing/billing_engine.dart';
 import 'billing/billing_store.dart';
 import 'data/ids.dart';
 import 'ui/cf_theme.dart';
+import 'ui/widgets.dart';
 
 /// Compromisso pessoal na agenda (reunião, médico, folga...).
 /// Ocupa o horário, mas não entra em cobrança nem em relatório.
@@ -339,14 +340,6 @@ class _EventFormState extends State<_EventForm> {
     final t = BillingStore.instance.terms;
     final draft = _draft();
     final clashes = AgendaEvents.instance.sessionClashes(draft, date);
-    Widget chip(String label, bool selected, VoidCallback onTap) => ChoiceChip(
-          label: Text(label),
-          selected: selected,
-          showCheckmark: false,
-          selectedColor: CF.ink,
-          labelStyle: CF.body(15, weight: FontWeight.w600, color: selected ? Colors.white : CF.text),
-          onSelected: (_) => onTap(),
-        );
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Center(
@@ -364,9 +357,9 @@ class _EventFormState extends State<_EventForm> {
               onChanged: (_) => setState(() => error = null),
             ),
             const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 6, children: [
+            PillGrid(columns: 3, children: [
               for (final s in suggestions)
-                ActionChip(label: Text(s), onPressed: () => setState(() => title.text = s)),
+                Pill(label: s, selected: title.text == s, onTap: () => setState(() => title.text = s)),
             ]),
             const SizedBox(height: 16),
             Row(children: [
@@ -396,8 +389,9 @@ class _EventFormState extends State<_EventForm> {
             if (!allDay) ...[
               Text('Duração', style: CF.body(16, weight: FontWeight.w700)),
               const SizedBox(height: 6),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (final m in const [30, 60, 90, 120, 180, 240]) chip(durationText(m), duration == m, () => setState(() => duration = m)),
+              PillGrid(columns: 6, narrowColumns: 3, children: [
+                for (final m in const [30, 60, 90, 120, 180, 240])
+                  Pill(label: durationText(m), selected: duration == m, onTap: () => setState(() => duration = m)),
               ]),
               const SizedBox(height: 6),
             ],

@@ -399,15 +399,6 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
     return t == null ? null : _hhmm(t.hour * 60 + t.minute);
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap) => ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        showCheckmark: false,
-        selectedColor: CF.ink,
-        labelStyle: CF.body(15, weight: FontWeight.w600, color: selected ? Colors.white : CF.text),
-        onSelected: (_) => onTap(),
-      );
-
   @override
   Widget build(BuildContext context) {
     final ready = b.settings != null;
@@ -485,16 +476,16 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                         const SizedBox(height: 8),
                         Text('Duração de cada horário', style: CF.body(15, weight: FontWeight.w700)),
                         const SizedBox(height: 6),
-                        Wrap(spacing: 8, runSpacing: 8, children: [
+                        PillGrid(columns: 5, narrowColumns: 3, children: [
                           for (final m in const [30, 45, 50, 60, 90])
-                            _chip(durationText(m), s.slotMinutes == m, () => setState(() => s.slotMinutes = m)),
+                            Pill(label: durationText(m), selected: s.slotMinutes == m, onTap: () => setState(() => s.slotMinutes = m)),
                         ]),
                         const SizedBox(height: 12),
                         Text('Mostrar os próximos', style: CF.body(15, weight: FontWeight.w700)),
                         const SizedBox(height: 6),
-                        Wrap(spacing: 8, runSpacing: 8, children: [
+                        PillGrid(columns: 3, children: [
                           for (final d in const [7, 14, 30])
-                            _chip('$d dias', s.daysAhead == d, () => setState(() => s.daysAhead = d)),
+                            Pill(label: '$d dias', selected: s.daysAhead == d, onTap: () => setState(() => s.daysAhead = d)),
                         ]),
                       ]),
                     ),
