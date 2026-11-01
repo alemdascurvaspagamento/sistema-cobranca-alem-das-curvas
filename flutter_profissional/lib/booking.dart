@@ -219,7 +219,7 @@ class Booking extends ChangeNotifier {
       }).eq('slug', s.slug);
       if (s.enabled) await publishBusy();
     } catch (_) {
-      onError?.call('Não foi possível salvar o link de horários. Confira a internet.');
+      onError?.call('Não foi possível salvar o agendamento online. Confira a internet.');
     }
   }
 
@@ -356,12 +356,14 @@ class Booking extends ChangeNotifier {
 // Configuração (profissional)
 // ---------------------------------------------------------------------------
 
-Future<void> openBookingSettings(BuildContext context) => Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const _BookingSettingsScreen()),
+/// Horários do agendamento online. Com [activate], já abre com o link ligado.
+Future<void> openBookingSettings(BuildContext context, {bool activate = false}) => Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => _BookingSettingsScreen(activate: activate)),
     );
 
 class _BookingSettingsScreen extends StatefulWidget {
-  const _BookingSettingsScreen();
+  const _BookingSettingsScreen({this.activate = false});
+  final bool activate;
 
   @override
   State<_BookingSettingsScreen> createState() => _BookingSettingsScreenState();
@@ -378,7 +380,7 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
     final cur = b.settings;
     s = BookingSettings(
       slug: cur?.slug ?? '',
-      enabled: cur?.enabled ?? false,
+      enabled: widget.activate || (cur?.enabled ?? false),
       title: cur?.title ?? '',
       weekdays: {...?cur?.weekdays},
       windows: [...?cur?.windows],
@@ -410,11 +412,11 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
   Widget build(BuildContext context) {
     final ready = b.settings != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Link de horários')),
+      appBar: AppBar(title: const Text('Agendamento online')),
       body: !ready
           ? const Padding(
               padding: EdgeInsets.all(24),
-              child: Text('Entre na sua conta para usar o link de horários. Na demonstração ele não fica disponível.'),
+              child: Text('Entre na sua conta para usar o agendamento online. Na demonstração ele não fica disponível.'),
             )
           : ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), children: [
               Center(
@@ -423,7 +425,7 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Text(
                       'Seus clientes abrem o link, veem só os horários livres e pedem um horário. '
-                      'Você aprova ou recusa na Secretária do Início.',
+                      'Você aceita ou recusa na Agenda (e o Início também avisa).',
                       style: CF.body(15, color: CF.muted, height: 1.35),
                     ),
                     const SizedBox(height: 12),
@@ -525,7 +527,7 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                       onPressed: () async {
                         await b.save(s);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link de horários salvo. Tá ok!')));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento online salvo.')));
                           Navigator.pop(context);
                         }
                       },
@@ -651,6 +653,151 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
       serviceInput.clear();
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Agendamento online no topo da Agenda
+// ---------------------------------------------------------------------------
+
+/// Painel da Agenda: ativar, enviar o link, pausar e responder pedidos, tudo num lugar.
+class OnlineBookingPanel extends StatelessWidget {
+  const OnlineBookingPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Booking.instance,
+        builder: (context, _) {
+          final b = Booking.instance;
+          final s = b.settings;
+          final on = s != null && s.enabled;
+          final list = b.pending;
+
+          void needAccount() => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Entre na sua conta para usar o agendamento online.')));
+
+          // Desligado: uma linha só, com o convite para ativar.
+          if (!on) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+              decoration: BoxDecoration(
+                color: CF.surface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: CF.line),
+              ),
+              child: Row(children: [
+                const IconBadge(Icons.event_available_rounded, color: CF.brand, size: 38),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Agendamento online', style: CF.body(16, weight: FontWeight.w700)),
+                    Text(
+                      s == null
+                          ? 'Seus clientes escolhem um horário livre pelo celular.'
+                          : 'Desligado. Seus clientes escolhem um horário livre pelo celular.',
+                      style: CF.body(13.5, color: CF.muted, height: 1.25),
+                    ),
+                  ]),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: s == null ? needAccount : () => openBookingSettings(context, activate: true),
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 42), padding: const EdgeInsets.symmetric(horizontal: 14)),
+                  child: const Text('Ativar'),
+                ),
+              ]),
+            );
+          }
+
+          // Ligado.
+          return Panel(
+            icon: Icons.event_available_rounded,
+            color: list.isEmpty ? CF.brand : CF.amber,
+            ringing: list.isNotEmpty,
+            title: 'Agendamento online',
+            action: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text('Ligado', style: CF.body(13, color: CF.green, weight: FontWeight.w700)),
+              Switch(
+                value: true,
+                activeTrackColor: CF.green,
+                onChanged: (_) async {
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Pausar o agendamento online?'),
+                      content: const Text(
+                          'Quem abrir o link verá que ele não está ativo. Seus horários e o link continuam guardados: é só ligar de novo.'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Pausar')),
+                      ],
+                    ),
+                  );
+                  if (ok == true) {
+                    s.enabled = false;
+                    await b.save(s);
+                  }
+                },
+              ),
+            ]),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(children: [
+                Container(width: 8, height: 8, decoration: const BoxDecoration(color: CF.green, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    list.isEmpty
+                        ? 'Recebendo pedidos. Nenhum aguardando agora.'
+                        : (list.length == 1 ? '1 pedido aguardando sua resposta' : '${list.length} pedidos aguardando sua resposta'),
+                    style: CF.body(14, color: list.isEmpty ? CF.muted : CF.amber, weight: FontWeight.w600),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => b.shareLink(context),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: CF.whatsapp, minimumSize: const Size(0, 44), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                    icon: const Icon(Icons.chat_rounded, size: 18),
+                    label: const FittedBox(child: Text('Enviar link')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: s.link));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    label: const FittedBox(child: Text('Copiar')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => openBookingSettings(context),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                    icon: const Icon(Icons.schedule_rounded, size: 18),
+                    label: const FittedBox(child: Text('Horários')),
+                  ),
+                ),
+              ]),
+              if (list.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                for (var i = 0; i < list.length; i++) ...[
+                  const Divider(height: 1),
+                  _RequestTile(r: list[i]),
+                ],
+              ],
+            ]),
+          );
+        },
+      );
 }
 
 // ---------------------------------------------------------------------------

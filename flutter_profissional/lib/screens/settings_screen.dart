@@ -202,9 +202,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         color: CF.whatsapp,
         child: ListTile(
-          leading: const Icon(Icons.share_rounded, color: CF.violet),
-          title: Text('Link de horários', style: CF.body(16, weight: FontWeight.w700)),
-          subtitle: Text('Clientes veem seus horários livres e pedem para marcar', style: CF.body(14, color: CF.muted)),
+          leading: const Icon(Icons.event_available_rounded, color: CF.brand),
+          title: Text('Agendamento online', style: CF.body(16, weight: FontWeight.w700)),
+          subtitle: Text('Agora fica no topo da Agenda. Aqui você ajusta os horários.', style: CF.body(14, color: CF.muted)),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => openBookingSettings(context),
         ),

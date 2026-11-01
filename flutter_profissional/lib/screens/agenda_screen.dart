@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../agenda_events.dart';
 import '../booking.dart';
+import '../calendar_feed.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
@@ -70,28 +71,42 @@ class _AgendaScreenState extends State<AgendaScreen> {
             icon: Icons.calendar_month_rounded,
             color: CF.blue,
             subtitle: _subtitle(),
-            trailing: FilledButton.icon(
-              onPressed: () => _chooseNew(context, day),
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Marcar'),
-            ),
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              FilledButton.icon(
+                onPressed: () => _chooseNew(context, day),
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: const Text('Marcar'),
+              ),
+              PopupMenuButton<String>(
+                tooltip: 'Mais opções da agenda',
+                icon: const Icon(Icons.more_vert_rounded, color: CF.ink),
+                onSelected: (v) {
+                  if (v == 'feed') openCalendarFeed(context);
+                  if (v == 'booking') openBookingSettings(context);
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'feed',
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.sync_rounded),
+                      title: Text('Ver no Outlook, Google ou iPhone'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'booking',
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.event_available_rounded),
+                      title: Text('Horários do agendamento online'),
+                    ),
+                  ),
+                ],
+              ),
+            ]),
           ),
           const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                final s = Booking.instance.settings;
-                if (s != null && s.enabled) {
-                  Booking.instance.shareLink(context);
-                } else {
-                  openBookingSettings(context);
-                }
-              },
-              icon: const Icon(Icons.share_rounded, size: 18),
-              label: const Text('Enviar link de horários'),
-            ),
-          ),
+          const OnlineBookingPanel(),
           const SizedBox(height: 10),
           _AgendaKpis(weekStart: weekStart),
           const SizedBox(height: 14),
