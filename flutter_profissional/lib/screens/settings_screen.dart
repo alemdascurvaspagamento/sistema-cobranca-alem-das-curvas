@@ -345,28 +345,58 @@ class _SubscriptionPanel extends StatelessWidget {
           const SizedBox(height: 12),
           LayoutBuilder(builder: (context, box) {
             final w = box.maxWidth >= 520 ? (box.maxWidth - 10) / 2 : box.maxWidth;
-            Widget plan(String name, String price, String what, bool highlight) => Container(
+            Widget plan(String name, String price, String yearly, String what, bool highlight) => Container(
                   width: w,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: highlight ? const Color(0xFFE9EFFA) : CF.surface,
+                    color: highlight ? const Color(0xFFDDF3F5) : CF.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: highlight ? CF.brand : CF.line, width: highlight ? 2 : 1),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(name, style: CF.body(16, weight: FontWeight.w700)),
                     Text(price, style: CF.score(28)),
-                    Text(what, style: CF.body(14, color: CF.muted)),
+                    Text(yearly, style: CF.body(13, color: CF.green, weight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(what, style: CF.body(14, color: CF.muted, height: 1.3)),
                   ]),
                 );
             return Wrap(spacing: 10, runSpacing: 10, children: [
-              plan('Essencial', 'R\$ 29,90/mês', 'Até 15 ${t.clients} ativos', false),
-              plan('Profissional', 'R\$ 49,90/mês', '${t.clientsTitle} ilimitados', true),
+              plan('Essencial', 'R\$ 34,90/mês', 'ou R\$ 349/ano (2 meses grátis)',
+                  'Até 15 ${t.clients} ativos. Agenda, cobrança e Pix.', false),
+              plan('Profissional', 'R\$ 59,90/mês', 'ou R\$ 599/ano (2 meses grátis)',
+                  '${t.clientsTitle} ilimitados, agendamento online, confirmação pelo WhatsApp, '
+                      'agenda no Outlook/Google e relatórios.',
+                  true),
             ]);
           }),
+          if (sub?.state == 'trialing' || sub == null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: CF.amberBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: CF.lap),
+              ),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.star_rounded, color: CF.amber),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(text: 'Oferta de fundador: ', style: CF.body(14.5, weight: FontWeight.w800, color: CF.amber)),
+                    TextSpan(
+                      text: 'assine durante o teste e tenha o Profissional por R\$ 39,90/mês para sempre. '
+                          'Só para as primeiras 100 contas.',
+                      style: CF.body(14.5, color: CF.text, height: 1.35),
+                    ),
+                  ])),
+                ),
+              ]),
+            ),
+          ],
           const SizedBox(height: 10),
-          Text('Plano anual com 2 meses grátis. A assinatura pelo site abre em breve; '
-              'você entra no app com este mesmo e-mail.',
+          Text('A assinatura é feita pelo site, que abre em breve; você entra no app com este mesmo e-mail.',
               style: CF.body(13.5, color: CF.muted, height: 1.35)),
         ],
       ]),

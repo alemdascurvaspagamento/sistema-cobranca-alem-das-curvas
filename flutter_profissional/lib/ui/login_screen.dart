@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? 'Digite o e-mail da sua conta. Você recebe um link para criar uma senha nova.'
                         : signup
                             ? '60 dias com tudo liberado, sem cartão. Depois você escolhe um plano, '
-                                'a partir de R\$ 29,90 por mês.'
+                                'a partir de R\$ 34,90 por mês.'
                             : 'Use o e-mail e a senha da sua conta.',
                     style: CF.body(16, color: Colors.white70, height: 1.4),
                   ),
