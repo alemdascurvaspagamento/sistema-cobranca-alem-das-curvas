@@ -1543,6 +1543,7 @@ class _VacationSheetState extends State<_VacationSheet> {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(widget.messengerContext).showSnackBar(SnackBar(
                         duration: const Duration(seconds: 8),
+                        persist: false, // some sozinho, mesmo tendo o botão Desfazer
                         content: Text('${_t.count(dates.length)} marcad${_t.g('as', 'os')} como $reason.'),
                         action: SnackBarAction(
                           label: 'Desfazer',

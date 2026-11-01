@@ -562,8 +562,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       selected = s;
       calendarSettings = false;
     });
-    // Cada tela começa do topo.
+    // Cada tela começa do topo, sem avisos da tela anterior.
     if (scroll.hasClients) scroll.jumpTo(0);
+    ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
   }
 
   void _changeProfession() {

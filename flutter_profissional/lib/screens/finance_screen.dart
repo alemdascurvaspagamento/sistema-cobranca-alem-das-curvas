@@ -624,6 +624,8 @@ class _ExpenseRow extends StatelessWidget {
                   store.payExpense(e);
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('Baixa feita: ${e.description} paga hoje.'),
+                    duration: const Duration(seconds: 6),
+                    persist: false,
                     action: SnackBarAction(label: 'Desfazer', onPressed: undo),
                   ));
                 },

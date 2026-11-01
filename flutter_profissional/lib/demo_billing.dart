@@ -348,6 +348,7 @@ class _DemoBillingState extends State<DemoBilling> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content:Text('${affected.length} atendimentos ajustados na demonstração.'),
       duration:const Duration(seconds:8),
+      persist:false,
       action:SnackBarAction(label:'DESFAZER',onPressed:(){
         for(final visit in affected){
           final old=before[visit]!;
