@@ -445,20 +445,35 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         SelectableText(s.link, style: CF.body(14, color: CF.blue)),
                         const SizedBox(height: 10),
+                        if (!s.enabled) ...[
+                          Text('Ligue "Link ativo" acima para poder enviar. Desligado, quem abrir verá que o link não está ativo.',
+                              style: CF.body(13.5, color: CF.amber, weight: FontWeight.w600, height: 1.3)),
+                          const SizedBox(height: 8),
+                        ],
                         Wrap(spacing: 8, runSpacing: 8, children: [
                           FilledButton.icon(
-                            onPressed: () => b.shareLink(context),
+                            // Salva antes de enviar: o link já chega ligado e com os horários desta tela.
+                            onPressed: !s.enabled
+                                ? null
+                                : () async {
+                                    await b.save(s);
+                                    if (context.mounted) await b.shareLink(context);
+                                  },
                             style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
                             icon: const Icon(Icons.chat_rounded, size: 18),
-                            label: const Text('Enviar pelo WhatsApp'),
+                            label: const Text('Salvar e enviar pelo WhatsApp'),
                           ),
                           OutlinedButton.icon(
-                            onPressed: () async {
-                              await Clipboard.setData(ClipboardData(text: s.link));
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
-                              }
-                            },
+                            onPressed: !s.enabled
+                                ? null
+                                : () async {
+                                    await b.save(s);
+                                    await Clipboard.setData(ClipboardData(text: s.link));
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(content: Text('Salvo e link copiado.')));
+                                    }
+                                  },
                             icon: const Icon(Icons.copy_rounded, size: 18),
                             label: const Text('Copiar'),
                           ),
