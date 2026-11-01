@@ -165,6 +165,13 @@ class Booking extends ChangeNotifier {
   Future<void> loadRequests() async {
     if (!_cloud && settings == null) return;
     try {
+      // LGPD: pedidos com nome e telefone de terceiros não ficam guardados para sempre.
+      try {
+        await _db
+            .from('cf_booking_requests')
+            .delete()
+            .lt('created_at', DateTime.now().toUtc().subtract(const Duration(days: 90)).toIso8601String());
+      } catch (_) {}
       final rows = await _db
           .from('cf_booking_requests')
           .select()

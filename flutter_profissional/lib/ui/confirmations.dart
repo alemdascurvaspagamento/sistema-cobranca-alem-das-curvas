@@ -36,6 +36,13 @@ class Confirmations extends ChangeNotifier {
           '${e.key}': [for (final id in (e.value as List? ?? const [])) '$id'],
       };
 
+  /// Esquece o texto e as marcações da conta anterior (ao sair da conta).
+  void clear() {
+    _sent = null;
+    _template = null;
+    notifyListeners();
+  }
+
   String get template {
     final t = _template ?? _meta[_templateKey] as String?;
     return (t == null || t.trim().isEmpty) ? defaultTemplate : t;

@@ -24,6 +24,8 @@ import 'screens/home_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
+import 'ui/confirmations.dart';
+import 'ui/start_guide.dart';
 import 'ui/widgets.dart';
 import 'ui/idle_guard.dart';
 import 'ui/login_screen.dart';
@@ -153,6 +155,8 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     AgendaEvents.instance.clear();
     Booking.instance.clear();
     CalendarFeed.instance.clear();
+    Confirmations.instance.clear();
+    StartGuide.instance.clear();
     if (!mounted) return;
     setState(() {
       loginNotice = idle ? 'Por segurança, saímos da sua conta depois de 30 minutos sem uso. Entre de novo.' : null;

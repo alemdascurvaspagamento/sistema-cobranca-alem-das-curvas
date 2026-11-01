@@ -20,6 +20,13 @@ class StartGuide extends ChangeNotifier {
     }
   }
 
+  /// Esquece o que estava na memória (ao sair da conta).
+  void clear() {
+    _closed = null;
+    _seenBilling = null;
+    notifyListeners();
+  }
+
   bool get closed => _closed ?? _meta[_closedKey] == true;
   bool get seenBilling => _seenBilling ?? _meta[_billingKey] == true;
 
