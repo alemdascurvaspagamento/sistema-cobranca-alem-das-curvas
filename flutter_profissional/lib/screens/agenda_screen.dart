@@ -16,6 +16,9 @@ enum _View { day, week, month }
 class AgendaScreen extends StatefulWidget {
   const AgendaScreen({super.key});
 
+  /// Ação do botão "+" fixo no canto (marcar no dia escolhido). Nulo fora da Agenda.
+  static final addAction = ValueNotifier<VoidCallback?>(null);
+
   @override
   State<AgendaScreen> createState() => _AgendaScreenState();
 }
@@ -25,6 +28,24 @@ class _AgendaScreenState extends State<AgendaScreen> {
   late DateTime day = store.today;
   late DateTime month = DateTime(store.today.year, store.today.month);
   _View view = _View.day;
+
+  late final VoidCallback _add = () {
+    if (mounted) _chooseNew(context, day);
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AgendaScreen.addAction.value = _add;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (AgendaScreen.addAction.value == _add) AgendaScreen.addAction.value = null;
+    super.dispose();
+  }
 
   DateTime get weekStart => DateTime(day.year, day.month, day.day - (day.weekday - 1));
 
@@ -72,11 +93,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
             color: CF.blue,
             subtitle: _subtitle(),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              FilledButton.icon(
-                onPressed: () => _chooseNew(context, day),
-                icon: const Icon(Icons.add_rounded, size: 20),
-                label: const Text('Marcar'),
-              ),
               PopupMenuButton<String>(
                 tooltip: 'Mais opções da agenda',
                 icon: const Icon(Icons.more_vert_rounded, color: CF.ink),
@@ -195,6 +211,12 @@ class _AgendaScreenState extends State<AgendaScreen> {
         icon: Icons.calendar_today_rounded,
         color: CF.blue,
         title: '${capitalize(fullDate(day))}${isToday ? ' (hoje)' : ''}',
+        action: FilledButton.icon(
+          onPressed: () => _chooseNew(context, day),
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 14)),
+          icon: const Icon(Icons.add_rounded, size: 18),
+          label: const Text('Marcar'),
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (holiday != null) ...[
             _HolidayNote(holiday: holiday),

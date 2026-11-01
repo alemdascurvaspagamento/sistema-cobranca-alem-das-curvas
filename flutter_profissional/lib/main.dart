@@ -746,9 +746,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   child: Stack(children: [
                   ListView(
                     controller: scroll,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: desktop ? 24 : (narrowPhone ? 12 : 16),
-                      vertical: desktop ? 20 : 14,
+                    padding: EdgeInsets.fromLTRB(
+                      desktop ? 24 : (narrowPhone ? 12 : 16),
+                      desktop ? 20 : 14,
+                      desktop ? 24 : (narrowPhone ? 12 : 16),
+                      // Espaço para o "+" da Agenda não cobrir o último item.
+                      selected == Section.agenda ? 88 : (desktop ? 20 : 14),
                     ),
                     children: [
                       if (widget.demo) _DemoBanner(onLogin: widget.onLogin),
@@ -767,22 +770,42 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   Positioned(
                     right: 16,
                     bottom: 16,
-                    child: ValueListenableBuilder<bool>(
-                      valueListenable: showTop,
-                      builder: (context, show, _) => AnimatedScale(
-                        scale: show ? 1 : 0,
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutBack,
-                        child: FloatingActionButton.small(
-                          heroTag: 'topo',
-                          tooltip: 'Voltar ao topo',
-                          backgroundColor: CF.ink,
-                          foregroundColor: Colors.white,
-                          onPressed: show ? _toTop : null,
-                          child: const Icon(Icons.arrow_upward_rounded),
+                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+                      ValueListenableBuilder<bool>(
+                        valueListenable: showTop,
+                        builder: (context, show, _) => AnimatedScale(
+                          scale: show ? 1 : 0,
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutBack,
+                          child: FloatingActionButton.small(
+                            heroTag: 'topo',
+                            tooltip: 'Voltar ao topo',
+                            backgroundColor: CF.ink,
+                            foregroundColor: Colors.white,
+                            onPressed: show ? _toTop : null,
+                            child: const Icon(Icons.arrow_upward_rounded),
+                          ),
                         ),
                       ),
-                    ),
+                      // Na Agenda: "+" fixo para marcar no dia escolhido, perto do polegar.
+                      if (selected == Section.agenda)
+                        ValueListenableBuilder<VoidCallback?>(
+                          valueListenable: AgendaScreen.addAction,
+                          builder: (context, add, _) => add == null
+                              ? const SizedBox.shrink()
+                              : Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: FloatingActionButton(
+                                    heroTag: 'marcar',
+                                    tooltip: 'Marcar',
+                                    backgroundColor: CF.brand,
+                                    foregroundColor: Colors.white,
+                                    onPressed: add,
+                                    child: const Icon(Icons.add_rounded, size: 28),
+                                  ),
+                                ),
+                        ),
+                    ]),
                   ),
                   ]),
                 ),
