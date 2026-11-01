@@ -117,7 +117,7 @@ class AgendaEvents extends ChangeNotifier {
         ));
       }
     } catch (e) {
-      debugPrint('Okday: compromissos indisponíveis ($e)');
+      debugPrint('Avora: compromissos indisponíveis ($e)');
     }
     notifyListeners();
   }

@@ -1,6 +1,6 @@
-# Confere o TestFlight do Okday e prepara o teste interno (grupo "Equipe").
+# Confere o TestFlight do Avora e prepara o teste interno (grupo "Equipe").
 # Roda quando o arquivo flutter_profissional/testflight_check.txt muda.
-name: Okday TestFlight (conferir)
+name: Avora TestFlight (conferir)
 
 on:
   push:

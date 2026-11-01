@@ -13,8 +13,8 @@ import 'ui/widgets.dart';
 
 String _d(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-/// Link de calendário (.ics) para ver a agenda do Okday no Office 365/Outlook,
-/// Google Agenda e Calendário do iPhone. Vai só do Okday para lá.
+/// Link de calendário (.ics) para ver a agenda do Avora no Office 365/Outlook,
+/// Google Agenda e Calendário do iPhone. Vai só do Avora para lá.
 class CalendarFeed extends ChangeNotifier {
   CalendarFeed._();
   static final instance = CalendarFeed._();
@@ -50,7 +50,7 @@ class CalendarFeed extends ChangeNotifier {
         unawaited(publish());
       }
     } catch (e) {
-      debugPrint('Okday: calendário indisponível ($e)');
+      debugPrint('Avora: calendário indisponível ($e)');
     }
     notifyListeners();
   }
@@ -65,7 +65,7 @@ class CalendarFeed extends ChangeNotifier {
       AgendaEvents.instance.addListener(_schedule);
       await publish();
     } catch (e) {
-      debugPrint('Okday: não criou o calendário ($e)');
+      debugPrint('Avora: não criou o calendário ($e)');
     }
     notifyListeners();
   }
@@ -119,7 +119,7 @@ class CalendarFeed extends ChangeNotifier {
           'date': _d(day),
           'start': start,
           'end': start + p.durationMinutes,
-          'title': showNames ? '${capitalize(t.session)} · ${p.name}' : '${capitalize(t.session)} (Okday)',
+          'title': showNames ? '${capitalize(t.session)} · ${p.name}' : '${capitalize(t.session)} (Avora)',
         });
       }
       for (final e in AgendaEvents.instance.on(day)) {
@@ -138,7 +138,7 @@ class CalendarFeed extends ChangeNotifier {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).neq('token', '');
     } catch (e) {
-      debugPrint('Okday: não publicou o calendário ($e)');
+      debugPrint('Avora: não publicou o calendário ($e)');
     }
   }
 }
@@ -163,7 +163,7 @@ class _CalendarFeedScreen extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 640),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 Text(
-                  'Seus atendimentos e compromissos do Okday aparecem no Office 365/Outlook, no Google Agenda '
+                  'Seus atendimentos e compromissos do Avora aparecem no Office 365/Outlook, no Google Agenda '
                   'ou no Calendário do iPhone. É só colar o link uma vez.',
                   style: CF.body(15, color: CF.muted, height: 1.35),
                 ),
@@ -208,7 +208,7 @@ class _CalendarFeedScreen extends StatelessWidget {
                     onChanged: f.setShowNames,
                     title: Text('Mostrar o nome do cliente', style: CF.body(16, weight: FontWeight.w600)),
                     subtitle: Text(
-                        f.showNames ? 'Ex.: "Aula · Carlão"' : 'Desligado: aparece só "Aula (Okday)", mais privado.',
+                        f.showNames ? 'Ex.: "Aula · Carlão"' : 'Desligado: aparece só "Aula (Avora)", mais privado.',
                         style: CF.body(14, color: CF.muted)),
                   ),
                   const SizedBox(height: 10),
@@ -218,7 +218,7 @@ class _CalendarFeedScreen extends StatelessWidget {
                     steps: [
                       'Abra o Outlook no computador (outlook.office.com).',
                       'Vá em Calendário › Adicionar calendário › Assinar da Web.',
-                      'Cole o link, dê o nome "Okday" e toque em Importar.',
+                      'Cole o link, dê o nome "Avora" e toque em Importar.',
                     ],
                   ),
                   const _Steps(
@@ -242,7 +242,7 @@ class _CalendarFeedScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     'As mudanças chegam ao seu calendário no ritmo de cada um: no iPhone em minutos, no Outlook '
-                    'em algumas horas, no Google em até um dia. O Okday atualiza o link sempre que você usa o app.',
+                    'em algumas horas, no Google em até um dia. O Avora atualiza o link sempre que você usa o app.',
                     style: CF.body(13.5, color: CF.muted, height: 1.35),
                   ),
                 ],

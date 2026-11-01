@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'cf_theme.dart';
 import 'widgets.dart';
 
-/// Tela de entrada: explica em segundos o que o Okday resolve e
+/// Tela de entrada: explica em segundos o que o Avora resolve e
 /// convida a pessoa a experimentar a demonstração.
 class SalesEntry extends StatelessWidget {
   const SalesEntry({super.key, required this.onStart, this.onLogin, this.onSignup});
@@ -67,8 +67,9 @@ class _Pitch extends StatelessWidget {
         Flexible(
           child: Text.rich(
             TextSpan(children: [
-              TextSpan(text: 'Ok', style: CF.body(22, color: CF.lap, weight: FontWeight.w800)),
-              TextSpan(text: 'day', style: CF.body(22, color: Colors.white, weight: FontWeight.w800)),
+              TextSpan(text: 'A', style: CF.body(22, color: Colors.white, weight: FontWeight.w800)),
+              TextSpan(text: 'v', style: CF.body(22, color: CF.lap, weight: FontWeight.w800)),
+              TextSpan(text: 'ora', style: CF.body(22, color: Colors.white, weight: FontWeight.w800)),
             ]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -1,7 +1,7 @@
 {
-  "name": "Okday",
-  "short_name": "Okday",
-  "description": "Okday: agenda e cobrança para profissionais liberais.",
+  "name": "Avora",
+  "short_name": "Avora",
+  "description": "Avora: agenda e cobrança para profissionais liberais.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0F2236",

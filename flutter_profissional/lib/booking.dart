@@ -131,7 +131,7 @@ class Booking extends ChangeNotifier {
       _poll = Timer.periodic(const Duration(minutes: 2), (_) => loadRequests());
       if (settings!.enabled) unawaited(publishBusy());
     } catch (e) {
-      debugPrint('Okday: link de horários indisponível ($e)');
+      debugPrint('Avora: link de horários indisponível ($e)');
     }
     notifyListeners();
   }
@@ -188,7 +188,7 @@ class Booking extends ChangeNotifier {
         ]);
       notifyListeners();
     } catch (e) {
-      debugPrint('Okday: solicitações indisponíveis ($e)');
+      debugPrint('Avora: solicitações indisponíveis ($e)');
     }
   }
 
@@ -262,7 +262,7 @@ class Booking extends ChangeNotifier {
         'busy_updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('slug', s.slug);
     } catch (e) {
-      debugPrint('Okday: não publicou horários ocupados ($e)');
+      debugPrint('Avora: não publicou horários ocupados ($e)');
     }
   }
 
@@ -876,8 +876,9 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
           const BrandMark(size: 28),
           const SizedBox(width: 8),
           Text.rich(TextSpan(children: [
-            TextSpan(text: 'Ok', style: CF.body(20, color: CF.lap, weight: FontWeight.w800)),
-            TextSpan(text: 'day', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
+            TextSpan(text: 'A', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
+            TextSpan(text: 'v', style: CF.body(20, color: CF.lap, weight: FontWeight.w800)),
+            TextSpan(text: 'ora', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
           ])),
         ]),
       ),

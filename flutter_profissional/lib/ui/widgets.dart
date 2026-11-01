@@ -531,7 +531,7 @@ class KpiRow extends StatelessWidget {
       });
 }
 
-/// Marca do Okday: agenda com check, em quadrado amarelo (igual ao ícone do app).
+/// Marca da Avora: letra A com um check dentro, em quadrado amarelo (igual ao ícone do app).
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 30});
   final double size;
@@ -540,10 +540,42 @@ class BrandMark extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: size,
         height: size,
-        alignment: Alignment.center,
         decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(size * .28)),
-        child: Icon(Icons.event_available_rounded, size: size * .72, color: CF.ink),
+        child: CustomPaint(painter: _AvoraGlyph(CF.ink)),
       );
+}
+
+class _AvoraGlyph extends CustomPainter {
+  const _AvoraGlyph(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 1024;
+    Offset o(double x, double y) => Offset(x * k, y * k);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(
+      Path()
+        ..moveTo(o(236, 800).dx, o(236, 800).dy)
+        ..lineTo(o(512, 236).dx, o(512, 236).dy)
+        ..lineTo(o(788, 800).dx, o(788, 800).dy),
+      paint..strokeWidth = 96 * k,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(o(436, 664).dx, o(436, 664).dy)
+        ..lineTo(o(494, 722).dx, o(494, 722).dy)
+        ..lineTo(o(600, 602).dx, o(600, 602).dy),
+      paint..strokeWidth = 58 * k,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_AvoraGlyph old) => old.color != color;
 }
 
 /// Páginas 1, 2, 3 no fim de listas longas.
