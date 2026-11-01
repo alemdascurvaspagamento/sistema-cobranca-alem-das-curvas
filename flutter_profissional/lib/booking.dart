@@ -960,18 +960,31 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
     if (mounted) setState(() => loading = false);
   }
 
-  /// Horários livres de um dia.
+  /// Faixas abertas de um dia: por dia da semana (novo) ou as mesmas para os dias marcados (antigo).
+  List _windows(DateTime d) {
+    final m = data!;
+    final byDay = (m['day_windows'] as Map?) ?? const {};
+    if (byDay.values.any((v) => (v as List?)?.isNotEmpty ?? false)) {
+      return (byDay['${d.weekday}'] as List?) ?? const [];
+    }
+    final weekdays = {for (final x in (m['weekdays'] as List)) (x as num).toInt()};
+    return weekdays.contains(d.weekday) ? (m['windows'] as List) : const [];
+  }
+
+  /// Dia inteiro bloqueado (feriado sem atendimento).
+  bool _closedAllDay(DateTime d) {
+    final key = _d(d);
+    for (final b in (data!['busy'] as List? ?? const [])) {
+      final mm = b as Map;
+      if ('${mm['date']}' == key && mm['start'] == 0 && mm['end'] == 24 * 60) return true;
+    }
+    return false;
+  }
+
+  /// Horários livres de um dia (começando de meia em meia hora).
   List<String> _slots(DateTime d) {
     final m = data!;
-    // Faixas do dia: por dia da semana (novo) ou as mesmas para os dias marcados (antigo).
-    final byDay = (m['day_windows'] as Map?) ?? const {};
-    final List windows;
-    if (byDay.values.any((v) => (v as List?)?.isNotEmpty ?? false)) {
-      windows = (byDay['${d.weekday}'] as List?) ?? const [];
-    } else {
-      final weekdays = {for (final x in (m['weekdays'] as List)) (x as num).toInt()};
-      windows = weekdays.contains(d.weekday) ? (m['windows'] as List) : const [];
-    }
+    final windows = _windows(d);
     if (windows.isEmpty) return const [];
     final slot = (m['slot_minutes'] as num).toInt();
     final key = _d(d);
@@ -996,7 +1009,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
       while (t + slot <= end) {
         final free = busy.every((b) => !(t < b.$2 && b.$1 < t + slot));
         if (free && (!isToday || t >= nowMin)) out.add(_hhmm(t));
-        t += slot;
+        t += 30; // de meia em meia hora: aproveita os intervalos entre atendimentos
       }
     }
     return out;
@@ -1083,9 +1096,11 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
     final m = data!;
     final ahead = (m['days_ahead'] as num).toInt();
     final now = DateTime.now();
+    // Mostra todos os dias de atendimento; os sem horário livre aparecem apagados.
     final days = [
       for (var i = 0; i <= ahead; i++) DateTime(now.year, now.month, now.day + i),
-    ].where((d) => _slots(d).isNotEmpty).toList();
+    ].where((d) => _windows(d).isNotEmpty).toList();
+    final anyFree = days.any((d) => _slots(d).isNotEmpty);
     final services = [for (final s in (m['services'] as List? ?? const [])) '$s'];
     final slots = day == null ? const <String>[] : _slots(day!);
     return ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 40), children: [
@@ -1114,11 +1129,15 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
             ],
             Text('Dia', style: CF.body(16, weight: FontWeight.w700)),
             const SizedBox(height: 6),
-            if (days.isEmpty)
-              Text('Nenhum horário livre nos próximos dias. Fale direto com o profissional.', style: CF.body(15, color: CF.muted))
-            else
+            if (days.isEmpty || !anyFree)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('Nenhum horário livre nos próximos dias. Fale direto com o profissional.',
+                    style: CF.body(15, color: CF.muted)),
+              ),
+            if (days.isNotEmpty) ...[
               SizedBox(
-                height: 74,
+                height: 86,
                 child: ListView(scrollDirection: Axis.horizontal, children: [
                   for (final d in days)
                     Padding(
@@ -1126,6 +1145,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
                       child: _DayChip(
                         day: d,
                         selected: day != null && dateOnly(day!) == d,
+                        note: _slots(d).isNotEmpty ? null : (_closedAllDay(d) ? 'fechado' : 'lotado'),
                         onTap: () => setState(() {
                           day = d;
                           time = null;
@@ -1134,6 +1154,11 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
                     ),
                 ]),
               ),
+              if (anyFree && days.any((d) => _slots(d).isEmpty)) ...[
+                const SizedBox(height: 6),
+                Text('Dias apagados estão sem horário livre.', style: CF.body(13, color: CF.muted)),
+              ],
+            ],
             if (day != null) ...[
               const SizedBox(height: 16),
               Text('Horário', style: CF.body(16, weight: FontWeight.w700)),
@@ -1180,27 +1205,37 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
 }
 
 class _DayChip extends StatelessWidget {
-  const _DayChip({required this.day, required this.selected, required this.onTap});
+  const _DayChip({required this.day, required this.selected, required this.onTap, this.note});
   final DateTime day;
   final bool selected;
   final VoidCallback onTap;
 
+  /// "lotado" ou "fechado": dia sem horário livre (aparece apagado e não dá para escolher).
+  final String? note;
+
   @override
-  Widget build(BuildContext context) => Material(
-        color: selected ? CF.brand : CF.surface,
+  Widget build(BuildContext context) {
+    final off = note != null;
+    return Opacity(
+      opacity: off ? .5 : 1,
+      child: Material(
+        color: selected ? CF.brand : (off ? CF.greyBg : CF.surface),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
+          onTap: off ? null : onTap,
           child: Container(
-            width: 62,
+            width: 64,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: CF.line)),
             alignment: Alignment.center,
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(weekdayShort[day.weekday - 1], style: CF.body(13, color: selected ? Colors.white70 : CF.muted)),
-              Text('${day.day}', style: CF.score(24, color: selected ? Colors.white : CF.text)),
+              Text('${day.day}', style: CF.score(24, color: selected ? Colors.white : (off ? CF.muted : CF.text))),
+              if (off) Text(note!, style: CF.body(11, color: CF.muted, weight: FontWeight.w600)),
             ]),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
