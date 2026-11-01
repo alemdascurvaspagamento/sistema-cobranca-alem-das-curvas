@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
@@ -30,6 +31,58 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = BillingStore.instance;
+
+  /// Excluir a conta (exigência da Apple e da LGPD). Pede para digitar EXCLUIR.
+  Future<void> _deleteAccount() async {
+    final typed = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Excluir minha conta?'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text(
+              'Isso apaga para sempre seus clientes, agenda, cobranças, despesas e configurações do Avora. '
+              'Não dá para desfazer. Se quiser guardar uma cópia, use antes "Baixar meus dados".',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: typed,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              onChanged: (_) => setLocal(() {}),
+              decoration: const InputDecoration(labelText: 'Para confirmar, digite EXCLUIR'),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: CF.red),
+              onPressed: typed.text.trim().toUpperCase() == 'EXCLUIR' ? () => Navigator.pop(ctx, true) : null,
+              child: const Text('Excluir para sempre'),
+            ),
+          ],
+        ),
+      ),
+    );
+    typed.dispose();
+    if (ok != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result = await Supabase.instance.client.rpc('cf_delete_my_account');
+      messenger.showSnackBar(SnackBar(
+        content: Text(result == 'account_deleted'
+            ? 'Sua conta foi excluída.'
+            : 'Seus dados do Avora foram apagados. Seu login continua porque você usa outro sistema da Além das Curvas.'),
+      ));
+      widget.onSignOut?.call();
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Não foi possível excluir agora. Verifique a internet e tente de novo, ou fale com o suporte.'),
+      ));
+    }
+  }
+
   Future<void> _download() async {
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -222,6 +275,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: const Text('Sair da conta'),
               ),
             ),
+          if (widget.onSignOut != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(foregroundColor: CF.red),
+                onPressed: _deleteAccount,
+                icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                label: const Text('Excluir minha conta'),
+              ),
+            ),
+          ],
           if (widget.onLeaveDemo != null)
             Align(
               alignment: Alignment.centerLeft,
