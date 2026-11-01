@@ -660,6 +660,10 @@ class BillingStore extends ChangeNotifier {
 
   List<Expense> get fixedExpenses => _expenses.where((e) => e.fixed && e.endMonth == null).toList();
 
+  /// Custo fixo do mês: contas que se repetem (fixas e parcelas). O mínimo para empatar.
+  double fixedCost(DateTime month) =>
+      expensesFor(month).where((e) => e.fixed).fold(0.0, (s, e) => s + e.amount);
+
   List<ExtraIncome> incomesFor(DateTime month) =>
       _incomes.where((e) => e.date.year == month.year && e.date.month == month.month).toList()
         ..sort((a, b) => a.date.compareTo(b.date));
@@ -721,6 +725,7 @@ class BillingStore extends ChangeNotifier {
     required DateTime date,
     required bool fixed,
     DateTime? fromMonth,
+    int? installments,
   }) {
     if (_locked()) return;
     final i = _expenses.indexWhere((e) => e.id == id);
@@ -758,7 +763,13 @@ class BillingStore extends ChangeNotifier {
         amount: amount,
         date: old.fixed && fixed ? start : date,
         fixed: fixed,
-        endMonth: fixed ? old.endMonth : null,
+        // Virou fixa agora: se for parcelada, já sabemos quando termina.
+        endMonth: !fixed
+            ? null
+            : old.fixed
+                ? old.endMonth
+                : (installments == null ? null : DateTime(date.year, date.month + installments)),
+        installments: !fixed ? null : (old.fixed ? old.installments : installments),
       );
       if (!old.fixed && (old.date.year != date.year || old.date.month != date.month)) {
         _moveExpensePaid(id, old.date, id, date);
@@ -1230,6 +1241,8 @@ class Expense {
     required this.date,
     this.fixed = false,
     this.endMonth,
+    this.installments,
+    this.installmentNo,
   });
 
   final String id;
@@ -1243,6 +1256,21 @@ class Expense {
   /// Fixa: primeiro mês em que ela deixa de valer.
   final DateTime? endMonth;
 
+  /// Parcelada: em quantas vezes (é uma fixa que termina sozinha).
+  final int? installments;
+
+  /// Parcelada, já posicionada num mês: qual parcela é (1, 2, 3...).
+  final int? installmentNo;
+
+  /// Repete todo mês, sem prazo para acabar.
+  bool get isFixedForever => fixed && installments == null;
+
+  /// Fixa com prazo: termina depois da última parcela.
+  bool get isInstallment => fixed && installments != null;
+
+  /// Acontece só uma vez (extraordinária).
+  bool get isExtra => !fixed;
+
   /// A mesma despesa fixa, posicionada em outro mês.
   Expense atMonth(DateTime month) {
     final last = DateTime(month.year, month.month + 1, 0).day;
@@ -1253,11 +1281,19 @@ class Expense {
       date: DateTime(month.year, month.month, date.day > last ? last : date.day),
       fixed: fixed,
       endMonth: endMonth,
+      installments: installments,
+      installmentNo: installments == null ? null : (month.year - date.year) * 12 + month.month - date.month + 1,
     );
   }
 
   Expense endingAt(DateTime month) => Expense(
-        id: id, description: description, amount: amount, date: date, fixed: fixed, endMonth: month);
+        id: id,
+        description: description,
+        amount: amount,
+        date: date,
+        fixed: fixed,
+        endMonth: month,
+        installments: installments);
 }
 
 /// Ganho que não vem da cobrança mensal (avaliação avulsa, palestra...).

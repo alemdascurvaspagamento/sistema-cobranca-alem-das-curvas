@@ -111,6 +111,7 @@ Uint8List buildDataWorkbook(BillingStore store) {
 
   // Despesas (cada mês de uma fixa vira uma linha)
   final exp = sheet('Despesas', ['Vencimento', 'Descrição', 'Valor', 'Fixa', 'Paga em']);
+  // "Fixa" = Sim para fixas e parcelas; Não para extraordinárias.
   for (final m in months) {
     for (final e in store.expensesFor(m)) {
       final paid = store.paidAt(e);

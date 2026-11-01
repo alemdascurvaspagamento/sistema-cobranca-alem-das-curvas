@@ -50,6 +50,37 @@ void main() {
     expect(store.expensesFor(m).any((e) => e.id == 'x'), isTrue);
   });
 
+  test('despesa extraordinária vale só no mês; parcelada termina sozinha', () {
+    store.seed(professionById('psico'), BillingModel.perSession);
+    final m = store.selectedMonth;
+    final next = DateTime(m.year, m.month + 1);
+    store.addExpense(Expense(id: 'ex', description: 'Conserto', amount: 80, date: DateTime(m.year, m.month, 4)));
+    store.addExpense(Expense(
+      id: 'par',
+      description: 'Notebook',
+      amount: 200,
+      date: DateTime(m.year, m.month, 5),
+      fixed: true,
+      installments: 3,
+      endMonth: DateTime(m.year, m.month + 3),
+    ));
+    expect(store.expensesFor(m).any((e) => e.id == 'ex'), isTrue);
+    expect(store.expensesFor(next).any((e) => e.id == 'ex'), isFalse);
+    // Parcelas 1, 2 e 3; no quarto mês não existe mais.
+    for (var k = 0; k < 3; k++) {
+      final list = store.expensesFor(DateTime(m.year, m.month + k));
+      final p = list.firstWhere((e) => e.id == 'par');
+      expect(p.installmentNo, k + 1);
+      expect(p.isInstallment, isTrue);
+    }
+    expect(store.expensesFor(DateTime(m.year, m.month + 3)).any((e) => e.id == 'par'), isFalse);
+    // Custo fixo conta a parcela, mas não a extraordinária.
+    final fixedBefore = store.fixedCost(m);
+    expect(fixedBefore >= 200, isTrue);
+    store.removeExpense('par');
+    expect(store.fixedCost(m), fixedBefore - 200);
+  });
+
   test('arquivar tira da cobrança sem apagar', () {
     store.seed(professionById('personal'), BillingModel.perSession);
     final id = store.activePlans.first.id;

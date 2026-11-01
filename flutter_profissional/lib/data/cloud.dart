@@ -141,6 +141,7 @@ class CloudService implements CloudSink {
         'date': _d(e.date),
         'fixed': e.fixed,
         'end_month': e.endMonth == null ? null : _m(e.endMonth!),
+        'installments': e.installments,
       }));
 
   @override
@@ -286,6 +287,7 @@ class CloudService implements CloudSink {
             date: _date(e['date'])!,
             fixed: e['fixed'] as bool? ?? false,
             endMonth: _date(e['end_month']),
+            installments: (e['installments'] as num?)?.toInt(),
           ),
       ],
       expensePaidOn: paidOn,

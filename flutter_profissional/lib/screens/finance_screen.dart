@@ -439,10 +439,98 @@ class _Expenses extends StatelessWidget {
                     : 'Todas as despesas do mês estão pagas.',
                 style: CF.body(14, color: open > 0 ? CF.amber : CF.green, weight: FontWeight.w600),
               ),
-              const SizedBox(height: 4),
-              for (final e in list) _ExpenseRow(expense: e, month: month),
+              const SizedBox(height: 10),
+              _FixedCostCard(month: month),
+              _ExpenseGroup(
+                title: 'Fixas',
+                note: 'Se repetem todo mês',
+                items: [for (final e in list) if (e.isFixedForever) e],
+                month: month,
+              ),
+              _ExpenseGroup(
+                title: 'Parceladas',
+                note: 'Terminam sozinhas',
+                items: [for (final e in list) if (e.isInstallment) e],
+                month: month,
+              ),
+              _ExpenseGroup(
+                title: 'Extraordinárias',
+                note: 'Só neste mês',
+                items: [for (final e in list) if (e.isExtra) e],
+                month: month,
+              ),
             ]),
     );
+  }
+}
+
+/// Quanto o mês custa só para funcionar (fixas e parcelas) e quanto disso já foi coberto.
+class _FixedCostCard extends StatelessWidget {
+  const _FixedCostCard({required this.month});
+  final DateTime month;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final cost = store.fixedCost(month);
+    if (cost <= 0) return const SizedBox.shrink();
+    final entered = store.totalIn(month);
+    final covered = entered >= cost;
+    final progress = (entered / cost).clamp(0.0, 1.0).toDouble();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: covered ? CF.greenBg : CF.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: covered ? CF.green : CF.line),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text('Custo fixo do mês', style: CF.body(14, color: CF.muted, weight: FontWeight.w700))),
+          Text(money(cost), style: CF.score(24)),
+        ]),
+        const SizedBox(height: 8),
+        GrowingBar(value: progress, minHeight: 10, color: covered ? CF.green : CF.brand, backgroundColor: CF.greyBg),
+        const SizedBox(height: 8),
+        Text(
+          covered
+              ? 'Já entrou o suficiente para cobrir o custo fixo. O que passar disso é sobra.'
+              : 'Faltam ${money(cost - entered)} entrar para cobrir o custo fixo do mês.',
+          style: CF.body(14, color: covered ? CF.green : CF.muted, weight: FontWeight.w600, height: 1.3),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Um bloco da lista de despesas, com título e subtotal. Some se estiver vazio.
+class _ExpenseGroup extends StatelessWidget {
+  const _ExpenseGroup({required this.title, required this.note, required this.items, required this.month});
+  final String title, note;
+  final List<Expense> items;
+  final DateTime month;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    final total = items.fold(0.0, (s, e) => s + e.amount);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 2),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Expanded(
+            child: Text.rich(TextSpan(children: [
+              TextSpan(text: title.toUpperCase(), style: CF.body(13, weight: FontWeight.w800, color: CF.ink)),
+              TextSpan(text: '  $note', style: CF.body(13, color: CF.muted)),
+            ])),
+          ),
+          Text(money(total), style: CF.score(18, color: CF.muted)),
+        ]),
+      ),
+      const Divider(height: 8),
+      for (final e in items) _ExpenseRow(expense: e, month: month),
+    ]);
   }
 }
 
@@ -463,7 +551,11 @@ class _ExpenseRow extends StatelessWidget {
       ExpenseStatus.open => (CF.amber, CF.amberBg, 'A pagar'),
     };
     final detail = StringBuffer(paid != null ? 'Paga em ${ddmm(paid)}' : 'Vence em ${ddmm(e.date)}');
-    if (e.fixed) detail.write(' · fixa, todo mês');
+    if (e.isInstallment) {
+      detail.write(' · parcela ${e.installmentNo}/${e.installments}');
+    } else if (e.fixed) {
+      detail.write(' · todo mês');
+    }
 
     void undo() {
       store.unpayExpense(e);
@@ -654,7 +746,10 @@ class _EntrySheetState extends State<_EntrySheet> {
   late final description = TextEditingController(text: widget.editing?.description ?? widget.income?.description ?? '');
   late final amount = TextEditingController(text: _amountText(widget.editing?.amount ?? widget.income?.amount));
   late DateTime date = widget.editing?.date ?? widget.income?.date ?? _defaultDate();
-  late bool fixed = widget.editing?.fixed ?? false;
+  /// 0 = extraordinária (só neste mês), 1 = fixa (todo mês), 2 = parcelada (N meses).
+  late int kind = widget.editing == null ? 0 : (widget.editing!.isInstallment ? 2 : (widget.editing!.fixed ? 1 : 0));
+  late final parcelas = TextEditingController(text: '${widget.editing?.installments ?? 6}');
+  bool get fixed => kind != 0;
   String? error;
 
   static String _amountText(double? v) =>
@@ -670,6 +765,7 @@ class _EntrySheetState extends State<_EntrySheet> {
   void dispose() {
     description.dispose();
     amount.dispose();
+    parcelas.dispose();
     super.dispose();
   }
 
@@ -695,6 +791,14 @@ class _EntrySheetState extends State<_EntrySheet> {
     }
     final text = description.text.trim();
     final editing = widget.editing;
+    int? n;
+    if (widget.expense && kind == 2 && editing?.fixed != true) {
+      n = int.tryParse(parcelas.text.trim());
+      if (n == null || n < 2 || n > 60) {
+        setState(() => error = 'Digite em quantas parcelas: de 2 a 60.');
+        return;
+      }
+    }
     if (editing != null) {
       final base = store.expenseById(editing.id) ?? editing;
       final month = widget.month ?? store.selectedMonth;
@@ -719,12 +823,20 @@ class _EntrySheetState extends State<_EntrySheet> {
         store.updateExpense(editing.id,
             description: text, amount: v, date: date, fixed: true, fromMonth: scope == 'from' ? month : null);
       } else {
-        store.updateExpense(editing.id, description: text, amount: v, date: date, fixed: fixed);
+        store.updateExpense(editing.id, description: text, amount: v, date: date, fixed: fixed, installments: n);
       }
     } else if (widget.income != null) {
       store.updateIncome(ExtraIncome(id: widget.income!.id, description: text, amount: v, date: date));
     } else if (widget.expense) {
-      store.addExpense(Expense(id: newUuid(), description: text, amount: v, date: date, fixed: fixed));
+      store.addExpense(Expense(
+        id: newUuid(),
+        description: text,
+        amount: v,
+        date: date,
+        fixed: fixed,
+        installments: n,
+        endMonth: n == null ? null : DateTime(date.year, date.month + n),
+      ));
     } else {
       store.addIncome(ExtraIncome(id: newUuid(), description: text, amount: v, date: date));
     }
@@ -746,6 +858,40 @@ class _EntrySheetState extends State<_EntrySheet> {
                   : (e ? 'Nova despesa' : 'Novo ganho extra'),
               style: CF.body(24, weight: FontWeight.w700),
             ),
+            if (e) ...[
+              const SizedBox(height: 14),
+              if (widget.editing?.fixed == true)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CF.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: CF.line),
+                  ),
+                  child: Text(
+                    widget.editing!.isInstallment
+                        ? 'Parcelada em ${widget.editing!.installments} vezes. Para encerrar antes, use "Parar de repetir" no menu da despesa.'
+                        : 'Fixa: se repete todo mês. Para deixar de repetir, use "Parar de repetir" no menu da despesa.',
+                    style: CF.body(14, color: CF.muted, height: 1.3),
+                  ),
+                )
+              else ...[
+                PillGrid(columns: 3, narrowColumns: 3, gap: 6, children: [
+                  Pill(label: 'Só este mês', selected: kind == 0, onTap: () => setState(() => kind = 0)),
+                  Pill(label: 'Todo mês', selected: kind == 1, onTap: () => setState(() => kind = 1)),
+                  Pill(label: 'Parcelada', selected: kind == 2, onTap: () => setState(() => kind = 2)),
+                ]),
+                const SizedBox(height: 6),
+                Text(
+                  switch (kind) {
+                    1 => 'Fixa: repete todo mês até você parar. Ex.: aluguel da sala, internet, contador.',
+                    2 => 'Parcelada: repete por alguns meses e termina sozinha. Ex.: equipamento em 6 vezes.',
+                    _ => 'Extraordinária: acontece uma vez só e não volta no mês seguinte. Ex.: conserto, curso, imposto.',
+                  },
+                  style: CF.body(14, color: CF.muted, height: 1.3),
+                ),
+              ],
+            ],
             const SizedBox(height: 14),
             TextField(
               controller: description,
@@ -759,41 +905,48 @@ class _EntrySheetState extends State<_EntrySheet> {
             const SizedBox(height: 10),
             TextField(
               controller: amount,
+              onChanged: (_) => setState(() {}),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
               style: CF.score(26),
-              decoration: const InputDecoration(labelText: 'Valor', prefixText: 'R\$ '),
+              decoration: InputDecoration(
+                labelText: e && kind == 2 && widget.editing?.fixed != true ? 'Valor de cada parcela' : 'Valor',
+                prefixText: 'R\$ ',
+              ),
             ),
+            if (e && kind == 2 && widget.editing?.fixed != true) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: parcelas,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(labelText: 'Em quantas parcelas', suffixText: 'meses'),
+              ),
+              Builder(builder: (_) {
+                final n = int.tryParse(parcelas.text.trim());
+                final v = double.tryParse(amount.text.replaceAll('.', '').replaceAll(',', '.'));
+                if (n == null || n < 2 || v == null) return const SizedBox.shrink();
+                final lm = DateTime(date.year, date.month + n - 1);
+                final lastDay = DateTime(lm.year, lm.month + 1, 0).day;
+                final lastDate = DateTime(lm.year, lm.month, date.day > lastDay ? lastDay : date.day);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text('Total: ${money(v * n)}. A última parcela vence em ${ddmm(lastDate)}.',
+                      style: CF.body(14, color: CF.muted)),
+                );
+              }),
+            ],
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: _pickDate,
               icon: const Icon(Icons.event_rounded, size: 18),
               label: Text(e && fixed
-                  ? (widget.editing?.fixed == true ? 'Vence todo dia ${date.day}' : 'Começa em ${ddmm(date)}')
+                  ? (widget.editing?.fixed == true
+                      ? 'Vence todo dia ${date.day}'
+                      : (kind == 2 ? '1ª parcela vence em ${ddmm(date)}' : 'Começa em ${ddmm(date)}'))
                   : 'Data: ${ddmm(date)}'),
             ),
-            if (e) ...[
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: CF.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: CF.line),
-                ),
-                child: SwitchListTile(
-                  value: fixed,
-                  activeTrackColor: CF.ink,
-                  // Para tirar a repetição de uma fixa, use "Parar de repetir".
-                  onChanged: widget.editing?.fixed == true ? null : (v) => setState(() => fixed = v),
-                  title: Text('Repete todo mês', style: CF.body(16, weight: FontWeight.w700)),
-                  subtitle: Text(
-                      widget.editing?.fixed == true
-                          ? 'Para deixar de repetir, use "Parar de repetir" no menu da despesa.'
-                          : 'Para aluguel, internet, contador e outras contas fixas.',
-                      style: CF.body(14, color: CF.muted)),
-                ),
-              ),
-            ],
             if (error != null) ...[
               const SizedBox(height: 10),
               Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),
