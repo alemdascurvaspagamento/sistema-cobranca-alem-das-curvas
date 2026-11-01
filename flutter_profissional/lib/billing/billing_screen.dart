@@ -69,34 +69,30 @@ class _BillingScreenState extends State<BillingScreen> {
           _Scoreboard(store: store),
           const SizedBox(height: 12),
           KpiRow([
-            KpiCard(icon: Icons.groups_rounded, label: 'Cobranças', value: '${counts[_Filter.all]}', color: CF.blue, accent: true,
-                onTap: () => setState(() { filter = _Filter.all; page = 0; })),
+            KpiCard(icon: Icons.groups_rounded, label: 'Todos', value: '${counts[_Filter.all]}', color: CF.blue, accent: true,
+                selected: filter == _Filter.all, onTap: () => setState(() { filter = _Filter.all; page = 0; })),
             KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber', value: '${counts[_Filter.open]}', color: CF.amber, accent: true,
-                onTap: () => setState(() { filter = _Filter.open; page = 0; })),
+                selected: filter == _Filter.open, onTap: () => setState(() { filter = _Filter.open; page = 0; })),
             KpiCard(icon: Icons.error_rounded, label: 'Atrasados', value: '${counts[_Filter.overdue]}', color: CF.red, accent: true,
-                onTap: () => setState(() { filter = _Filter.overdue; page = 0; })),
+                selected: filter == _Filter.overdue, onTap: () => setState(() { filter = _Filter.overdue; page = 0; })),
             KpiCard(icon: Icons.check_circle_rounded, label: 'Pagos', value: '${counts[_Filter.paid]}', color: CF.green, accent: true,
-                onTap: () => setState(() { filter = _Filter.paid; page = 0; })),
+                selected: filter == _Filter.paid, onTap: () => setState(() { filter = _Filter.paid; page = 0; })),
           ]),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              for (final f in _Filter.values)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text('${_filterLabel(f)}  ${counts[f]}'),
-                    selected: filter == f,
-                    showCheckmark: false,
-                    selectedColor: CF.ink,
-                    labelStyle: CF.body(15,
-                        weight: FontWeight.w600, color: filter == f ? Colors.white : CF.text),
-                    onSelected: (_) => setState(() { filter = f; page = 0; }),
-                  ),
-                ),
-            ]),
-          ),
+          const SizedBox(height: 10),
+          Row(children: [
+            const Icon(Icons.touch_app_rounded, size: 16, color: CF.muted),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                filter == _Filter.all
+                    ? 'Toque num quadro para filtrar a lista.'
+                    : 'Mostrando: ${_filterLabel(filter).toLowerCase()} (${counts[filter]})',
+                style: CF.body(14, color: CF.muted),
+              ),
+            ),
+            if (filter != _Filter.all)
+              TextButton(onPressed: () => setState(() { filter = _Filter.all; page = 0; }), child: const Text('Ver todos')),
+          ]),
           SizedBox(key: listKey, height: 12),
           if (shown.isEmpty)
             _EmptyState(filter: filter, onShowAll: () => setState(() => filter = _Filter.all))

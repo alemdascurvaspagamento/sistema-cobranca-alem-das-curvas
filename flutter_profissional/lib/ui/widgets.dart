@@ -456,9 +456,13 @@ class KpiCard extends StatelessWidget {
     this.accent = false,
     this.valueColor,
     this.onTap,
+    this.selected,
   });
   final IconData icon;
   final String label, value, hint;
+
+  /// Quando o quadro funciona como filtro: true = filtro ativo (destacado).
+  final bool? selected;
   final Color color;
   final Color? valueColor;
 
@@ -468,12 +472,15 @@ class KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = Container(
+    final on = selected == true;
+    final card = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: CF.surface,
+        color: on ? Color.alphaBlend(color.withValues(alpha: .08), CF.surface) : CF.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CF.line),
+        border: Border.all(color: on ? color : CF.line, width: on ? 2 : 1),
+        boxShadow: on ? [BoxShadow(color: color.withValues(alpha: .18), blurRadius: 12, offset: const Offset(0, 4))] : null,
       ),
       foregroundDecoration: accent
           ? BoxDecoration(
@@ -489,8 +496,9 @@ class KpiCard extends StatelessWidget {
             child: Text(label.toUpperCase(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: CF.body(12, weight: FontWeight.w700, color: CF.muted, height: 1.2)),
+                style: CF.body(12, weight: FontWeight.w700, color: on ? color : CF.muted, height: 1.2)),
           ),
+          if (on) Icon(Icons.check_circle_rounded, size: 18, color: color),
         ]),
         const SizedBox(height: 8),
         FittedBox(
