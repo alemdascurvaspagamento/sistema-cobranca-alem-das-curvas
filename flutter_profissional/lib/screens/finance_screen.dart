@@ -1113,7 +1113,7 @@ class _CalendarDay extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(2),
       child: Material(
-        color: selected ? CF.ink : (items.isEmpty ? Colors.transparent : CF.surface),
+        color: selected ? CF.brand : (items.isEmpty ? Colors.transparent : CF.surface),
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),

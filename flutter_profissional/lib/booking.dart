@@ -1090,7 +1090,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
                     label: Text(s),
                     selected: service == s,
                     showCheckmark: false,
-                    selectedColor: CF.ink,
+                    selectedColor: CF.brand,
                     labelStyle: CF.body(15, weight: FontWeight.w600, color: service == s ? Colors.white : CF.text),
                     onSelected: (_) => setState(() => service = s),
                   ),
@@ -1172,7 +1172,7 @@ class _DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: selected ? CF.ink : CF.surface,
+        color: selected ? CF.brand : CF.surface,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),

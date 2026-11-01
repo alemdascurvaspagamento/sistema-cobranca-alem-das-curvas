@@ -126,7 +126,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
               foregroundColor: WidgetStateProperty.resolveWith(
                   (s) => s.contains(WidgetState.selected) ? Colors.white : CF.ink),
               backgroundColor: WidgetStateProperty.resolveWith(
-                  (s) => s.contains(WidgetState.selected) ? CF.ink : CF.surface),
+                  (s) => s.contains(WidgetState.selected) ? CF.brand : CF.surface),
               side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
               textStyle: WidgetStatePropertyAll(CF.body(15, weight: FontWeight.w600)),
             ),
@@ -677,7 +677,7 @@ class _DayPill extends StatelessWidget {
       button: true,
       label: '${weekdayLong[date.weekday - 1]} ${date.day}, $count',
       child: Material(
-        color: selected ? CF.ink : CF.surface,
+        color: selected ? CF.brand : CF.surface,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -686,7 +686,7 @@ class _DayPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: selected ? CF.ink : (isToday ? CF.blue : CF.line), width: isToday && !selected ? 2 : 1),
+              border: Border.all(color: selected ? CF.brand : (isToday ? CF.blue : CF.line), width: isToday && !selected ? 2 : 1),
             ),
             child: Column(children: [
               Text(weekdayShort[date.weekday - 1], style: CF.body(12, color: selected ? Colors.white70 : CF.muted)),
@@ -840,7 +840,7 @@ class _NewSessionState extends State<_NewSession> {
                   label: Text(p.name),
                   selected: clientId == p.id,
                   showCheckmark: false,
-                  selectedColor: CF.ink,
+                  selectedColor: CF.brand,
                   labelStyle: CF.body(15, weight: FontWeight.w600, color: clientId == p.id ? Colors.white : CF.text),
                   onSelected: (_) => setState(() {
                     clientId = p.id;

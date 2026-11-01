@@ -351,7 +351,7 @@ class _SubscriptionPanel extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: highlight ? const Color(0xFFE9EFFA) : CF.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: highlight ? CF.ink : CF.line, width: highlight ? 2 : 1),
+                    border: Border.all(color: highlight ? CF.brand : CF.line, width: highlight ? 2 : 1),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(name, style: CF.body(16, weight: FontWeight.w700)),

@@ -586,7 +586,7 @@ class _ClientFormState extends State<_ClientForm> {
         label: Text(label),
         selected: selected,
         showCheckmark: false,
-        selectedColor: CF.ink,
+        selectedColor: CF.brand,
         labelStyle: CF.body(15, weight: FontWeight.w600, color: selected ? Colors.white : CF.text),
         onSelected: (_) => onTap(),
       );
