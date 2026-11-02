@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../pay_link.dart';
 import '../ui/cf_theme.dart';
 import '../ui/motion.dart';
 import '../ui/widgets.dart';
@@ -1836,7 +1837,7 @@ Future<void> openDueDayDialog(BuildContext context, StudentPlan plan) async {
 // WhatsApp
 // ---------------------------------------------------------------------------
 
-String billingMessage(StudentPlan plan) {
+String billingMessage(StudentPlan plan, {String? payLink}) {
   final store = BillingStore.instance;
   final bill = store.bill(plan);
   final received = store.received(plan.id);
@@ -1872,8 +1873,14 @@ String billingMessage(StudentPlan plan) {
       ..writeln('Falta: ${money(remaining)}');
   }
   b.writeln('Vencimento: ${ddmm(due)}');
-  // O código copia e cola vai numa mensagem separada (alguns celulares escondem mensagens com ele).
+  // O WhatsApp barra mensagens com o código copia e cola: vai a chave e o link da página de pagamento.
   if (pix.isNotEmpty) b.writeln('Pix: $pix');
+  if (payLink != null) {
+    b
+      ..writeln()
+      ..writeln('Pague com um toque (Pix copia e cola e QR Code):')
+      ..writeln(payLink);
+  }
   b
     ..writeln()
     ..write('Qualquer dúvida, é só me chamar.');
@@ -1881,7 +1888,7 @@ String billingMessage(StudentPlan plan) {
 }
 
 /// Mensagem para o responsável financeiro: uma linha por pessoa e um Pix só com o total.
-String groupBillingMessage(PayGroup g) {
+String groupBillingMessage(PayGroup g, {String? payLink}) {
   final store = BillingStore.instance;
   final month = store.selectedMonth;
   final total = store.groupTotal(g);
@@ -1905,6 +1912,12 @@ String groupBillingMessage(PayGroup g) {
   }
   b.writeln('Vencimento: ${ddmm(store.groupDue(g))}');
   if (pix.isNotEmpty) b.writeln('Pix: $pix');
+  if (payLink != null) {
+    b
+      ..writeln()
+      ..writeln('Pague com um toque (Pix copia e cola e QR Code):')
+      ..writeln(payLink);
+  }
   b
     ..writeln()
     ..write('Qualquer dúvida, é só me chamar.');
@@ -1912,10 +1925,21 @@ String groupBillingMessage(PayGroup g) {
 }
 
 Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
-  final group = BillingStore.instance.groupFor(plan);
-  final controller = TextEditingController(text: group != null ? groupBillingMessage(group) : billingMessage(plan));
   final store = BillingStore.instance;
-  final left = group != null ? store.groupRemaining(group) : store.remaining(plan);
+  final group = store.groupFor(plan);
+  final first = group?.members.first ?? plan;
+  // Link da página de pagamento (o código Pix fica lá, não na mensagem).
+  final payLink = await PayLinks.linkFor(
+    clientId: first.id,
+    payerFirst: group?.payerFirst ?? plan.name.split(' ').first,
+    amount: group != null ? store.groupRemaining(group) : store.remaining(plan),
+    due: group != null ? store.groupDue(group) : store.dueDate(plan),
+    pixKey: store.pixFor(first).key,
+    pixCode: group != null ? store.groupPixCode(group) : store.pixCodeFor(plan),
+  );
+  if (!context.mounted) return;
+  final controller = TextEditingController(
+      text: group != null ? groupBillingMessage(group, payLink: payLink) : billingMessage(plan, payLink: payLink));
   final send = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -1944,16 +1968,10 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
               icon: const Icon(Icons.chat_rounded, size: 18),
               label: const Text('Abrir no WhatsApp'),
             ),
-            if (store.pixKey.isNotEmpty && left > 0) ...[
+            if (payLink != null) ...[
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.pop(sheet, 'pix'),
-                style: OutlinedButton.styleFrom(foregroundColor: CF.pix),
-                icon: const Icon(Icons.pix_rounded, size: 18),
-                label: const Text('Enviar também o Pix copia e cola (2ª mensagem)'),
-              ),
-              const SizedBox(height: 4),
-              Text('Mande a cobrança primeiro. O código vai sozinho, numa segunda mensagem, para o ${_t.client} copiar com um toque.',
+              Text('O link abre uma página com o valor, o QR Code e o botão "Copiar código Pix". '
+                  '(O WhatsApp não entrega mensagens com o código direto.)',
                   style: CF.body(13, color: CF.muted, height: 1.3)),
             ],
           ]),
@@ -1961,9 +1979,7 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
       ),
     ),
   );
-  final text = send == 'pix'
-      ? (group != null ? store.groupPixCode(group) : store.pixCodeFor(plan))
-      : controller.text;
+  final text = controller.text;
   controller.dispose();
   if (send == null) return;
   var phone = (group?.payerPhone ?? plan.phone).replaceAll(RegExp(r'[^0-9]'), '');
@@ -2050,15 +2066,12 @@ Future<void> openPixSheet(BuildContext context, StudentPlan plan) async {
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: () async {
+                  onPressed: () {
                     Navigator.pop(sheet);
-                    var phone = (group?.payerPhone ?? plan.phone).replaceAll(RegExp(r'[^0-9]'), '');
-                    if (phone.length == 10 || phone.length == 11) phone = '55$phone';
-                    await launchUrl(Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(code)}'),
-                        mode: LaunchMode.externalApplication);
+                    openWhatsAppBilling(context, plan);
                   },
                   icon: const Icon(Icons.chat_rounded, size: 18),
-                  label: const Text('Mandar só o código Pix no WhatsApp'),
+                  label: const Text('Mandar cobrança com link de pagamento'),
                 ),
                 const SizedBox(height: 4),
                 TextButton(

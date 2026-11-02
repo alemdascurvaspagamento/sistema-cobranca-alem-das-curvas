@@ -15,6 +15,7 @@ import 'billing/rules_screen.dart';
 import 'booking_requests.dart';
 import 'calendar_connections.dart';
 import 'config.dart';
+import 'pay_link.dart';
 import 'data/cloud.dart';
 import 'profile/profession_profile.dart';
 import 'screens/agenda_screen.dart';
@@ -59,11 +60,13 @@ class CoachFlowApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: switch (Uri.base.queryParameters['agendar']) {
-          'demo' => const BookingPublicDemo(),
-          final String slug when slug.isNotEmpty => BookingPublicPage(slug: slug),
-          _ => const CoachFlowEntry(),
-        },
+        home: Uri.base.queryParameters['pagar']?.isNotEmpty == true
+            ? PayPublicPage(token: Uri.base.queryParameters['pagar']!)
+            : switch (Uri.base.queryParameters['agendar']) {
+                'demo' => const BookingPublicDemo(),
+                final String slug when slug.isNotEmpty => BookingPublicPage(slug: slug),
+                _ => const CoachFlowEntry(),
+              },
       );
 }
 
