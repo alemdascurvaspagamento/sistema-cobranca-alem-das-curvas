@@ -8,3 +8,4 @@ Pedido de montagem do iPhone nº 13 — opções em grade alinhada
 2026-11-01T21:06:08Z agenda-nova-ordem
 2026-11-01T22:26:24Z link-so-ligado
 2026-11-01T23:08:46Z aviso-e-agendamento
+2026-11-02T00:20:42Z precos
