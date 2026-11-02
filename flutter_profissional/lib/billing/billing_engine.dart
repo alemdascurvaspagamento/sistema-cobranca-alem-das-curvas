@@ -139,6 +139,9 @@ class StudentPlan {
     this.packageSize = 10,
     this.packageStart,
     this.pixChoice = 1,
+    this.payerId = '',
+    this.payerName = '',
+    this.payerPhone = '',
   });
 
   final String id;
@@ -172,12 +175,19 @@ class StudentPlan {
   /// Em qual chave Pix este cliente paga: 1 = principal, 2 = segunda chave.
   final int pixChoice;
 
+  /// Responsável financeiro: outro cliente que paga por este ('' = ele mesmo).
+  final String payerId;
+
+  /// Responsável que não é cliente (ex.: mãe de um aluno). Usado quando [payerId] está vazio.
+  final String payerName;
+  final String payerPhone;
+
   bool get hasRoutine => weekdays.isNotEmpty;
 
   /// Valor de cada atendimento (por atendimento ou por hora).
   double get unitPrice => model == BillingModel.hourly ? rate * durationMinutes / 60 : rate;
 
-  StudentPlan copyWith({int? dueDay, double? rate, BillingModel? model, bool? active}) => StudentPlan(
+  StudentPlan copyWith({int? dueDay, double? rate, BillingModel? model, bool? active, String? payerId, String? payerName, String? payerPhone}) => StudentPlan(
         id: id,
         name: name,
         rate: rate ?? this.rate,
@@ -192,6 +202,9 @@ class StudentPlan {
         packageSize: packageSize,
         packageStart: packageStart,
         pixChoice: pixChoice,
+        payerId: payerId ?? this.payerId,
+        payerName: payerName ?? this.payerName,
+        payerPhone: payerPhone ?? this.payerPhone,
       );
 }
 

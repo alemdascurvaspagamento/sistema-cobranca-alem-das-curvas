@@ -81,6 +81,44 @@ void main() {
     expect(store.fixedCost(m), fixedBefore - 200);
   });
 
+  test('responsável financeiro junta a conta e divide o pagamento', () {
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final ps = store.activePlans.where((p) => store.bill(p).total > 0).take(3).toList();
+    expect(ps.length, 3);
+    final head = ps[0];
+    store.savePlan(ps[1].copyWith(payerId: head.id));
+    store.savePlan(ps[2].copyWith(payerId: head.id));
+    final g = store.groupFor(store.plan(ps[1].id))!;
+    expect(g.head!.id, head.id);
+    expect(g.members.length, 3);
+    final total = store.groupTotal(g);
+    expect(total, closeTo([for (final p in ps) store.bill(store.plan(p.id)).total].fold(0.0, (a, b) => a + b), 0.01));
+    // Pix único com o total.
+    if (store.groupRemaining(g) > 0) {
+      expect(store.groupPixCode(g), contains(store.groupRemaining(g).toStringAsFixed(2)));
+    }
+    // Pagamento do responsável zera a conta de todos.
+    store.addGroupPayment(g, PaymentEntry(amount: store.groupRemaining(g), date: store.today));
+    for (final p in ps) {
+      expect(store.remaining(store.plan(p.id)), closeTo(0, 0.01));
+    }
+    // Quem não tem responsável continua sozinho.
+    final alone = store.activePlans.firstWhere((p) => !ps.any((x) => x.id == p.id));
+    expect(store.groupFor(alone), isNull);
+  });
+
+  test('responsável que não é cliente junta pelo WhatsApp', () {
+    store.seed(professionById('personal'), BillingModel.perSession);
+    final ps = store.activePlans.take(2).toList();
+    for (final p in ps) {
+      store.savePlan(p.copyWith(payerName: 'Maria Souza', payerPhone: '11988887777'));
+    }
+    final g = store.groupFor(store.plan(ps[0].id))!;
+    expect(g.head, isNull);
+    expect(g.payerFirst, 'Maria');
+    expect(g.members.length, 2);
+  });
+
   test('arquivar tira da cobrança sem apagar', () {
     store.seed(professionById('personal'), BillingModel.perSession);
     final id = store.activePlans.first.id;

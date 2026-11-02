@@ -232,6 +232,87 @@ class BillingStore extends ChangeNotifier {
   double get monthRemaining => activePlans.fold(0, (s, p) => s + remaining(p));
   int countStatus(BillStatus st) => activePlans.where((p) => status(p) == st).length;
 
+  // ---------------------------------------------------------------- responsável financeiro
+
+  static String _digits(String s) => s.replaceAll(RegExp(r'[^0-9]'), '');
+
+  /// Cliente que paga por [p] (se for outro cliente ativo).
+  StudentPlan? payerOf(StudentPlan p) {
+    if (p.payerId.isEmpty || p.payerId == p.id) return null;
+    for (final x in plans) {
+      if (x.id == p.payerId && x.active) return x;
+    }
+    return null;
+  }
+
+  /// Clientes ativos que têm [head] como responsável financeiro.
+  List<StudentPlan> dependentsOf(StudentPlan head) =>
+      [for (final x in activePlans) if (x.id != head.id && x.payerId == head.id) x];
+
+  /// Grupo de pagamento de [p]: um responsável e as pessoas que ele paga. `null` = paga sozinho.
+  PayGroup? groupFor(StudentPlan p) {
+    final clientPayer = payerOf(p);
+    if (clientPayer == null && p.payerId.isEmpty && _digits(p.payerPhone).length >= 8) {
+      // Responsável que não é cliente: junta todos com o mesmo WhatsApp de responsável.
+      final phone = _digits(p.payerPhone);
+      final members = [
+        for (final x in activePlans)
+          if (x.payerId.isEmpty && _digits(x.payerPhone) == phone) x,
+      ];
+      if (!members.any((x) => x.id == p.id)) members.add(p);
+      return PayGroup(
+        payerName: p.payerName.trim().isEmpty ? 'Responsável' : p.payerName.trim(),
+        payerPhone: phone,
+        members: members,
+      );
+    }
+    final head = clientPayer ?? p;
+    final deps = dependentsOf(head);
+    if (deps.isEmpty) return null;
+    return PayGroup(payerName: head.name, payerPhone: head.phone, members: [head, ...deps], head: head);
+  }
+
+  double groupTotal(PayGroup g, {DateTime? month}) => g.members.fold(0.0, (s, m) => s + bill(m, month: month).total);
+  double groupReceived(PayGroup g, {DateTime? month}) => g.members.fold(0.0, (s, m) => s + received(m.id, month: month));
+  double groupRemaining(PayGroup g, {DateTime? month}) => g.members.fold(0.0, (s, m) => s + remaining(m, month: month));
+
+  /// Vencimento do grupo: o primeiro entre as pessoas que ainda devem (ou o do responsável).
+  DateTime groupDue(PayGroup g, {DateTime? month}) {
+    final open = [for (final m in g.members) if (remaining(m, month: month) > 0) dueDate(m, month: month)]..sort();
+    return open.isNotEmpty ? open.first : dueDate(g.members.first, month: month);
+  }
+
+  /// Um pagamento do responsável vira baixa de cada pessoa, na ordem, até cobrir o valor.
+  void addGroupPayment(PayGroup g, PaymentEntry entry, {DateTime? month}) {
+    if (_locked()) return;
+    var left = entry.amount;
+    for (final m in g.members) {
+      if (left <= 0.004) break;
+      final r = remaining(m, month: month);
+      if (r <= 0) continue;
+      final part = r < left ? r : left;
+      addPayment(m.id, PaymentEntry(amount: double.parse(part.toStringAsFixed(2)), date: entry.date, method: entry.method), month: month);
+      left -= part;
+    }
+    // Pagou a mais: o excedente fica com o primeiro da conta.
+    if (left > 0.004) {
+      addPayment(g.members.first.id, PaymentEntry(amount: double.parse(left.toStringAsFixed(2)), date: entry.date, method: entry.method), month: month);
+    }
+  }
+
+  /// Pix copia e cola com o total que falta do grupo.
+  String groupPixCode(PayGroup g, {DateTime? month}) {
+    final m = month ?? selectedMonth;
+    final pix = pixFor(g.members.first);
+    return pixPayload(
+      key: pix.key,
+      name: pix.name,
+      city: pixCity,
+      amount: groupRemaining(g, month: m),
+      message: '${terms.sessionsTitle} ${monthNames[m.month - 1]}',
+    );
+  }
+
   Holiday? holidayOn(DateTime d) {
     for (final h in holidays) {
       if (dateOnly(h.date) == dateOnly(d)) return h;
@@ -1359,4 +1440,24 @@ class SessionStats {
   });
   final int charged, cancelledCharged, cancelledWaived, moved, credits, holidays, makeUps;
   int get cancelled => cancelledCharged + cancelledWaived;
+}
+
+/// Quem paga por um grupo de clientes (responsável financeiro) e quem está no grupo.
+class PayGroup {
+  PayGroup({required this.payerName, required this.payerPhone, required this.members, this.head});
+
+  /// Nome e WhatsApp de quem recebe a cobrança.
+  final String payerName;
+  final String payerPhone;
+
+  /// Pessoas da conta (o responsável primeiro, quando ele também é cliente).
+  final List<StudentPlan> members;
+
+  /// O responsável, quando ele também é cliente.
+  final StudentPlan? head;
+
+  String get payerFirst => payerName.split(' ').first;
+
+  /// Cliente [p] é quem recebe a cobrança do grupo?
+  bool isHead(StudentPlan p) => head?.id == p.id || (head == null && members.isNotEmpty && members.first.id == p.id);
 }

@@ -78,6 +78,9 @@ class CloudService implements CloudSink {
         'due_day': p.dueDay,
         'active': p.active,
         'pix_choice': p.pixChoice,
+        'payer_id': p.payerId.isEmpty ? null : p.payerId,
+        'payer_name': p.payerName,
+        'payer_phone': p.payerPhone,
       };
 
   @override
@@ -229,6 +232,9 @@ class CloudService implements CloudSink {
           dueDay: (c['due_day'] as num?)?.toInt() ?? 5,
           active: c['active'] as bool? ?? true,
           pixChoice: (c['pix_choice'] as num?)?.toInt() ?? 1,
+          payerId: c['payer_id'] as String? ?? '',
+          payerName: c['payer_name'] as String? ?? '',
+          payerPhone: c['payer_phone'] as String? ?? '',
         ),
     ];
 

@@ -496,11 +496,19 @@ class _ClientFormState extends State<_ClientForm> {
   late int duration = widget.plan?.durationMinutes ?? ProfessionalProfile.instance.profession.duration;
   late int dueDay = widget.plan?.dueDay ?? 10;
   late int pixChoice = widget.plan?.pixChoice ?? 1;
+
+  /// Quem paga: 0 = ele mesmo, 1 = outro cliente, 2 = outra pessoa (não é cliente).
+  late int payerMode = (widget.plan?.payerId.isNotEmpty ?? false)
+      ? 1
+      : ((widget.plan?.payerPhone.isNotEmpty ?? false) ? 2 : 0);
+  late String payerId = widget.plan?.payerId ?? '';
+  late final payerName = TextEditingController(text: widget.plan?.payerName ?? '');
+  late final payerPhone = TextEditingController(text: widget.plan?.payerPhone ?? '');
   String? error;
 
   @override
   void dispose() {
-    for (final c in [name, phone, service, rate, packageSize]) {
+    for (final c in [name, phone, service, rate, packageSize, payerName, payerPhone]) {
       c.dispose();
     }
     super.dispose();
@@ -558,6 +566,14 @@ class _ClientFormState extends State<_ClientForm> {
       setState(() => error = 'O pacote precisa ter pelo menos 1 ${t.session}.');
       return;
     }
+    if (payerMode == 1 && payerId.isEmpty) {
+      setState(() => error = 'Escolha quem paga por ${name.text.trim().split(' ').first}.');
+      return;
+    }
+    if (payerMode == 2 && payerPhone.text.replaceAll(RegExp(r'[^0-9]'), '').length < 10) {
+      setState(() => error = 'Digite o WhatsApp do responsável, com DDD.');
+      return;
+    }
     final today = store.today;
     final p = StudentPlan(
       id: widget.plan?.id ?? store.newClientId(),
@@ -574,12 +590,80 @@ class _ClientFormState extends State<_ClientForm> {
       dueDay: dueDay,
       active: widget.plan?.active ?? true,
       pixChoice: pixChoice,
+      payerId: payerMode == 1 ? payerId : '',
+      payerName: payerMode == 2 ? payerName.text.trim() : '',
+      payerPhone: payerMode == 2 ? payerPhone.text.replaceAll(RegExp(r'[^0-9]'), '') : '',
     );
     store.savePlan(p);
     Navigator.pop(context);
     ScaffoldMessenger.of(widget.messengerContext).showSnackBar(SnackBar(
       content: Text(widget.plan == null ? 'Cadastro de ${p.name} criado. Já aparece na agenda e nas cobranças.' : 'Cadastro de ${p.name} atualizado.'),
     ));
+  }
+
+  /// "Responsável financeiro": quem recebe a cobrança e paga por este cliente.
+  List<Widget> _payerSection() {
+    final self = widget.plan;
+    final first = name.text.trim().isEmpty ? store.terms.client : name.text.trim().split(' ').first;
+    // Quem já paga por outros não pode ter responsável (evita uma conta dentro da outra).
+    final paysForOthers = self != null && store.dependentsOf(self).isNotEmpty;
+    final candidates = [
+      for (final x in store.activePlans)
+        if (x.id != self?.id && x.payerId.isEmpty) x,
+    ];
+    if (payerId.isNotEmpty && !candidates.any((x) => x.id == payerId)) payerId = '';
+    return [
+      Text('Quem paga', style: CF.body(16, weight: FontWeight.w700)),
+      const SizedBox(height: 6),
+      if (paysForOthers)
+        Text(
+          '$first é responsável financeiro de ${store.dependentsOf(self).map((x) => x.name.split(' ').first).join(', ')}: '
+          'a cobrança deles entra na conta de $first.',
+          style: CF.body(14, color: CF.violet, weight: FontWeight.w600, height: 1.3),
+        )
+      else ...[
+        PillGrid(columns: 3, narrowColumns: 3, gap: 6, children: [
+          Pill(label: 'Ele mesmo', selected: payerMode == 0, onTap: () => setState(() => payerMode = 0)),
+          Pill(label: 'Outro ${store.terms.client}', selected: payerMode == 1, onTap: () => setState(() => payerMode = 1)),
+          Pill(label: 'Outra pessoa', selected: payerMode == 2, onTap: () => setState(() => payerMode = 2)),
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          switch (payerMode) {
+            1 => 'A cobrança de $first entra na conta de quem você escolher: uma mensagem só, com o detalhe de cada um e um Pix único.',
+            2 => 'Para quando quem paga não é ${store.terms.client} (ex.: mãe, pai, empresa). Quem tiver o mesmo WhatsApp de responsável recebe tudo numa conta só.',
+            _ => '$first recebe a própria cobrança.',
+          },
+          style: CF.body(13.5, color: CF.muted, height: 1.3),
+        ),
+        if (payerMode == 1) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: payerId.isEmpty ? null : payerId,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Responsável financeiro'),
+            items: [
+              for (final x in candidates) DropdownMenuItem(value: x.id, child: Text(x.name, overflow: TextOverflow.ellipsis)),
+            ],
+            onChanged: (v) => setState(() => payerId = v ?? ''),
+          ),
+        ],
+        if (payerMode == 2) ...[
+          const SizedBox(height: 8),
+          TextField(
+            controller: payerName,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Nome do responsável'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: payerPhone,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(labelText: 'WhatsApp do responsável', hintText: '(11) 99999-9999'),
+          ),
+        ],
+      ],
+    ];
   }
 
   Widget _chip(String label, bool selected, VoidCallback onTap) => ChoiceChip(
@@ -739,6 +823,8 @@ class _ClientFormState extends State<_ClientForm> {
               const SizedBox(height: 4),
               Text('Chave: ${pixChoice == 2 ? store.pixKey2 : store.pixKey}', style: CF.body(14, color: CF.muted)),
             ],
+            const SizedBox(height: 18),
+            ..._payerSection(),
             if (error != null) ...[
               const SizedBox(height: 12),
               Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),

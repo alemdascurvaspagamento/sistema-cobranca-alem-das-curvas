@@ -357,6 +357,7 @@ class StudentBillCard extends StatelessWidget {
     final due = store.dueDate(plan);
     final (fg, bg) = CF.forStatus(status);
     final unpaid = status != BillStatus.paid && status != BillStatus.nothing;
+    final group = store.groupFor(plan);
 
     final detail = billSummary(bill, _t);
 
@@ -442,6 +443,10 @@ class StudentBillCard extends StatelessWidget {
               const SizedBox(height: 10),
               _PartialBar(received: received, total: bill.total, remaining: remaining),
             ],
+            if (group != null) ...[
+              const SizedBox(height: 10),
+              _FamilyNote(plan: plan, group: group),
+            ],
             const SizedBox(height: 12),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
@@ -483,7 +488,8 @@ class StudentBillCard extends StatelessWidget {
                     onPressed: () => openWhatsAppBilling(context, plan),
                     style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
                     icon: const Icon(Icons.chat_rounded, size: 18),
-                    label: const Text('Cobrar no WhatsApp'),
+                    label: Text(group == null ? 'Cobrar no WhatsApp' : 'Cobrar ${group.payerFirst}',
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
                 ),
                 _MoreMenu(plan: plan),
@@ -492,6 +498,70 @@ class StudentBillCard extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+/// Quadro do responsável financeiro dentro do cartão de cobrança.
+class _FamilyNote extends StatelessWidget {
+  const _FamilyNote({required this.plan, required this.group});
+  final StudentPlan plan;
+  final PayGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = BillingStore.instance;
+    final head = group.isHead(plan);
+    final total = store.groupTotal(group);
+    final left = store.groupRemaining(group);
+    final others = [for (final m in group.members) if (m.id != plan.id) m];
+    final String title;
+    if (group.head == null) {
+      title = 'Responsável: ${group.payerName}';
+    } else if (head) {
+      title = 'Responsável financeiro: paga também por ${others.map((m) => m.name.split(' ').first).join(', ')}';
+    } else {
+      title = 'Pago por ${group.payerName}: entra na cobrança de ${group.payerFirst}';
+    }
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: CF.violetBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: CF.violet.withValues(alpha: .25)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Icon(Icons.family_restroom_rounded, size: 18, color: CF.violet),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title, style: CF.body(14, color: CF.violet, weight: FontWeight.w700, height: 1.3))),
+        ]),
+        if (head || group.head == null) ...[
+          const SizedBox(height: 6),
+          for (final m in group.members)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(children: [
+                Expanded(
+                  child: Text(m.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(14, color: CF.text)),
+                ),
+                Text(money(store.bill(m).total), style: CF.body(14, weight: FontWeight.w600)),
+              ]),
+            ),
+          const Divider(height: 14),
+          Row(children: [
+            Expanded(child: Text('Total da conta', style: CF.body(14, weight: FontWeight.w700))),
+            Text(money(total), style: CF.score(20)),
+          ]),
+          if (left > 0 && left < total)
+            Text('Falta ${money(left)}', textAlign: TextAlign.end, style: CF.body(13, color: CF.amber, weight: FontWeight.w600)),
+        ] else
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text('Total da conta: ${money(total)}. "Recebi", "Pix" e "Cobrar" valem para a conta toda.',
+                style: CF.body(13, color: CF.muted, height: 1.3)),
+          ),
+      ]),
     );
   }
 }
@@ -1585,7 +1655,11 @@ class _PaymentSheet extends StatefulWidget {
 
 class _PaymentSheetState extends State<_PaymentSheet> {
   final store = BillingStore.instance;
-  late final amount = TextEditingController(text: _format(store.remaining(widget.plan)));
+
+  /// Conta com responsável financeiro: o pagamento é do grupo todo.
+  late final group = store.groupFor(widget.plan);
+  late final amount = TextEditingController(
+      text: _format(group != null ? store.groupRemaining(group!) : store.remaining(widget.plan)));
   String method = 'Pix';
   late DateTime date = store.today;
   String? error;
@@ -1620,20 +1694,28 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       setState(() => error = 'Digite um valor maior que zero.');
       return;
     }
-    store.addPayment(widget.plan.id, PaymentEntry(amount: v, date: date, method: method));
+    final g = group;
+    final entry = PaymentEntry(amount: v, date: date, method: method);
+    if (g != null) {
+      store.addGroupPayment(g, entry);
+    } else {
+      store.addPayment(widget.plan.id, entry);
+    }
     Navigator.pop(context);
-    final left = store.remaining(widget.plan);
+    final left = g != null ? store.groupRemaining(g) : store.remaining(widget.plan);
+    final who = g != null ? 'A conta de ${g.payerFirst}' : widget.plan.name.split(' ').first;
     ScaffoldMessenger.of(widget.messengerContext).showSnackBar(SnackBar(
       content: Text(left <= 0
-          ? 'Pagamento registrado. ${widget.plan.name.split(' ').first} está em dia.'
+          ? 'Pagamento registrado. $who está em dia.'
           : 'Pagamento registrado. Ainda falta ${money(left)}.'),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final bill = store.bill(widget.plan);
-    final remaining = store.remaining(widget.plan);
+    final g = group;
+    final total = g != null ? store.groupTotal(g) : store.bill(widget.plan).total;
+    final remaining = g != null ? store.groupRemaining(g) : store.remaining(widget.plan);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Center(
@@ -1642,7 +1724,10 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text('Registrar pagamento', style: CF.body(22, weight: FontWeight.w700)),
             Text(
-              '${widget.plan.name} · conta de ${money(bill.total)}, falta ${money(remaining)}',
+              g != null
+                  ? 'Conta de ${g.payerName} (${g.members.map((m) => m.name.split(' ').first).join(', ')}) · '
+                      '${money(total)}, falta ${money(remaining)}. O valor é dividido entre as pessoas da conta.'
+                  : '${widget.plan.name} · conta de ${money(total)}, falta ${money(remaining)}',
               style: CF.body(15, color: CF.muted),
             ),
             const SizedBox(height: 16),
@@ -1802,8 +1887,48 @@ String billingMessage(StudentPlan plan) {
   return b.toString();
 }
 
+/// Mensagem para o responsável financeiro: uma linha por pessoa e um Pix só com o total.
+String groupBillingMessage(PayGroup g) {
+  final store = BillingStore.instance;
+  final month = store.selectedMonth;
+  final total = store.groupTotal(g);
+  final received = store.groupReceived(g);
+  final remaining = store.groupRemaining(g);
+  final pix = store.pixFor(g.members.first).key;
+  final b = StringBuffer()
+    ..writeln('Olá, ${g.payerFirst}! Tudo bem?')
+    ..writeln()
+    ..writeln('Segue o resumo de ${monthNames[month.month - 1]}:');
+  for (final m in g.members) {
+    final bill = store.bill(m);
+    final who = m.name.split(' ').first;
+    b.writeln(bill.total <= 0 ? '• $who: nada a cobrar' : '• $who: ${billSummary(bill, _t)} = ${money(bill.total)}');
+  }
+  b.writeln('Total: ${money(total)}');
+  if (received > 0) {
+    b
+      ..writeln('Já recebido: ${money(received)}')
+      ..writeln('Falta: ${money(remaining)}');
+  }
+  b.writeln('Vencimento: ${ddmm(store.groupDue(g))}');
+  if (pix.isNotEmpty) {
+    b.writeln('Pix: $pix');
+    if (remaining > 0) {
+      b
+        ..writeln()
+        ..writeln('Pix copia e cola (já com o valor total):')
+        ..writeln(store.groupPixCode(g));
+    }
+  }
+  b
+    ..writeln()
+    ..write('Qualquer dúvida, é só me chamar.');
+  return b.toString();
+}
+
 Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
-  final controller = TextEditingController(text: billingMessage(plan));
+  final group = BillingStore.instance.groupFor(plan);
+  final controller = TextEditingController(text: group != null ? groupBillingMessage(group) : billingMessage(plan));
   final send = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -1814,7 +1939,8 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text('Cobrar ${plan.name.split(' ').first}', style: CF.body(22, weight: FontWeight.w700)),
+            Text(group != null ? 'Cobrar ${group.payerFirst} (responsável)' : 'Cobrar ${plan.name.split(' ').first}',
+                style: CF.body(22, weight: FontWeight.w700)),
             Text('Confira a mensagem. Nada é enviado sem você tocar em enviar no WhatsApp.',
                 style: CF.body(15, color: CF.muted)),
             const SizedBox(height: 14),
@@ -1839,7 +1965,7 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
   final text = controller.text;
   controller.dispose();
   if (send != true) return;
-  var phone = plan.phone.replaceAll(RegExp(r'[^0-9]'), '');
+  var phone = (group?.payerPhone ?? plan.phone).replaceAll(RegExp(r'[^0-9]'), '');
   if (phone.length == 10 || phone.length == 11) phone = '55$phone';
   final url = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(text)}');
   final ok = await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -1868,9 +1994,10 @@ Future<void> openPixSheet(BuildContext context, StudentPlan plan) async {
     builder: (sheet) => AnimatedBuilder(
       animation: store,
       builder: (sheet, _) {
-        final left = store.remaining(plan);
-        final code = store.pixCodeFor(plan);
-        final first = plan.name.split(' ').first;
+        final group = store.groupFor(plan);
+        final left = group != null ? store.groupRemaining(group) : store.remaining(plan);
+        final code = group != null ? store.groupPixCode(group) : store.pixCodeFor(plan);
+        final first = group != null ? '${group.payerFirst} (conta da família)' : plan.name.split(' ').first;
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           child: Center(
