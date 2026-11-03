@@ -262,7 +262,38 @@ class Period {
         PeriodKind.year => '$year',
       };
 
+  /// Nome curto para títulos: "Outubro/2026", "4º trimestre/2026", "2026".
+  String get title => switch (kind) {
+        PeriodKind.month => '${_cap(monthNames[index])}/$year',
+        PeriodKind.quarter => '${index + 1}º trimestre/$year',
+        PeriodKind.semester => '${index + 1}º semestre/$year',
+        PeriodKind.year => '$year',
+      };
+
+  /// Quais meses entram: "1 a 31 de outubro", "outubro a dezembro de 2026".
+  String get range {
+    final ms = months;
+    if (kind == PeriodKind.month) {
+      final last = DateTime(year, index + 2, 0).day;
+      return '1 a $last de ${monthNames[index]}';
+    }
+    return '${monthNames[ms.first.month - 1]} a ${monthNames[ms.last.month - 1]} de $year';
+  }
+
+  /// O período tem o mês informado (por exemplo, o mês de hoje).
+  bool includes(DateTime d) => months.any((m) => m.year == d.year && m.month == d.month);
+
   static String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+extension PeriodKindWords on PeriodKind {
+  /// "mês", "trimestre", "semestre", "ano".
+  String get noun => switch (this) {
+        PeriodKind.month => 'mês',
+        PeriodKind.quarter => 'trimestre',
+        PeriodKind.semester => 'semestre',
+        PeriodKind.year => 'ano',
+      };
 }
 
 // ---------------------------------------------------------------------------

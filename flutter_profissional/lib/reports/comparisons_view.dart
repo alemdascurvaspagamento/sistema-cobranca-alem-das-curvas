@@ -19,14 +19,22 @@ class ComparisonsView extends StatefulWidget {
 class _ComparisonsViewState extends State<ComparisonsView> {
   final store = BillingStore.instance;
   PeriodKind kind = PeriodKind.month;
-  late Period period = Period.containing(kind, store.today);
+  late Period period = _startPeriod(kind);
 
   /// true = mesmo período do ano passado; false = período anterior.
   bool lastYear = false;
 
+  /// Abre no último período já fechado (o mês passado, por exemplo),
+  /// para não comparar um mês que mal começou com um mês inteiro.
+  Period _startPeriod(PeriodKind k) {
+    final closed = Period.containing(k, store.today).previous;
+    return PeriodNumbers.of(closed).hasData ? closed : Period.containing(k, store.today);
+  }
+
   void _setKind(PeriodKind k) => setState(() {
         kind = k;
-        period = Period.containing(k, store.today);
+        period = _startPeriod(k);
+        if (k == PeriodKind.year) lastYear = false;
       });
 
   bool get _canGoNext => !period.next.start.isAfter(DateTime(store.today.year, store.today.month));
@@ -63,17 +71,21 @@ class _ComparisonsViewState extends State<ComparisonsView> {
           const SizedBox(height: 10),
           Text('Comparar com', style: CF.body(14, color: CF.muted, weight: FontWeight.w700)),
           const SizedBox(height: 6),
-          PillGrid(columns: 2, narrowColumns: 2, gap: 6, children: [
-            Pill(label: kind == PeriodKind.year ? 'Ano anterior' : 'Período anterior', selected: !lastYear,
-                onTap: () => setState(() => lastYear = false)),
-            Pill(label: 'Mesmo período ano passado', selected: lastYear, onTap: () => setState(() => lastYear = true)),
-          ]),
-          const SizedBox(height: 10),
-          Text(
-            '${period.label} × ${basePeriod.label}'
-            '${cur.isPartial ? '. Período em andamento: valores até ${monthNames[cur.until.month - 1]}.' : ''}',
-            style: CF.body(14, color: CF.muted, height: 1.3),
-          ),
+          if (kind == PeriodKind.year)
+            Pill(label: 'Ano anterior (${period.previous.short})', selected: true, onTap: () {})
+          else
+            PillGrid(columns: 2, narrowColumns: 2, gap: 6, children: [
+              Pill(
+                  label: '${capitalize(kind.noun)} anterior (${period.previous.short})',
+                  selected: !lastYear,
+                  onTap: () => setState(() => lastYear = false)),
+              Pill(
+                  label: 'Mesmo ${kind.noun} de ${period.year - 1} (${period.sameLastYear.short})',
+                  selected: lastYear,
+                  onTap: () => setState(() => lastYear = true)),
+            ]),
+          const SizedBox(height: 12),
+          _VersusLine(cur: period, base: basePeriod, inProgress: period.includes(store.today)),
           const SizedBox(height: 12),
           if (!base.hasData)
             Panel(
@@ -88,12 +100,14 @@ class _ComparisonsViewState extends State<ComparisonsView> {
               ),
             )
           else ...[
+            _Summary(cur: cur, base: base),
+            const SizedBox(height: 12),
             _Metrics(cur: cur, base: base),
             const SizedBox(height: 14),
             _DriversPanel(
               icon: Icons.south_west_rounded,
               color: CF.green,
-              title: 'Por que os ganhos mudaram',
+              title: 'Por que os ganhos mudaram (${basePeriod.short} → ${period.short})',
               total: cur.income - base.income,
               drivers: cmp.incomeDrivers(),
               upIsGood: true,
@@ -103,7 +117,7 @@ class _ComparisonsViewState extends State<ComparisonsView> {
             _DriversPanel(
               icon: Icons.north_east_rounded,
               color: CF.red,
-              title: 'Por que os gastos mudaram',
+              title: 'Por que os gastos mudaram (${basePeriod.short} → ${period.short})',
               total: cur.expenses - base.expenses,
               drivers: [...cmp.expenseDrivers(), ...cmp.topExpenseItems()],
               upIsGood: false,
@@ -149,9 +163,9 @@ class _Metrics extends StatelessWidget {
           border: Border.all(color: CF.line),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: CF.body(13, color: CF.muted, weight: FontWeight.w700)),
+          Text('$label · ${cur.period.short}', style: CF.body(13, color: CF.muted, weight: FontWeight.w700)),
           FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: CountUpText(money(c), style: CF.score(26))),
-          Text('antes ${money(b)}', style: CF.body(12.5, color: CF.muted)),
+          Text('${capitalize(base.period.short)}: ${money(b)}', style: CF.body(12.5, color: CF.muted)),
           const SizedBox(height: 4),
           Row(children: [
             Icon(d == 0 ? Icons.remove_rounded : (d > 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
@@ -186,9 +200,9 @@ class _Metrics extends StatelessWidget {
           border: Border.all(color: CF.line),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Margem', style: CF.body(13, color: CF.muted, weight: FontWeight.w700)),
+          Text('Margem · ${cur.period.short}', style: CF.body(13, color: CF.muted, weight: FontWeight.w700)),
           Text(mc == null ? '—' : '${(mc * 100).round()}%', style: CF.score(26)),
-          Text('antes ${mb == null ? '—' : '${(mb * 100).round()}%'}', style: CF.body(12.5, color: CF.muted)),
+          Text('${capitalize(base.period.short)}: ${mb == null ? '—' : '${(mb * 100).round()}%'}', style: CF.body(12.5, color: CF.muted)),
           const SizedBox(height: 4),
           Text('De cada R\$ 100 que entram, quanto sobra', style: CF.body(11.5, color: CF.muted)),
         ]),
@@ -304,10 +318,10 @@ class _MonthByMonth extends StatelessWidget {
       title: 'Mês a mês',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Wrap(spacing: 14, runSpacing: 4, children: [
-          _Legend(color: CF.green, label: 'Ganhos (agora)'),
-          _Legend(color: CF.green.withValues(alpha: .35), label: 'Ganhos (antes)'),
-          _Legend(color: CF.red, label: 'Gastos (agora)'),
-          _Legend(color: CF.red.withValues(alpha: .35), label: 'Gastos (antes)'),
+          _Legend(color: CF.green, label: 'Ganhos ${cur.period.short}'),
+          _Legend(color: CF.green.withValues(alpha: .35), label: 'Ganhos ${base.period.short}'),
+          _Legend(color: CF.red, label: 'Gastos ${cur.period.short}'),
+          _Legend(color: CF.red.withValues(alpha: .35), label: 'Gastos ${base.period.short}'),
         ]),
         const SizedBox(height: 8),
         for (var i = 0; i < n; i++) ...[
@@ -352,7 +366,7 @@ class _Legend extends StatelessWidget {
       ]);
 }
 
-/// Indicadores do negócio, agora × antes.
+/// Indicadores do negócio, um período ao lado do outro.
 class _Indicators extends StatelessWidget {
   const _Indicators({required this.cur, required this.base});
   final PeriodNumbers cur, base;
@@ -390,6 +404,58 @@ class _Indicators extends StatelessWidget {
             ]),
           ),
       ]),
+    );
+  }
+}
+
+/// A frase grande do topo: o que está sendo comparado com o quê.
+class _VersusLine extends StatelessWidget {
+  const _VersusLine({required this.cur, required this.base, required this.inProgress});
+  final Period cur, base;
+  final bool inProgress;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(color: const Color(0xFFDDF3F5), borderRadius: BorderRadius.circular(16)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(text: cur.title, style: CF.body(19, weight: FontWeight.w800, color: CF.ink)),
+              TextSpan(text: '  comparado com  ', style: CF.body(15, color: CF.muted)),
+              TextSpan(text: base.title, style: CF.body(19, weight: FontWeight.w800, color: CF.brand)),
+            ]),
+          ),
+          if (inProgress) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${cur.title} ainda não terminou: os números vão mudar até o fim do ${cur.kind.noun}.',
+              style: CF.body(13, color: CF.amber, weight: FontWeight.w700),
+            ),
+          ],
+        ]),
+      );
+}
+
+/// Resumo em uma frase, antes dos números.
+class _Summary extends StatelessWidget {
+  const _Summary({required this.cur, required this.base});
+  final PeriodNumbers cur, base;
+
+  static String _em(Period p) => p.kind == PeriodKind.quarter || p.kind == PeriodKind.semester ? 'No ${p.title}' : 'Em ${p.title}';
+
+  @override
+  Widget build(BuildContext context) {
+    final d = cur.income - base.income;
+    final pct = _pct(cur.income, base.income);
+    final change = d.abs() < 0.01
+        ? 'o mesmo que'
+        : '${money(d.abs())} a ${d > 0 ? 'mais' : 'menos'}${pct == null ? '' : ' ($pct)'} que';
+    final where = _em(base.period).replaceFirst('Em', 'em').replaceFirst('No', 'no');
+    return Text(
+      '${_em(cur.period)} você ganhou ${money(cur.income)}, $change $where. '
+      'Gastou ${money(cur.expenses)} e sobraram ${money(cur.result)}.',
+      style: CF.body(15.5, weight: FontWeight.w600, height: 1.35),
     );
   }
 }

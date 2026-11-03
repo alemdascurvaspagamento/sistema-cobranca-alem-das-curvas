@@ -20,6 +20,19 @@ void main() {
     expect(Period.containing(PeriodKind.month, DateTime(2026, 11, 3)).index, 10);
   });
 
+  test('nomes claros dos períodos comparados', () {
+    const out = Period(PeriodKind.month, 2026, 9);
+    expect(out.title, 'Outubro/2026');
+    expect(out.range, '1 a 31 de outubro');
+    expect(out.previous.title, 'Setembro/2026');
+    expect(out.sameLastYear.short, 'out/25');
+    expect(const Period(PeriodKind.quarter, 2026, 3).range, 'outubro a dezembro de 2026');
+    expect(const Period(PeriodKind.year, 2026, 0).title, '2026');
+    expect(out.includes(DateTime(2026, 10, 15)), isTrue);
+    expect(out.includes(DateTime(2026, 11, 1)), isFalse);
+    expect(PeriodKind.quarter.noun, 'trimestre');
+  });
+
   test('o "por que mudou" soma exatamente a diferença dos ganhos', () {
     store.seed(professionById('personal'), BillingModel.perSession);
     final now = Period.containing(PeriodKind.month, store.today);
