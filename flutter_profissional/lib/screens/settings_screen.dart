@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../config.dart';
+import '../ui/legal.dart';
 
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
@@ -231,6 +234,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => openCalendarFeed(context),
         ),
+      ),
+      const SizedBox(height: 14),
+      Panel(
+        icon: Icons.support_agent_rounded,
+        color: CF.brand,
+        title: 'Ajuda e contato',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Dúvida, problema ou ideia? Fale direto com a equipe do Leguno.',
+              style: CF.body(14.5, color: CF.muted, height: 1.3)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
+              onPressed: () => launchUrl(
+                Uri.parse('https://wa.me/${AppConfig.supportContact.replaceAll(RegExp(r'[^0-9]'), '')}'
+                    '?text=${Uri.encodeComponent('Oi! Uso o Leguno e queria falar sobre: ')}'),
+                mode: LaunchMode.externalApplication,
+              ),
+              icon: const Icon(Icons.chat_rounded, size: 18),
+              label: const Text('WhatsApp'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => launchUrl(
+                Uri(scheme: 'mailto', path: AppConfig.supportEmail, queryParameters: {'subject': 'Leguno: ajuda'}),
+                mode: LaunchMode.externalApplication,
+              ),
+              icon: const Icon(Icons.mail_rounded, size: 18),
+              label: Text(AppConfig.supportEmail),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Wrap(spacing: 4, children: [
+            TextButton(onPressed: () => openLegal(context, LegalDoc.terms), child: const Text('Termos de Uso')),
+            TextButton(onPressed: () => openLegal(context, LegalDoc.privacy), child: const Text('Política de Privacidade')),
+          ]),
+        ]),
       ),
       const SizedBox(height: 14),
       Panel(

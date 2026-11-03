@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Termos de Uso · Leguno</title><link rel="icon" type="image/png" href="favicon.png"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+:root{--ink:#0F2236;--ink2:#1D3757;--tq:#0A7E8C;--mint:#22C7D6;--amber:#FFC23D;--bg:#F2F5F9;--line:#DDE4EE;--text:#0E1A2B;--muted:#55657A;--wa:#1FA855;--green:#0E7C55;--red:#B42330}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Barlow,"Helvetica Neue",Arial,sans-serif;color:var(--text);background:#fff;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+/* topo */
+header{position:sticky;top:0;z-index:10;background:rgba(15,34,54,.96);backdrop-filter:blur(8px)}
+.nav{display:flex;align-items:center;gap:24px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:800;font-size:22px;letter-spacing:-.5px}
+.brand svg{width:34px;height:34px}
+.brand b{color:var(--amber);font-weight:800}
+.nav nav{display:flex;gap:22px;margin-left:auto}
+.nav nav a{color:#C8D3E0;text-decoration:none;font-weight:600;font-size:15px}
+.nav nav a:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:999px;font-weight:700;font-size:16px;text-decoration:none;border:2px solid transparent;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--amber);color:var(--ink);box-shadow:0 6px 20px rgba(255,194,61,.35)}
+.btn-ghost{border-color:rgba(255,255,255,.35);color:#fff}
+.btn-tq{background:var(--tq);color:#fff}
+.btn-sm{height:38px;padding:0 16px;font-size:14.5px}
+/* herói */
+.hero{background:radial-gradient(circle at 85% 0%,#1D3757 0,var(--ink) 60%);color:#fff;padding:72px 0 88px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.eyebrow{display:inline-block;background:rgba(34,199,214,.14);color:var(--mint);font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px;margin-bottom:18px}
+h1{font-size:54px;line-height:1.04;letter-spacing:-1.5px;margin:0 0 18px;font-weight:800}
+h1 em{font-style:normal;color:var(--amber)}
+.lead{font-size:20px;color:#C8D3E0;margin:0 0 28px;max-width:540px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{font-size:14px;color:#9FB0C3;margin-top:14px}
+/* celular */
+.phone{justify-self:center;width:320px;background:#0B1A2A;border-radius:38px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
+.screen{background:#ECE5DD;border-radius:28px;overflow:hidden}
+.wa-top{background:#075E54;color:#fff;padding:14px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px}
+.wa-top span{width:30px;height:30px;border-radius:50%;background:#25D366;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.wa-body{padding:16px 12px 22px;display:flex;flex-direction:column;gap:10px}
+.bubble{background:#DCF8C6;border-radius:12px 12px 2px 12px;padding:10px 12px;font-size:14px;line-height:1.38;color:#111;align-self:flex-end;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.bubble .link{color:#0A66C2;text-decoration:underline;word-break:break-all}
+.bubble .time{display:block;text-align:right;font-size:11px;color:#667;margin-top:4px}
+.paycard{background:#fff;border-radius:12px;padding:12px;font-size:13px;align-self:flex-end;max-width:92%;border:1px solid #d9d9d9}
+.paycard b{font-size:20px;display:block;margin:2px 0}
+.paycard .p{display:block;text-align:center;background:var(--tq);color:#fff;border-radius:999px;padding:8px;margin-top:8px;font-weight:700}
+/* seções */
+section{padding:84px 0}
+.alt{background:var(--bg)}
+h2{font-size:38px;line-height:1.1;letter-spacing:-.8px;margin:0 0 12px;font-weight:800;color:var(--ink)}
+.sub{font-size:18px;color:var(--muted);margin:0 0 40px;max-width:680px}
+.pains{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pain{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+.pain h3{margin:0 0 6px;font-size:19px;color:var(--ink)}
+.pain p{margin:0;color:var(--muted)}
+.pain .x{color:var(--red);font-weight:800}
+.pain .ok{color:var(--green);font-weight:800}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;counter-reset:s}
+.step{position:relative;padding:26px 22px 22px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+.step:before{counter-increment:s;content:counter(s);position:absolute;top:-18px;left:22px;width:36px;height:36px;border-radius:50%;background:var(--amber);color:var(--ink);font-weight:800;display:flex;align-items:center;justify-content:center}
+.step h3{margin:6px 0 6px;font-size:19px;color:var(--ink)}
+.step p{margin:0;color:var(--muted)}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat{background:#fff;border:1px solid var(--line);border-top:3px solid var(--tq);border-radius:18px;padding:20px}
+.feat .ic{width:40px;height:40px;border-radius:12px;background:#DDF3F5;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:10px}
+.feat h3{margin:0 0 4px;font-size:17px;color:var(--ink)}
+.feat p{margin:0;font-size:15px;color:var(--muted)}
+.who{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.who span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+/* preços */
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.price{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;flex-direction:column}
+.price.hl{border:2px solid var(--tq);box-shadow:0 18px 40px rgba(10,126,140,.15)}
+.price.founder{background:var(--ink);color:#fff;border:none}
+.price .tag{align-self:flex-start;font-size:12.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:#DDF3F5;color:var(--tq);margin-bottom:12px}
+.price.founder .tag{background:var(--amber);color:var(--ink)}
+.price h3{margin:0;font-size:22px}
+.price .v{font-size:44px;font-weight:800;letter-spacing:-1px;margin:8px 0 0}
+.price .v small{font-size:17px;font-weight:600;color:var(--muted)}
+.price.founder .v small{color:#9FB0C3}
+.price .y{color:var(--muted);font-size:15px;margin-bottom:16px}
+.price.founder .y{color:#C8D3E0}
+.price ul{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px;flex:1}
+.price li{padding-left:26px;position:relative;font-size:15.5px}
+.price li:before{content:"✓";position:absolute;left:0;color:var(--tq);font-weight:800}
+.price.founder li:before{color:var(--amber)}
+.trial{margin-top:26px;text-align:center;color:var(--muted);font-size:16px}
+/* perguntas */
+.faq{max-width:800px}
+details{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:700;font-size:17px;color:var(--ink);list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--tq);font-size:22px;line-height:1}
+details[open] summary:after{content:"–"}
+details p{margin:10px 0 0;color:var(--muted)}
+/* final */
+.final{background:radial-gradient(circle at 15% 100%,#1D3757 0,var(--ink) 60%);color:#fff;text-align:center}
+.final h2{color:#fff}
+.final .sub{color:#C8D3E0;margin:0 auto 30px}
+footer{background:#0B1A2A;color:#9FB0C3;padding:36px 0;font-size:14.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:space-between}
+footer a{color:#C8D3E0;text-decoration:none}
+footer a:hover{color:#fff}
+footer .links{display:flex;gap:20px;flex-wrap:wrap}
+.wa-float{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:20}
+.wa-float svg{width:30px;height:30px;fill:#fff}
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  h1{font-size:40px}
+  .pains,.steps,.prices{grid-template-columns:1fr}
+  .feats{grid-template-columns:1fr 1fr}
+  .nav nav{display:none}
+  .nav .btn-ghost{display:none}
+  .nav .btn-primary{margin-left:auto}
+  section{padding:64px 0}
+  h2{font-size:30px}
+}
+@media (max-width:520px){.feats{grid-template-columns:1fr}.lead{font-size:18px}.phone{width:290px}}
+
+.legal{max-width:760px;padding:56px 20px 80px}.legal h1{color:var(--ink);font-size:40px}.legal h3{color:var(--ink);font-size:19px;margin:26px 0 6px}.legal p{margin:0;color:#2b3a4d;font-size:16.5px}.legal .ver{color:var(--muted)}</style></head><body><header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html" aria-label="Leguno">
+      <svg viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradient id="am" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#FFD36B"/><stop offset="1" stop-color="#F2A516"/></linearGradient><linearGradient id="tq" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#0A7E8C"/><stop offset="1" stop-color="#22C7D6"/></linearGradient></defs><path d="M330 840 L250 840 Q215 840 228 806 L298 660 L800 660 Q828 660 816 690 L766 812 Q755 840 726 840 Z" fill="url(#tq)"/><path d="M298 660 L522 660 L506 702 L282 702 Z" fill="#06343B" opacity=".45"/><path d="M478 168 Q486 146 512 146 L690 146 Q718 146 707 172 L522 660 L298 660 Z" fill="url(#am)"/></svg>
+      <span>Le<b>g</b>uno</span>
+    </a>
+    <nav>
+      <a href="index.html#como-funciona">Como funciona</a>
+      <a href="index.html#recursos">Recursos</a>
+      <a href="index.html#precos">Preços</a>
+      <a href="index.html#perguntas">Perguntas</a>
+    </nav>
+    <a class="btn btn-ghost btn-sm" href="https://app.leguno.com.br">Entrar</a>
+    <a class="btn btn-primary btn-sm" href="https://app.leguno.com.br">Testar grátis</a>
+  </div>
+</header><main class="wrap legal"><h1>Termos de Uso</h1><p class="ver">Versão de 29/10/2026 · fase de testes</p><h3>1. Quem somos</h3><p>O Leguno é um aplicativo de agenda e cobrança para profissionais liberais, oferecido pela Além das Curvas (Daniel Barsottini). Fale com a gente: WhatsApp (11) 99182-7006 ou daniel@leguno.com.br.</p><h3>2. O que o app faz</h3><p>Ajuda você a organizar agenda, calcular cobranças, acompanhar pagamentos, ganhos e despesas. O app não recebe nem repassa dinheiro: o Pix e as cobranças acontecem entre você e os seus clientes, fora do app.</p><h3>3. Versão de teste</h3><p>O app está em fase de testes. Pode ter erros, mudar ou ficar fora do ar. Não use como único registro: guarde sempre uma cópia (em Configurações, &quot;Seus dados&quot; baixa uma planilha com tudo).</p><h3>4. Sua conta</h3><p>Você é responsável pelas informações que cadastra e por manter a senha em segredo. Cada conta é de uma pessoa. É preciso ter 18 anos ou mais.</p><h3>5. Teste grátis e planos</h3><p>O teste grátis dura 60 dias. Depois, para continuar editando, é preciso assinar um plano. Sem assinatura, a conta fica só para consulta e nada é apagado. Durante a fase de testes, nenhuma cobrança é feita. Os valores dos planos serão informados antes de qualquer cobrança.</p><h3>6. O que pode e o que não pode</h3><p>Você pode usar o app para o seu trabalho. Não pode usá-lo para fins ilegais, tentar acessar dados de outras pessoas, copiar ou revender o app, nem enviar conteúdo ofensivo.</p><h3>7. Responsabilidade</h3><p>Os cálculos do app dependem do que você cadastra. Confira os valores antes de cobrar. O app não substitui contador, nota fiscal ou orientação jurídica. Fazemos o possível para o app funcionar bem, mas não garantimos funcionamento sem interrupções.</p><h3>8. Cancelar</h3><p>Você pode parar de usar e pedir a exclusão da sua conta a qualquer momento, pelo contato acima.</p><h3>9. Mudanças</h3><p>Podemos mudar estes termos. Avisaremos no app ou por e-mail antes de mudanças importantes.</p><h3>10. Lei aplicável</h3><p>Valem as leis do Brasil. Em caso de conflito, vale o foro do domicílio do usuário, como prevê a lei do consumidor.</p></main><footer>
+  <div class="wrap">
+    <div>© 2026 Leguno · Agenda e cobrança para profissionais liberais</div>
+    <div class="links">
+      <a href="https://wa.me/5511991827006?text=Oi!%20Quero%20saber%20mais%20sobre%20o%20Leguno.">WhatsApp</a>
+      <a href="mailto:daniel@leguno.com.br">daniel@leguno.com.br</a>
+      <a href="termos.html">Termos de Uso</a>
+      <a href="privacidade.html">Privacidade</a>
+    </div>
+  </div>
+</footer></body></html>

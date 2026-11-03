@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leguno · Agenda e cobrança para profissionais liberais</title>
+<meta name="description" content="Agenda, faltas, feriados e cobrança pelo WhatsApp com Pix, no automático. Para personal trainers, nutricionistas, psicólogos, fisioterapeutas e professores particulares. Teste grátis por 60 dias.">
+<meta name="theme-color" content="#0F2236">
+<meta property="og:title" content="Leguno · Agenda e cobrança no automático">
+<meta property="og:description" content="Faltas, feriados e Pix no automático. Teste grátis por 60 dias, sem cartão.">
+<meta property="og:image" content="https://leguno.com.br/og.png">
+<meta property="og:url" content="https://leguno.com.br">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0F2236;--ink2:#1D3757;--tq:#0A7E8C;--mint:#22C7D6;--amber:#FFC23D;--bg:#F2F5F9;--line:#DDE4EE;--text:#0E1A2B;--muted:#55657A;--wa:#1FA855;--green:#0E7C55;--red:#B42330}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Barlow,"Helvetica Neue",Arial,sans-serif;color:var(--text);background:#fff;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+/* topo */
+header{position:sticky;top:0;z-index:10;background:rgba(15,34,54,.96);backdrop-filter:blur(8px)}
+.nav{display:flex;align-items:center;gap:24px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:800;font-size:22px;letter-spacing:-.5px}
+.brand svg{width:34px;height:34px}
+.brand b{color:var(--amber);font-weight:800}
+.nav nav{display:flex;gap:22px;margin-left:auto}
+.nav nav a{color:#C8D3E0;text-decoration:none;font-weight:600;font-size:15px}
+.nav nav a:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:999px;font-weight:700;font-size:16px;text-decoration:none;border:2px solid transparent;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--amber);color:var(--ink);box-shadow:0 6px 20px rgba(255,194,61,.35)}
+.btn-ghost{border-color:rgba(255,255,255,.35);color:#fff}
+.btn-tq{background:var(--tq);color:#fff}
+.btn-sm{height:38px;padding:0 16px;font-size:14.5px}
+/* herói */
+.hero{background:radial-gradient(circle at 85% 0%,#1D3757 0,var(--ink) 60%);color:#fff;padding:72px 0 88px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.eyebrow{display:inline-block;background:rgba(34,199,214,.14);color:var(--mint);font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px;margin-bottom:18px}
+h1{font-size:54px;line-height:1.04;letter-spacing:-1.5px;margin:0 0 18px;font-weight:800}
+h1 em{font-style:normal;color:var(--amber)}
+.lead{font-size:20px;color:#C8D3E0;margin:0 0 28px;max-width:540px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{font-size:14px;color:#9FB0C3;margin-top:14px}
+/* celular */
+.phone{justify-self:center;width:320px;background:#0B1A2A;border-radius:38px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
+.screen{background:#ECE5DD;border-radius:28px;overflow:hidden}
+.wa-top{background:#075E54;color:#fff;padding:14px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px}
+.wa-top span{width:30px;height:30px;border-radius:50%;background:#25D366;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.wa-body{padding:16px 12px 22px;display:flex;flex-direction:column;gap:10px}
+.bubble{background:#DCF8C6;border-radius:12px 12px 2px 12px;padding:10px 12px;font-size:14px;line-height:1.38;color:#111;align-self:flex-end;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.bubble .link{color:#0A66C2;text-decoration:underline;word-break:break-all}
+.bubble .time{display:block;text-align:right;font-size:11px;color:#667;margin-top:4px}
+.paycard{color:#111;background:#fff;border-radius:12px;padding:12px;font-size:13px;align-self:flex-end;max-width:92%;border:1px solid #d9d9d9}
+.paycard b{font-size:20px;display:block;margin:2px 0}
+.paycard .p{display:block;text-align:center;background:var(--tq);color:#fff;border-radius:999px;padding:8px;margin-top:8px;font-weight:700}
+/* seções */
+section{padding:84px 0}
+.alt{background:var(--bg)}
+h2{font-size:38px;line-height:1.1;letter-spacing:-.8px;margin:0 0 12px;font-weight:800;color:var(--ink)}
+.sub{font-size:18px;color:var(--muted);margin:0 0 40px;max-width:680px}
+.pains{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pain{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+.pain h3{margin:0 0 6px;font-size:19px;color:var(--ink)}
+.pain p{margin:0;color:var(--muted)}
+.pain .x{color:var(--red);font-weight:800}
+.pain .ok{color:var(--green);font-weight:800}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;counter-reset:s}
+.step{position:relative;padding:26px 22px 22px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+.step:before{counter-increment:s;content:counter(s);position:absolute;top:-18px;left:22px;width:36px;height:36px;border-radius:50%;background:var(--amber);color:var(--ink);font-weight:800;display:flex;align-items:center;justify-content:center}
+.step h3{margin:6px 0 6px;font-size:19px;color:var(--ink)}
+.step p{margin:0;color:var(--muted)}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat{background:#fff;border:1px solid var(--line);border-top:3px solid var(--tq);border-radius:18px;padding:20px}
+.feat .ic{width:40px;height:40px;border-radius:12px;background:#DDF3F5;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:10px}
+.feat h3{margin:0 0 4px;font-size:17px;color:var(--ink)}
+.feat p{margin:0;font-size:15px;color:var(--muted)}
+.who{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.who span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+/* preços */
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.price{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;flex-direction:column}
+.price.hl{border:2px solid var(--tq);box-shadow:0 18px 40px rgba(10,126,140,.15)}
+.price.founder{background:var(--ink);color:#fff;border:none}
+.price .tag{align-self:flex-start;font-size:12.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:#DDF3F5;color:var(--tq);margin-bottom:12px}
+.price.founder .tag{background:var(--amber);color:var(--ink)}
+.price h3{margin:0;font-size:22px}
+.price .v{font-size:44px;font-weight:800;letter-spacing:-1px;margin:8px 0 0}
+.price .v small{font-size:17px;font-weight:600;color:var(--muted)}
+.price.founder .v small{color:#9FB0C3}
+.price .y{color:var(--muted);font-size:15px;margin-bottom:16px}
+.price.founder .y{color:#C8D3E0}
+.price ul{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px;flex:1}
+.price li{padding-left:26px;position:relative;font-size:15.5px}
+.price li:before{content:"✓";position:absolute;left:0;color:var(--tq);font-weight:800}
+.price.founder li:before{color:var(--amber)}
+.trial{margin-top:26px;text-align:center;color:var(--muted);font-size:16px}
+/* perguntas */
+.faq{max-width:800px}
+details{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:700;font-size:17px;color:var(--ink);list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--tq);font-size:22px;line-height:1}
+details[open] summary:after{content:"–"}
+details p{margin:10px 0 0;color:var(--muted)}
+/* final */
+.final{background:radial-gradient(circle at 15% 100%,#1D3757 0,var(--ink) 60%);color:#fff;text-align:center}
+.final h2{color:#fff}
+.final .sub{color:#C8D3E0;margin:0 auto 30px}
+footer{background:#0B1A2A;color:#9FB0C3;padding:36px 0;font-size:14.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:space-between}
+footer a{color:#C8D3E0;text-decoration:none}
+footer a:hover{color:#fff}
+footer .links{display:flex;gap:20px;flex-wrap:wrap}
+.wa-float{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:20}
+.wa-float svg{width:30px;height:30px;fill:#fff}
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  h1{font-size:40px}
+  .pains,.steps,.prices{grid-template-columns:1fr}
+  .feats{grid-template-columns:1fr 1fr}
+  .nav nav{display:none}
+  .nav .btn-ghost{display:none}
+  .nav .btn-primary{margin-left:auto}
+  section{padding:64px 0}
+  h2{font-size:30px}
+}
+@media (max-width:520px){.feats{grid-template-columns:1fr}.lead{font-size:18px}.phone{width:290px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#" aria-label="Leguno">
+      <svg viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradient id="am" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#FFD36B"/><stop offset="1" stop-color="#F2A516"/></linearGradient><linearGradient id="tq" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#0A7E8C"/><stop offset="1" stop-color="#22C7D6"/></linearGradient></defs><path d="M330 840 L250 840 Q215 840 228 806 L298 660 L800 660 Q828 660 816 690 L766 812 Q755 840 726 840 Z" fill="url(#tq)"/><path d="M298 660 L522 660 L506 702 L282 702 Z" fill="#06343B" opacity=".45"/><path d="M478 168 Q486 146 512 146 L690 146 Q718 146 707 172 L522 660 L298 660 Z" fill="url(#am)"/></svg>
+      <span>Le<b>g</b>uno</span>
+    </a>
+    <nav>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#recursos">Recursos</a>
+      <a href="#precos">Preços</a>
+      <a href="#perguntas">Perguntas</a>
+    </nav>
+    <a class="btn btn-ghost btn-sm" href="https://app.leguno.com.br">Entrar</a>
+    <a class="btn btn-primary btn-sm" href="https://app.leguno.com.br">Testar grátis</a>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Para quem atende com hora marcada</span>
+      <h1>Sua agenda e suas cobranças <em>no automático</em>.</h1>
+      <p class="lead">O Leguno calcula quanto cada cliente deve no mês, já descontando faltas e feriados, e manda a cobrança pelo WhatsApp com o Pix pronto. Você só confere e envia.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 60 dias</a>
+        <a class="btn btn-ghost" href="#como-funciona">Ver como funciona</a>
+      </div>
+      <p class="note">Sem cartão de crédito. Funciona no computador, no iPhone e no Android.</p>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="screen">
+        <div class="wa-top"><span>A</span> Ana Paula</div>
+        <div class="wa-body">
+          <div class="bubble">Oi, Ana! Segue o resumo de outubro: 8 aulas (1 falta avisada não cobrada).<br><b>Total: R$ 640,00</b> · vence dia 10.<br>Pague com um toque:<br><span class="link">app.leguno.com.br/?pagar=…</span><span class="time">09:12 ✓✓</span></div>
+          <div class="paycard">Valor de outubro<b>R$ 640,00</b>Vence em 10/11<span class="p">Copiar código Pix</span></div>
+          <div class="bubble">Pago! Obrigada 😊<span class="time">09:20 ✓✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>Chega de planilha e de conta de cabeça.</h2>
+    <p class="sub">Quem atende com hora marcada perde tempo e dinheiro todo mês com a mesma coisa.</p>
+    <div class="pains">
+      <div class="pain"><h3>Faltas e remarcações</h3><p><span class="x">Antes:</span> anotar em papel e lembrar no fim do mês. <span class="ok">Com o Leguno:</span> um toque na agenda e a cobrança já se ajusta.</p></div>
+      <div class="pain"><h3>Cobrar sem constrangimento</h3><p><span class="x">Antes:</span> digitar valor por valor no WhatsApp. <span class="ok">Com o Leguno:</span> mensagem educada, com valor e link de pagamento prontos.</p></div>
+      <div class="pain"><h3>Saber quanto sobrou</h3><p><span class="x">Antes:</span> não saber se o mês foi bom. <span class="ok">Com o Leguno:</span> ganhos, despesas e o que sobrou, mês a mês.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="como-funciona">
+  <div class="wrap">
+    <h2>Como funciona</h2>
+    <p class="sub">Em 10 minutos você cadastra seus clientes. Depois disso, o Leguno faz as contas sozinho.</p>
+    <div class="steps">
+      <div class="step"><h3>Cadastre seus clientes</h3><p>Nome, telefone, dias e horários, valor da aula, do mês ou do pacote e o dia de vencimento.</p></div>
+      <div class="step"><h3>Use a agenda no dia a dia</h3><p>Marque faltas, remarcações e aulas extras. Feriados entram sozinhos, do jeito que você definir.</p></div>
+      <div class="step"><h3>Cobre com um toque</h3><p>No vencimento, toque em "Cobrar". O WhatsApp abre com a mensagem e o Pix prontos. Ao receber, marque como pago.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="recursos" class="alt">
+  <div class="wrap">
+    <h2>Tudo o que você precisa, nada que atrapalhe</h2>
+    <p class="sub">Feito por um profissional que atende com hora marcada, para quem vive a mesma rotina.</p>
+    <div class="feats">
+      <div class="feat"><div class="ic">📅</div><h3>Agenda da semana</h3><p>Atendimentos, faltas, remarcações e avulsos num só lugar.</p></div>
+      <div class="feat"><div class="ic">💬</div><h3>Cobrança pelo WhatsApp</h3><p>Mensagem pronta com valor, vencimento e link de pagamento Pix.</p></div>
+      <div class="feat"><div class="ic">⚡</div><h3>Pix com QR Code</h3><p>Seu cliente copia o código ou lê o QR Code. Até duas chaves Pix.</p></div>
+      <div class="feat"><div class="ic">🗓️</div><h3>Agendamento online</h3><p>Um link para o cliente escolher o horário livre e pedir a marcação.</p></div>
+      <div class="feat"><div class="ic">✅</div><h3>Confirmação do dia</h3><p>Confirme os atendimentos de hoje ou de amanhã pelo WhatsApp.</p></div>
+      <div class="feat"><div class="ic">👨‍👩‍👧</div><h3>Responsável financeiro</h3><p>Uma pessoa paga por vários, numa cobrança só.</p></div>
+      <div class="feat"><div class="ic">📊</div><h3>Relatórios e comparativos</h3><p>Compare meses e entenda por que você ganhou mais ou menos.</p></div>
+      <div class="feat"><div class="ic">🔗</div><h3>Outlook e Google Agenda</h3><p>Veja seus atendimentos na agenda que você já usa.</p></div>
+    </div>
+    <div class="who">
+      <span>Personal trainer</span><span>Nutricionista</span><span>Psicólogo(a)</span><span>Fisioterapeuta</span><span>Professor(a) particular</span><span>Pilates e Yoga</span><span>Fonoaudiólogo(a)</span><span>Terapeuta</span><span>Esteticista</span><span>Coach</span>
+    </div>
+  </div>
+</section>
+
+<section id="precos">
+  <div class="wrap">
+    <h2>Preços simples</h2>
+    <p class="sub">Teste tudo por 60 dias, sem cartão. Depois, escolha um plano. Sem fidelidade: cancele quando quiser.</p>
+    <div class="prices">
+      <div class="price">
+        <span class="tag">Para começar</span>
+        <h3>Essencial</h3>
+        <div class="v">R$ 34,90<small>/mês</small></div>
+        <div class="y">ou R$ 349 por ano (2 meses grátis)</div>
+        <ul><li>Até 15 clientes ativos</li><li>Agenda, faltas e feriados</li><li>Cobrança pelo WhatsApp com Pix</li><li>Ganhos e despesas do mês</li><li>Computador, iPhone e Android</li></ul>
+        <a class="btn btn-tq" href="https://app.leguno.com.br">Testar grátis</a>
+      </div>
+      <div class="price hl">
+        <span class="tag">Mais completo</span>
+        <h3>Profissional</h3>
+        <div class="v">R$ 59,90<small>/mês</small></div>
+        <div class="y">ou R$ 599 por ano (2 meses grátis)</div>
+        <ul><li>Clientes ilimitados</li><li>Tudo do Essencial</li><li>Agendamento online</li><li>Confirmação pelo WhatsApp</li><li>Agenda no Outlook e Google</li><li>Relatórios e comparativos</li></ul>
+        <a class="btn btn-tq" href="https://app.leguno.com.br">Testar grátis</a>
+      </div>
+      <div class="price founder">
+        <span class="tag">Oferta de fundador</span>
+        <h3>Profissional para sempre</h3>
+        <div class="v">R$ 39,90<small>/mês</small></div>
+        <div class="y">Preço garantido enquanto você for assinante</div>
+        <ul><li>Tudo do Profissional</li><li>Só para as primeiras 100 contas</li><li>Assine durante o teste grátis</li><li>Ajude a decidir as próximas novidades</li></ul>
+        <a class="btn btn-primary" href="https://app.leguno.com.br">Quero ser fundador</a>
+      </div>
+    </div>
+    <p class="trial">O Leguno não cobra nada dos seus clientes: o Pix cai direto na sua conta.</p>
+  </div>
+</section>
+
+<section id="perguntas" class="alt">
+  <div class="wrap faq">
+    <h2>Perguntas frequentes</h2>
+    <details><summary>Preciso de cartão de crédito para testar?</summary><p>Não. Você cria a conta com seu e-mail e usa tudo por 60 dias. No fim do teste, escolhe se quer assinar.</p></details>
+    <details><summary>O Leguno recebe o dinheiro dos meus clientes?</summary><p>Não. O Pix vai direto para a sua chave, sem taxa e sem intermediário. O Leguno só calcula, organiza e manda a cobrança.</p></details>
+    <details><summary>O que acontece se eu não assinar depois do teste?</summary><p>Sua conta fica só para consulta: você continua vendo e baixando seus dados, nada é apagado. Para voltar a lançar, é só assinar.</p></details>
+    <details><summary>Funciona no computador e no celular?</summary><p>Sim. Pelo navegador do computador em app.leguno.com.br, e no iPhone e no Android. Seus dados ficam iguais em todos.</p></details>
+    <details><summary>Serve para a minha profissão?</summary><p>Se você atende com hora marcada e cobra por aula, por mês ou por pacote, serve. O app já usa as palavras da sua área: aluno, paciente, cliente, sessão, aula.</p></details>
+    <details><summary>Meus dados ficam seguros?</summary><p>Cada conta só enxerga os próprios dados, o acesso é por senha e a sessão encerra sozinha quando fica parada. Você pode baixar tudo em planilha ou excluir a conta quando quiser.</p></details>
+    <details><summary>Posso cancelar quando quiser?</summary><p>Sim, sem multa e sem fidelidade.</p></details>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2>Comece hoje. Seu próximo fechamento de mês vai levar minutos.</h2>
+    <p class="sub">60 dias grátis, sem cartão. Leva 10 minutos para cadastrar seus clientes.</p>
+    <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 60 dias</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Leguno · Agenda e cobrança para profissionais liberais</div>
+    <div class="links">
+      <a href="https://wa.me/5511991827006?text=Oi!%20Quero%20saber%20mais%20sobre%20o%20Leguno.">WhatsApp</a>
+      <a href="mailto:daniel@leguno.com.br">daniel@leguno.com.br</a>
+      <a href="termos.html">Termos de Uso</a>
+      <a href="privacidade.html">Privacidade</a>
+    </div>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/5511991827006?text=Oi!%20Quero%20saber%20mais%20sobre%20o%20Leguno." aria-label="Falar no WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.45 1.32-2 1.37-.51.05-1 .24-3.36-.7-2.84-1.12-4.65-4.03-4.79-4.22-.14-.19-1.14-1.52-1.14-2.9 0-1.38.72-2.06.98-2.34.25-.28.55-.35.74-.35.18 0 .37 0 .53.01.17.01.4-.06.62.48.23.55.79 1.92.86 2.06.07.14.11.3.02.49-.09.19-.14.3-.28.46-.14.16-.29.36-.42.48-.14.14-.28.29-.12.57.16.28.72 1.19 1.55 1.93 1.07.95 1.97 1.25 2.25 1.39.28.14.44.12.6-.07.16-.19.69-.81.88-1.09.18-.28.37-.23.62-.14.25.09 1.6.76 1.87.9.28.14.46.21.53.32.07.12.07.67-.18 1.36z"/></svg>
+</a>
+</body>
+</html>

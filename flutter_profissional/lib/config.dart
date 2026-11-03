@@ -18,8 +18,11 @@ class AppConfig {
   /// ou e-mail). Vazio: a faixa de teste aparece sem o botão de contato.
   static const supportContact = String.fromEnvironment('SUPPORT_CONTACT', defaultValue: '5511991827006');
 
+  /// E-mail de suporte (caixa do Zoho).
+  static const supportEmail = String.fromEnvironment('SUPPORT_EMAIL', defaultValue: 'daniel@leguno.com.br');
+
   /// Endereço público do app (links enviados a clientes).
-  static const publicUrl = String.fromEnvironment('PUBLIC_URL', defaultValue: 'https://coachflow-profissional-flutter.vercel.app');
+  static const publicUrl = String.fromEnvironment('PUBLIC_URL', defaultValue: 'https://app.leguno.com.br');
 
   /// Desliga o login (usado nos testes automáticos, que não têm internet).
   static const offline = bool.fromEnvironment('CF_OFFLINE');
