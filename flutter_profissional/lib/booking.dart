@@ -343,12 +343,43 @@ class Booking extends ChangeNotifier {
         mode: LaunchMode.externalApplication);
   }
 
-  /// Mensagem pronta para mandar o link a um cliente (sem número: a pessoa escolhe o contato).
+  /// Quem está mandando, para a mensagem não parecer anônima.
+  static String _sender() {
+    final store = BillingStore.instance;
+    final person = store.pixName.trim().split(' ').first;
+    final business = store.businessName.trim();
+    if (person.isNotEmpty && business.isNotEmpty && business.toLowerCase() != store.pixName.trim().toLowerCase()) {
+      return '$person, da $business';
+    }
+    return person.isNotEmpty ? person : business;
+  }
+
+  /// Mensagem pessoal para um cliente. Cada mensagem sai diferente (nome e link
+  /// próprios): a mesma mensagem com link mandada para muita gente de uma vez
+  /// é segurada pelo filtro de spam do WhatsApp e não aparece para quem recebe.
+  static String inviteText(String link, {String? firstName, String? tag}) {
+    final who = _sender();
+    final hello = firstName == null || firstName.isEmpty ? 'Oi!' : 'Oi, $firstName!';
+    return '$hello${who.isEmpty ? '' : ' Aqui é $who.'}\n'
+        'Agora você pode marcar ou trocar seu horário comigo por este link. '
+        'É só escolher o dia e a hora livres:\n'
+        '$link${tag == null ? '' : '&c=$tag'}';
+  }
+
+  /// Envia o link pelo WhatsApp, um cliente por vez, com mensagem pessoal.
   Future<void> shareLink(BuildContext context) async {
     final s = settings;
     if (s == null) return;
-    final text = 'Oi! Veja meus horários livres e escolha o melhor para você: ${s.link}';
-    await launchUrl(Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}'), mode: LaunchMode.externalApplication);
+    final plans = [
+      for (final p in BillingStore.instance.activePlans)
+        if (p.phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 10) p,
+    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => _InviteSheet(link: s.link, plans: plans),
+    );
   }
 }
 
@@ -1234,6 +1265,102 @@ class _DayChip extends StatelessWidget {
               if (off) Text(note!, style: CF.body(11, color: CF.muted, weight: FontWeight.w600)),
             ]),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Escolher para quem mandar o link de agendamento (um por vez).
+class _InviteSheet extends StatefulWidget {
+  const _InviteSheet({required this.link, required this.plans});
+  final String link;
+  final List<StudentPlan> plans;
+
+  @override
+  State<_InviteSheet> createState() => _InviteSheetState();
+}
+
+class _InviteSheetState extends State<_InviteSheet> {
+  String query = '';
+  final sent = <String>{};
+
+  Future<void> _send(StudentPlan p) async {
+    final first = p.name.trim().split(' ').first;
+    final clean = p.id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    final tag = clean.length > 6 ? clean.substring(0, 6) : clean;
+    await Booking._whatsApp(p.phone, Booking.inviteText(widget.link, firstName: first, tag: tag));
+    if (mounted) setState(() => sent.add(p.id));
+  }
+
+  Future<void> _other() async {
+    final text = Booking.inviteText(widget.link);
+    await launchUrl(Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}'), mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = BillingStore.instance.terms;
+    final q = query.trim().toLowerCase();
+    final list = [for (final p in widget.plans) if (q.isEmpty || p.name.toLowerCase().contains(q)) p];
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * .8,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('Enviar link de agendamento', style: CF.body(19, weight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(
+              'Mande para um ${t.client} por vez: a mensagem sai com o nome de cada um. '
+              'Mensagens iguais com link para muita gente de uma vez são seguradas pelo WhatsApp.',
+              style: CF.body(13.5, color: CF.muted, height: 1.3),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'Buscar ${t.client}',
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              onChanged: (v) => setState(() => query = v),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: list.isEmpty
+                  ? Center(child: Text('Nenhum ${t.client} com telefone.', style: CF.body(14, color: CF.muted)))
+                  : ListView.separated(
+                      itemCount: list.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final p = list[i];
+                        final done = sent.contains(p.id);
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(p.name, style: CF.body(15.5, weight: FontWeight.w600)),
+                          subtitle: done ? Text('Enviado', style: CF.body(13, color: CF.green, weight: FontWeight.w700)) : null,
+                          trailing: done
+                              ? const Icon(Icons.check_circle_rounded, color: CF.green)
+                              : FilledButton.icon(
+                                  onPressed: () => _send(p),
+                                  style: FilledButton.styleFrom(
+                                      backgroundColor: CF.whatsapp, minimumSize: const Size(0, 38),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12)),
+                                  icon: const Icon(Icons.chat_rounded, size: 16),
+                                  label: const Text('Enviar'),
+                                ),
+                          onTap: done ? null : () => _send(p),
+                        );
+                      },
+                    ),
+            ),
+            TextButton.icon(
+              onPressed: _other,
+              icon: const Icon(Icons.person_add_alt_rounded),
+              label: const Text('Mandar para outra pessoa (escolher no WhatsApp)'),
+            ),
+          ]),
         ),
       ),
     );
