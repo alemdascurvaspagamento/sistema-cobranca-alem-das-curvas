@@ -129,7 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
       error = null;
     });
     try {
-      await auth.resetPasswordForEmail(email.text.trim(), redirectTo: kIsWeb ? Uri.base.origin : AppConfig.publicUrl);
+      // O link volta com ?nova_senha=1: assim o app abre direto na tela de criar a senha nova.
+      await auth.resetPasswordForEmail(email.text.trim(),
+          redirectTo: '${kIsWeb ? Uri.base.origin : AppConfig.publicUrl}/?nova_senha=1');
       setState(() => info = 'Enviamos um link para ${email.text.trim()}. Abra o e-mail e crie uma nova senha.');
     } catch (_) {
       setState(() => error = 'Não foi possível enviar o e-mail agora. Tente de novo em instantes.');

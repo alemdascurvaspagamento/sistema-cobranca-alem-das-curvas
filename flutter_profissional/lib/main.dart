@@ -100,20 +100,28 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     super.initState();
     if (!_cloudReady) return;
     final auth = Supabase.instance.client.auth;
+    // Veio do link "Esqueci minha senha": abre a tela de criar senha nova, e não o app.
+    final recovering = Uri.base.queryParameters['nova_senha'] == '1' || Uri.base.fragment.contains('type=recovery');
     _authSub = auth.onAuthStateChange.listen((data) {
       if (!mounted) return;
       switch (data.event) {
         case AuthChangeEvent.passwordRecovery:
           setState(() => mode = _Mode.newPassword);
         case AuthChangeEvent.signedIn:
-          if (mode == _Mode.login || mode == _Mode.entry) _load();
+          if (recovering && mode != _Mode.cloud) {
+            setState(() => mode = _Mode.newPassword);
+          } else if (mode == _Mode.login || mode == _Mode.entry) {
+            _load();
+          }
         case AuthChangeEvent.signedOut:
           if (mode != _Mode.login) setState(() => mode = _Mode.entry);
         default:
           break;
       }
     });
-    if (auth.currentSession != null) {
+    if (auth.currentSession != null && recovering) {
+      mode = _Mode.newPassword;
+    } else if (auth.currentSession != null) {
       mode = _Mode.loading;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
