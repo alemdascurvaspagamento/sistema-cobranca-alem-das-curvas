@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config.dart';
 import 'cf_theme.dart';
 import 'legal.dart';
 
@@ -128,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
       error = null;
     });
     try {
-      await auth.resetPasswordForEmail(email.text.trim(), redirectTo: Uri.base.origin);
+      await auth.resetPasswordForEmail(email.text.trim(), redirectTo: kIsWeb ? Uri.base.origin : AppConfig.publicUrl);
       setState(() => info = 'Enviamos um link para ${email.text.trim()}. Abra o e-mail e crie uma nova senha.');
     } catch (_) {
       setState(() => error = 'Não foi possível enviar o e-mail agora. Tente de novo em instantes.');
