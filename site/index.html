@@ -57,6 +57,20 @@ h1 em{font-style:normal;color:var(--amber)}
 .paycard{color:#111;background:#fff;border-radius:12px;padding:12px;font-size:13px;align-self:flex-end;max-width:92%;border:1px solid #d9d9d9}
 .paycard b{font-size:20px;display:block;margin:2px 0}
 .paycard .p{display:block;text-align:center;background:var(--tq);color:#fff;border-radius:999px;padding:8px;margin-top:8px;font-weight:700}
+/* telas do app */
+.shots-wrap{position:relative}
+.shots{display:flex;gap:26px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:8px 4px 26px;margin:0 -4px;scrollbar-width:none}
+.shots::-webkit-scrollbar{display:none}
+.shot{flex:0 0 250px;margin:0;scroll-snap-align:start;text-align:center}
+.shot .frame{background:#0B1A2A;border-radius:36px;padding:10px;box-shadow:0 20px 44px rgba(15,34,54,.22)}
+.shot img{display:block;width:100%;height:auto;border-radius:27px}
+.shot h3{margin:16px 0 4px;font-size:18px;color:var(--ink)}
+.shot p{margin:0 auto;font-size:15px;color:var(--muted);max-width:230px}
+.shots-nav{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px}
+.shots-nav button{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-size:20px;cursor:pointer}
+.shots-nav button:hover{border-color:var(--tq);color:var(--tq)}
+.shots-hint{font-size:14px;color:var(--muted);margin:0}
+@media (max-width:900px){.shots-nav{display:none}.shot{flex-basis:72%}}
 /* seções */
 section{padding:84px 0}
 .alt{background:var(--bg)}
@@ -140,6 +154,7 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
       <span>Le<b>g</b>uno</span>
     </a>
     <nav>
+      <a href="#por-dentro">Telas</a>
       <a href="#como-funciona">Como funciona</a>
       <a href="#recursos">Recursos</a>
       <a href="#precos">Preços</a>
@@ -173,6 +188,15 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="por-dentro">
+  <div class="wrap">
+    <h2>Veja o Leguno por dentro</h2>
+    <p class="sub">Telas reais do aplicativo, com dados de demonstração.</p>
+    <div class="shots-nav"><button type="button" aria-label="Telas anteriores" onclick="document.getElementById('shots').scrollBy({left:-552})">&#8592;</button><button type="button" aria-label="Próximas telas" onclick="document.getElementById('shots').scrollBy({left:552})">&#8594;</button></div><div class="shots" id="shots"><figure class="shot"><div class="frame"><img src="/telas/cobrancas.jpg" alt="Tela do Leguno: Cobranças do mês" width="540" height="973" loading="lazy"></div><h3>Cobranças do mês</h3><p>Quanto já entrou e quanto falta receber, cliente por cliente.</p></figure><figure class="shot"><div class="frame"><img src="/telas/cobrar-whatsapp.jpg" alt="Tela do Leguno: Cobrar com um toque" width="540" height="973" loading="lazy"></div><h3>Cobrar com um toque</h3><p>Valor com a conta explicada e o botão "Cobrar no WhatsApp".</p></figure><figure class="shot"><div class="frame"><img src="/telas/financeiro.jpg" alt="Tela do Leguno: Financeiro" width="540" height="973" loading="lazy"></div><h3>Financeiro</h3><p>Entrou, saiu, o que sobrou e a previsão do mês.</p></figure><figure class="shot"><div class="frame"><img src="/telas/comparativos.jpg" alt="Tela do Leguno: Comparativos" width="540" height="973" loading="lazy"></div><h3>Comparativos</h3><p>Um mês comparado com o outro, com o porquê das mudanças.</p></figure><figure class="shot"><div class="frame"><img src="/telas/meta.jpg" alt="Tela do Leguno: Meta do ano" width="540" height="973" loading="lazy"></div><h3>Meta do ano</h3><p>Quanto falta e quanto receber por mês para chegar lá.</p></figure><figure class="shot"><div class="frame"><img src="/telas/despesas.jpg" alt="Tela do Leguno: Despesas" width="540" height="973" loading="lazy"></div><h3>Despesas</h3><p>Fixas, parceladas e do mês, com o custo fixo à vista.</p></figure></div>
+    <p class="shots-hint">Deslize para o lado para ver mais telas →</p>
   </div>
 </section>
 
