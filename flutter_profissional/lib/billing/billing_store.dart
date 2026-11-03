@@ -300,6 +300,47 @@ class BillingStore extends ChangeNotifier {
     }
   }
 
+  // ---------------------------------------------------------------- período de cada cliente (comparativos)
+
+  /// Meses com atividade registrada (pagamento ou atendimento) de um cliente.
+  List<DateTime> _activityMonths(StudentPlan p) {
+    final out = <DateTime>{};
+    _payments.forEach((key, list) {
+      if (list.isEmpty || !key.startsWith('${p.id}|')) return;
+      final ym = key.split('|').last.split('-');
+      out.add(DateTime(int.parse(ym[0]), int.parse(ym[1])));
+    });
+    for (final k in (_events[p.id] ?? const <String, LessonRecord>{}).keys) {
+      final d = DateTime.tryParse(k);
+      if (d != null) out.add(DateTime(d.year, d.month));
+    }
+    return out.toList()..sort();
+  }
+
+  /// Primeiro mês em que o cliente conta nos números (antes disso ele ainda não era cliente).
+  DateTime clientStart(StudentPlan p) {
+    final act = _activityMonths(p);
+    final candidates = [if (act.isNotEmpty) act.first, if (p.packageStart != null) DateTime(p.packageStart!.year, p.packageStart!.month)];
+    if (candidates.isEmpty) return DateTime(today.year, today.month);
+    candidates.sort();
+    return candidates.first;
+  }
+
+  /// Último mês em que um cliente arquivado conta (o da última atividade). `null` = ainda ativo.
+  DateTime? clientEnd(StudentPlan p) {
+    if (p.active) return null;
+    final act = _activityMonths(p);
+    return act.isEmpty ? clientStart(p) : act.last;
+  }
+
+  /// O cliente fazia parte do negócio neste mês?
+  bool clientInMonth(StudentPlan p, DateTime month) {
+    final m = DateTime(month.year, month.month);
+    if (m.isBefore(clientStart(p))) return false;
+    final end = clientEnd(p);
+    return end == null || !m.isAfter(end);
+  }
+
   /// Pix copia e cola com o total que falta do grupo.
   String groupPixCode(PayGroup g, {DateTime? month}) {
     final m = month ?? selectedMonth;

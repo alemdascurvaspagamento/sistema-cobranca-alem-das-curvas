@@ -6,11 +6,45 @@ import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
+import '../reports/comparisons_view.dart';
 import 'finance_screen.dart' show editAnnualGoal;
 
-/// Relatórios: visão geral do mês, meta do ano, detalhe por cliente e o ano mês a mês.
-class ReportsScreen extends StatelessWidget {
+/// Relatórios em duas abas: Visão geral e Comparativos.
+class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
+
+  @override
+  State<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends State<ReportsScreen> {
+  bool compare = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PillGrid(columns: 2, narrowColumns: 2, gap: 6, children: [
+        Pill(label: 'Visão geral', selected: !compare, onTap: () => setState(() => compare = false)),
+        Pill(label: 'Comparativos', selected: compare, onTap: () => setState(() => compare = true)),
+      ]),
+    );
+    if (compare) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Compare períodos e entenda o que mudou'),
+        const SizedBox(height: 8),
+        tabs,
+        const ComparisonsView(),
+      ]);
+    }
+    return _ReportsOverview(tabs: tabs);
+  }
+}
+
+/// Visão geral do mês, meta do ano, detalhe por cliente e o ano mês a mês.
+class _ReportsOverview extends StatelessWidget {
+  const _ReportsOverview({required this.tabs});
+  final Widget tabs;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +74,7 @@ class ReportsScreen extends StatelessWidget {
           if (wide) {
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               title,
+              tabs,
               const Align(alignment: Alignment.centerLeft, child: MonthSwitcher()),
               const SizedBox(height: 10),
               overview,
@@ -54,6 +89,7 @@ class ReportsScreen extends StatelessWidget {
           return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             title,
             const SizedBox(height: 8),
+            tabs,
             overview,
             const SizedBox(height: 14),
             goal,

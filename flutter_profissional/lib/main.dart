@@ -16,6 +16,7 @@ import 'booking_requests.dart';
 import 'calendar_connections.dart';
 import 'config.dart';
 import 'pay_link.dart';
+import 'reports/comparisons.dart';
 import 'data/cloud.dart';
 import 'profile/profession_profile.dart';
 import 'screens/agenda_screen.dart';
@@ -158,6 +159,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     AgendaEvents.instance.clear();
     Booking.instance.clear();
     CalendarFeed.instance.clear();
+    Snapshots.instance.clear();
     Confirmations.instance.clear();
     StartGuide.instance.clear();
     if (!mounted) return;

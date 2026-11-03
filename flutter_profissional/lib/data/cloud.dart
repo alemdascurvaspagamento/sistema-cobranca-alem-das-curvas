@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../agenda_events.dart';
 import '../booking.dart';
 import '../calendar_feed.dart';
+import '../reports/comparisons.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
@@ -327,6 +328,7 @@ class CloudService implements CloudSink {
     await AgendaEvents.instance.load();
     await Booking.instance.load();
     await CalendarFeed.instance.load();
+    await Snapshots.instance.load();
     return true;
   }
 
