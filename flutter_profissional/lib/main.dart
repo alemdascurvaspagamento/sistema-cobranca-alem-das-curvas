@@ -38,7 +38,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (AppConfig.cloudEnabled) {
     try {
-      await Supabase.initialize(url: AppConfig.supabaseUrl, anonKey: AppConfig.supabaseKey);
+      await Supabase.initialize(
+        url: AppConfig.supabaseUrl,
+        anonKey: AppConfig.supabaseKey,
+        // Links de e-mail (senha nova, confirmar cadastro) funcionam em qualquer aparelho e navegador,
+        // mesmo pedidos no app do iPhone e abertos no Safari ou no computador.
+        authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
+      );
     } catch (e) {
       debugPrint('Coach Flow: banco indisponível ($e). Só a demonstração funciona.');
     }
