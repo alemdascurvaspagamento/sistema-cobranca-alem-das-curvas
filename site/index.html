@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leguno · Agenda e cobrança para profissionais liberais</title>
-<meta name="description" content="Agenda, faltas, feriados e cobrança pelo WhatsApp com Pix, no automático. Para personal trainers, nutricionistas, psicólogos, fisioterapeutas e professores particulares. Teste grátis por 60 dias.">
+<meta name="description" content="Agenda, faltas, feriados e cobrança pelo WhatsApp com Pix, no automático. Para personal trainers, nutricionistas, psicólogos, fisioterapeutas e professores particulares. Teste grátis por 30 dias.">
 <meta name="theme-color" content="#0F2236">
 <meta property="og:title" content="Leguno · Agenda e cobrança no automático">
-<meta property="og:description" content="Faltas, feriados e Pix no automático. Teste grátis por 60 dias, sem cartão.">
+<meta property="og:description" content="Faltas, feriados e Pix no automático. Teste grátis por 30 dias, sem cartão.">
 <meta property="og:image" content="https://leguno.com.br/og.jpg">
 <meta property="og:url" content="https://leguno.com.br">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -45,18 +45,19 @@ h1 em{font-style:normal;color:var(--amber)}
 .lead{font-size:20px;color:#C8D3E0;margin:0 0 28px;max-width:540px}
 .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .note{font-size:14px;color:#9FB0C3;margin-top:14px}
-/* celular */
-.phone{justify-self:center;width:320px;background:#0B1A2A;border-radius:38px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
-.screen{background:#ECE5DD;border-radius:28px;overflow:hidden}
-.wa-top{background:#075E54;color:#fff;padding:14px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px}
-.wa-top span{width:30px;height:30px;border-radius:50%;background:#25D366;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
-.wa-body{padding:16px 12px 22px;display:flex;flex-direction:column;gap:10px}
-.bubble{background:#DCF8C6;border-radius:12px 12px 2px 12px;padding:10px 12px;font-size:14px;line-height:1.38;color:#111;align-self:flex-end;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08)}
-.bubble .link{color:#0A66C2;text-decoration:underline;word-break:break-all}
-.bubble .time{display:block;text-align:right;font-size:11px;color:#667;margin-top:4px}
-.paycard{color:#111;background:#fff;border-radius:12px;padding:12px;font-size:13px;align-self:flex-end;max-width:92%;border:1px solid #d9d9d9}
-.paycard b{font-size:20px;display:block;margin:2px 0}
-.paycard .p{display:block;text-align:center;background:var(--tq);color:#fff;border-radius:999px;padding:8px;margin-top:8px;font-weight:700}
+/* celular: três telas do app em leque */
+.fan{position:relative;justify-self:center;width:470px;height:560px}
+.fan .ph{position:absolute;width:236px;background:#0B1A2A;border-radius:34px;padding:9px;box-shadow:0 30px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08)}
+.fan .ph img{display:block;width:100%;height:auto;aspect-ratio:540/973;object-fit:cover;object-position:center top;border-radius:26px}
+.fan .back1{left:0;top:62px;transform:rotate(-8deg);opacity:.92}
+.fan .back2{right:0;top:62px;transform:rotate(8deg);opacity:.92}
+.fan .front{left:50%;top:0;transform:translateX(-50%);z-index:2;width:258px}
+.fan .chip{position:absolute;z-index:3;background:#fff;color:var(--ink);border-radius:14px;padding:10px 14px;font-size:14px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.fan .chip i{font-style:normal;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.fan .c1{left:-30px;bottom:150px}.fan .c1 i{background:var(--wa)}
+.fan .c2{right:-34px;top:440px}.fan .c2 i{background:var(--tq)}
+@media (max-width:900px){.fan{width:340px;height:400px;margin-top:10px}.fan .ph{width:172px;border-radius:26px;padding:7px}.fan .ph img{border-radius:20px}.fan .front{width:190px}.fan .back1,.fan .back2{top:46px}.fan .chip{font-size:12.5px;padding:8px 11px}.fan .c1{left:-4px;bottom:24px}.fan .c2{right:-6px;top:-14px}.hero{padding-bottom:40px}}
+@media (max-width:380px){.fan{transform:scale(.9);transform-origin:top center}}
 /* telas do app */
 .shots-wrap{position:relative}
 .shots{display:flex;gap:26px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:8px 4px 26px;margin:0 -4px;scrollbar-width:none}
@@ -170,23 +171,20 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
   <div class="wrap">
     <div>
       <span class="eyebrow">Para quem atende com hora marcada</span>
-      <h1>Sua agenda e suas cobranças <em>no automático</em>.</h1>
-      <p class="lead">O Leguno calcula quanto cada cliente deve no mês, já descontando faltas e feriados, e manda a cobrança pelo WhatsApp com o Pix pronto. Você só confere e envia.</p>
+      <h1>Agenda, cobrança e finanças <em>no automático</em>.</h1>
+      <p class="lead">O Leguno organiza seus atendimentos, calcula quanto cada cliente deve já descontando faltas e feriados, cobra pelo WhatsApp com Pix e mostra quanto sobrou no fim do mês.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 60 dias</a>
+        <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 30 dias</a>
         <a class="btn btn-ghost" href="#como-funciona">Ver como funciona</a>
       </div>
       <p class="note">Sem cartão de crédito. Funciona no computador, no iPhone e no Android.</p>
     </div>
-    <div class="phone" aria-hidden="true">
-      <div class="screen">
-        <div class="wa-top"><span>A</span> Ana Paula</div>
-        <div class="wa-body">
-          <div class="bubble">Oi, Ana! Segue o resumo de outubro: 8 aulas (1 falta avisada não cobrada).<br><b>Total: R$ 640,00</b> · vence dia 10.<br>Pague com um toque:<br><span class="link">app.leguno.com.br/?pagar=…</span><span class="time">09:12 ✓✓</span></div>
-          <div class="paycard">Valor de outubro<b>R$ 640,00</b>Vence em 10/11<span class="p">Copiar código Pix</span></div>
-          <div class="bubble">Pago! Obrigada 😊<span class="time">09:20 ✓✓</span></div>
-        </div>
-      </div>
+    <div class="fan" aria-hidden="true">
+      <div class="ph back1"><img src="/telas/agenda.jpg" alt="" width="540" height="973"></div>
+      <div class="ph back2"><img src="/telas/comparativos.jpg" alt="" width="540" height="973"></div>
+      <div class="ph front"><img src="/telas/cobrancas.jpg" alt="" width="540" height="973"></div>
+      <span class="chip c1"><i>✓</i>Cobrança enviada no WhatsApp</span>
+      <span class="chip c2"><i>↗</i>+14% que o mês passado</span>
     </div>
   </div>
 </section>
@@ -247,7 +245,7 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
 <section id="precos">
   <div class="wrap">
     <h2>Preços simples</h2>
-    <p class="sub">Teste tudo por 60 dias, sem cartão. Depois, escolha um plano. Sem fidelidade: cancele quando quiser.</p>
+    <p class="sub">Teste tudo por 30 dias, sem cartão. Depois, escolha um plano. Sem fidelidade: cancele quando quiser.</p>
     <div class="prices">
       <div class="price">
         <span class="tag">Para começar</span>
@@ -281,7 +279,7 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
 <section id="perguntas" class="alt">
   <div class="wrap faq">
     <h2>Perguntas frequentes</h2>
-    <details><summary>Preciso de cartão de crédito para testar?</summary><p>Não. Você cria a conta com seu e-mail e usa tudo por 60 dias. No fim do teste, escolhe se quer assinar.</p></details>
+    <details><summary>Preciso de cartão de crédito para testar?</summary><p>Não. Você cria a conta com seu e-mail e usa tudo por 30 dias. No fim do teste, escolhe se quer assinar.</p></details>
     <details><summary>O Leguno recebe o dinheiro dos meus clientes?</summary><p>Não. O Pix vai direto para a sua chave, sem taxa e sem intermediário. O Leguno só calcula, organiza e manda a cobrança.</p></details>
     <details><summary>O que acontece se eu não assinar depois do teste?</summary><p>Sua conta fica só para consulta: você continua vendo e baixando seus dados, nada é apagado. Para voltar a lançar, é só assinar.</p></details>
     <details><summary>Funciona no computador e no celular?</summary><p>Sim. Pelo navegador do computador em app.leguno.com.br, e no iPhone e no Android. Seus dados ficam iguais em todos.</p></details>
@@ -294,8 +292,8 @@ footer .links{display:flex;gap:20px;flex-wrap:wrap}
 <section class="final">
   <div class="wrap">
     <h2>Comece hoje. Seu próximo fechamento de mês vai levar minutos.</h2>
-    <p class="sub">60 dias grátis, sem cartão. Leva 10 minutos para cadastrar seus clientes.</p>
-    <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 60 dias</a>
+    <p class="sub">30 dias grátis, sem cartão. Leva 10 minutos para cadastrar seus clientes.</p>
+    <a class="btn btn-primary" href="https://app.leguno.com.br">Testar grátis por 30 dias</a>
   </div>
 </section>
 </main>

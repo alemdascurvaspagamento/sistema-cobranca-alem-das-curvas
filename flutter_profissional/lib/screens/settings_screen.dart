@@ -367,7 +367,7 @@ class _SubscriptionPanel extends StatelessWidget {
       _ => (
           'Teste grátis',
           sub == null
-              ? '60 dias com tudo liberado.'
+              ? '30 dias com tudo liberado.'
               : 'Faltam ${sub.trialDaysLeft(now)} dias (até ${date(sub.trialEndsAt)}). Tudo liberado, sem cartão.',
           CF.amber,
         ),
