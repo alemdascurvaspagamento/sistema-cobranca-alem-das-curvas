@@ -111,7 +111,7 @@ class Snapshots {
       _cloud = true;
       unawaited(_saveMissing());
     } catch (e) {
-      debugPrint('Avora: fotografias mensais indisponíveis ($e)');
+      debugPrint('Leguno: fotografias mensais indisponíveis ($e)');
     }
   }
 
@@ -162,7 +162,7 @@ class Snapshots {
     try {
       await _db.from('cf_month_snapshots').upsert(rows, onConflict: 'owner_id,month');
     } catch (e) {
-      debugPrint('Avora: não gravou fotografias mensais ($e)');
+      debugPrint('Leguno: não gravou fotografias mensais ($e)');
     }
   }
 

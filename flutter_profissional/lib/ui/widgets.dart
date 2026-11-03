@@ -531,7 +531,7 @@ class KpiRow extends StatelessWidget {
       });
 }
 
-/// Marca da Avora: letra A com um check dentro, em quadrado amarelo (igual ao ícone do app).
+/// Marca do Leguno: o "L" dobrado (haste âmbar e base turquesa) no quadrado azul-marinho, igual ao ícone do app.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 30});
   final double size;
@@ -540,42 +540,54 @@ class BrandMark extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(color: CF.lap, borderRadius: BorderRadius.circular(size * .28)),
-        child: CustomPaint(painter: _AvoraGlyph(CF.ink)),
+        decoration: BoxDecoration(
+          color: CF.ink,
+          borderRadius: BorderRadius.circular(size * .24),
+          border: Border.all(color: Colors.white.withValues(alpha: .14)),
+        ),
+        child: CustomPaint(painter: const _LegunoGlyph()),
       );
 }
 
-class _AvoraGlyph extends CustomPainter {
-  const _AvoraGlyph(this.color);
-  final Color color;
+class _LegunoGlyph extends CustomPainter {
+  const _LegunoGlyph();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final k = size.width / 1024;
-    Offset o(double x, double y) => Offset(x * k, y * k);
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    // Desenho feito numa caixa de 1024, com o "L" ocupando 86% (como no ícone).
+    final k = size.width / 1024 * .86;
+    final dx = size.width / 2 - 512 * k, dy = size.height / 2 - 512 * k;
+    Offset o(double x, double y) => Offset(dx + x * k, dy + y * k);
+    Path poly(List<List<double>> pts) {
+      final path = Path()..moveTo(o(pts[0][0], pts[0][1]).dx, o(pts[0][0], pts[0][1]).dy);
+      for (final p in pts.skip(1)) {
+        path.lineTo(o(p[0], p[1]).dx, o(p[0], p[1]).dy);
+      }
+      return path..close();
+    }
+
+    final base = poly([[250, 840], [228, 806], [298, 660], [800, 660], [816, 690], [766, 812], [726, 840]]);
     canvas.drawPath(
-      Path()
-        ..moveTo(o(236, 800).dx, o(236, 800).dy)
-        ..lineTo(o(512, 236).dx, o(512, 236).dy)
-        ..lineTo(o(788, 800).dx, o(788, 800).dy),
-      paint..strokeWidth = 96 * k,
+      base,
+      Paint()
+        ..shader = LinearGradient(colors: const [Color(0xFF0A7E8C), Color(0xFF22C7D6)])
+            .createShader(Rect.fromPoints(o(228, 660), o(816, 840))),
     );
+    canvas.drawPath(poly([[298, 660], [522, 660], [506, 702], [282, 702]]), Paint()..color = const Color(0x7306343B));
+    final stem = poly([[478, 168], [512, 146], [690, 146], [707, 172], [522, 660], [298, 660]]);
     canvas.drawPath(
-      Path()
-        ..moveTo(o(436, 664).dx, o(436, 664).dy)
-        ..lineTo(o(494, 722).dx, o(494, 722).dy)
-        ..lineTo(o(600, 602).dx, o(600, 602).dy),
-      paint..strokeWidth = 58 * k,
+      stem,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [Color(0xFFFFD36B), Color(0xFFF2A516)],
+        ).createShader(Rect.fromPoints(o(298, 146), o(707, 660))),
     );
   }
 
   @override
-  bool shouldRepaint(_AvoraGlyph old) => old.color != color;
+  bool shouldRepaint(_LegunoGlyph old) => false;
 }
 
 /// Páginas 1, 2, 3 no fim de listas longas.

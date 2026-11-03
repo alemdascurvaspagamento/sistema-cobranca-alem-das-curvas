@@ -131,7 +131,7 @@ Future<void> openConfirmTemplate(BuildContext context) {
       title: const Text('Mensagem de confirmação'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Use {nome}, {atendimento}, {quando} e {hora}: o Avora troca pelos dados de cada um ({quando} vira "hoje" ou "amanhã").'),
+          const Text('Use {nome}, {atendimento}, {quando} e {hora}: o Leguno troca pelos dados de cada um ({quando} vira "hoje" ou "amanhã").'),
           const SizedBox(height: 12),
           TextField(controller: controller, minLines: 3, maxLines: 6),
         ]),

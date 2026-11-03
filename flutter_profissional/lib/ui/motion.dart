@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../billing/billing_engine.dart' show money, moneyCompact;
 
-/// Movimentos do Avora: curtos, rodam uma vez e respeitam o
+/// Movimentos do Leguno: curtos, rodam uma vez e respeitam o
 /// "Reduzir movimento" do celular (aí tudo aparece parado).
 bool reduceMotion(BuildContext context) => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 

@@ -51,7 +51,7 @@ class CoachFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Avora',
+        title: 'Leguno',
         debugShowCheckedModeBanner: false,
         theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
@@ -479,7 +479,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     final c = AppConfig.supportContact.trim();
     Uri? link;
     if (c.contains('@')) {
-      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Avora: feedback'});
+      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Leguno: feedback'});
     } else if (c.isNotEmpty) {
       link = Uri.parse('https://wa.me/${c.replaceAll(RegExp(r'[^0-9]'), '')}');
     }
@@ -720,9 +720,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 const BrandMark(size: 30),
                 const SizedBox(width: 10),
                 Text.rich(TextSpan(children: [
-                  TextSpan(text: 'A', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
-                  TextSpan(text: 'v', style: CF.body(21, color: CF.lap, weight: FontWeight.w800)),
-                  TextSpan(text: 'ora', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
+                  TextSpan(text: 'Le', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
+                  TextSpan(text: 'g', style: CF.body(21, color: CF.lap, weight: FontWeight.w800)),
+                  TextSpan(text: 'uno', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
                 ])),
               ]),
             ),

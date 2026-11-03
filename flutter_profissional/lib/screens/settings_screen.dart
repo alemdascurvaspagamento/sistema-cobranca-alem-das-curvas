@@ -42,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Excluir minha conta?'),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             const Text(
-              'Isso apaga para sempre seus clientes, agenda, cobranças, despesas e configurações do Avora. '
+              'Isso apaga para sempre seus clientes, agenda, cobranças, despesas e configurações do Leguno. '
               'Não dá para desfazer. Se quiser guardar uma cópia, use antes "Baixar meus dados".',
             ),
             const SizedBox(height: 12),
@@ -73,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       messenger.showSnackBar(SnackBar(
         content: Text(result == 'account_deleted'
             ? 'Sua conta foi excluída.'
-            : 'Seus dados do Avora foram apagados. Seu login continua porque você usa outro sistema da Além das Curvas.'),
+            : 'Seus dados do Leguno foram apagados. Seu login continua porque você usa outro sistema da Além das Curvas.'),
       ));
       widget.onSignOut?.call();
     } catch (_) {

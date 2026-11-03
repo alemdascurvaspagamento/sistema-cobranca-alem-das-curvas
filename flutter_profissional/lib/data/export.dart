@@ -141,6 +141,6 @@ Uint8List buildDataWorkbook(BillingStore store) {
 Future<String> downloadMyData(BillingStore store) async {
   final bytes = buildDataWorkbook(store);
   final now = store.today;
-  final name = 'avora-dados-${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  final name = 'leguno-dados-${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   return FileSaver.instance.saveFile(name: name, bytes: bytes, ext: 'xlsx', mimeType: MimeType.microsoftExcel);
 }

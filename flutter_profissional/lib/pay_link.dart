@@ -67,7 +67,7 @@ class PayLinks {
       }
       return '${AppConfig.publicUrl}/?pagar=$token';
     } catch (e) {
-      debugPrint('Avora: link de pagamento indisponível ($e)');
+      debugPrint('Leguno: link de pagamento indisponível ($e)');
       return null;
     }
   }
@@ -127,9 +127,9 @@ class _PayPublicPageState extends State<PayPublicPage> {
           const BrandMark(size: 28),
           const SizedBox(width: 8),
           Text.rich(TextSpan(children: [
-            TextSpan(text: 'A', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
-            TextSpan(text: 'v', style: CF.body(20, color: CF.lap, weight: FontWeight.w800)),
-            TextSpan(text: 'ora', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
+            TextSpan(text: 'Le', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
+            TextSpan(text: 'g', style: CF.body(20, color: CF.lap, weight: FontWeight.w800)),
+            TextSpan(text: 'uno', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
           ])),
         ]),
       ),
