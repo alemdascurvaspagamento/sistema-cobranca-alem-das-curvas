@@ -101,7 +101,7 @@ class _OnboardingState extends State<Onboarding> {
         const gap = 10.0;
         final w = (box.maxWidth - gap * (columns - 1)) / columns;
         return Wrap(spacing: gap, runSpacing: gap, children: [
-          for (final p in professionProfiles)
+          for (final p in professionsForChoice)
             SizedBox(
               width: w,
               child: _ProfessionTile(

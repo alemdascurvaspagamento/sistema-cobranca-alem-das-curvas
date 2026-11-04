@@ -178,3 +178,14 @@ class ProfessionalProfile extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+/// Ordem mostrada na escolha da profissão: primeiro as que mais usam o Leguno,
+/// depois as demais em ordem alfabética e "Outra profissão" por último.
+const _topProfessions = ['personal', 'fisio', 'professor', 'dentista', 'fono', 'massoterapeuta'];
+
+List<ProfessionProfile> get professionsForChoice {
+  final top = [for (final id in _topProfessions) ...professionProfiles.where((p) => p.id == id)];
+  final rest = [for (final p in professionProfiles) if (!_topProfessions.contains(p.id) && p.id != 'outra') p];
+  final other = professionProfiles.where((p) => p.id == 'outra');
+  return [...top, ...rest, ...other];
+}
