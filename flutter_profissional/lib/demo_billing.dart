@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
 import 'demo_ledger.dart';
+import 'ui/whatsapp.dart';
 
 const _gold = Color(0xFF0C213A);
 const _surface = Color(0xFFFFFFFF);
@@ -279,7 +280,7 @@ class _DemoBillingState extends State<DemoBilling> {
         FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Abrir WhatsApp')),
       ]));
     if(approved!=true)return;
-    final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(finalMessage)}');
+    final url=whatsAppLink(phone,text:finalMessage);
     if(!await launchUrl(url,mode:LaunchMode.externalApplication)&&mounted){
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));

@@ -13,6 +13,7 @@ import 'data/ids.dart';
 import 'ui/cf_theme.dart';
 import 'ui/motion.dart';
 import 'ui/widgets.dart';
+import 'ui/whatsapp.dart';
 
 // ---------------------------------------------------------------------------
 // Dados
@@ -339,7 +340,7 @@ class Booking extends ChangeNotifier {
   static Future<void> _whatsApp(String phone, String text) async {
     var p = phone.replaceAll(RegExp(r'[^0-9]'), '');
     if (p.length == 10 || p.length == 11) p = '55$p';
-    await launchUrl(Uri.parse('https://wa.me/$p?text=${Uri.encodeComponent(text)}'),
+    await launchUrl(whatsAppLink(p, text: text),
         mode: LaunchMode.externalApplication);
   }
 

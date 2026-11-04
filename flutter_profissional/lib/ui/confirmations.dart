@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
+import 'whatsapp.dart';
 
 /// Confirmação dos atendimentos do dia pelo WhatsApp.
 ///
@@ -82,7 +83,7 @@ class Confirmations extends ChangeNotifier {
   Future<void> send(BuildContext context, StudentPlan plan, LessonLine line) async {
     var phone = plan.phone.replaceAll(RegExp(r'[^0-9]'), '');
     if (phone.length == 10 || phone.length == 11) phone = '55$phone';
-    final url = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(messageFor(plan, line))}');
+    final url = whatsAppLink(phone, text: messageFor(plan, line));
     final ok = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (!ok) {
       if (context.mounted) {

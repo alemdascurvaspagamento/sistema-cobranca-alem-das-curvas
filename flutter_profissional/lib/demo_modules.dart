@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'demo_mode.dart';
 import 'client_editor.dart';
 import 'demo_ledger.dart';
+import 'ui/whatsapp.dart';
 
 const demoGold = Color(0xFF0C213A);
 const demoSurface = Color(0xFFFFFFFF);
@@ -40,11 +41,11 @@ class _DemoClientsState extends State<DemoClients> {
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Cadastre um WhatsApp válido com DDD.')));
       return;
     }
-    final message='Olá, ${client.name}! Tudo bem? Aqui é da equipe Coach Flow. '
+    final message='Olá, ${client.name}! Tudo bem? Aqui é da equipe Leguno. '
       'Estamos entrando em contato sobre ${client.service}. '
       'Podemos confirmar a situação do seu pagamento? '
       'Caso já tenha efetuado, desconsidere esta mensagem. Obrigado!';
-    final uri=Uri.parse('https://wa.me/$digits?text=${Uri.encodeComponent(message)}');
+    final uri=whatsAppLink(digits,text:message);
     if(!await launchUrl(uri,mode:LaunchMode.externalApplication) && mounted){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));
     }
@@ -56,8 +57,8 @@ class _DemoClientsState extends State<DemoClients> {
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Informe um WhatsApp válido com DDD.')));
       return;
     }
-    final message=Uri.encodeComponent('Olá, ${client.name}! Aqui é da equipe Coach Flow. Podemos conversar sobre ${client.service}?');
-    final uri=Uri.parse('https://wa.me/$digits?text=$message');
+    final message='Olá, ${client.name}! Podemos conversar sobre ${client.service}?';
+    final uri=whatsAppLink(digits,text:message);
     if(!await launchUrl(uri,mode:LaunchMode.externalApplication) && mounted){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Não foi possível abrir o WhatsApp.')));
     }

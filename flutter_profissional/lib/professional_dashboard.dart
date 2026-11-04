@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'demo_mode.dart';
 import 'demo_ledger.dart';
+import 'ui/whatsapp.dart';
 
 /// Painel visual demonstrativo. Não confundir agenda prevista com receita recebida.
 class ProfessionalDashboard extends StatefulWidget {
@@ -162,7 +163,7 @@ class _ProfessionalDashboardState extends State<ProfessionalDashboard> {
             child:const Text('Abrir WhatsApp')),
         ]));
     if(approved!=true||!mounted)return;
-    final url=Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
+    final url=whatsAppLink(phone,text:message);
     if(!await launchUrl(url,mode:LaunchMode.externalApplication)&&mounted){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content:Text('Não foi possível abrir o WhatsApp.')));

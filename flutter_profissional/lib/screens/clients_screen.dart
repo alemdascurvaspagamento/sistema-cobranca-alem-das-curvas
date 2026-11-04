@@ -8,6 +8,7 @@ import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
+import '../ui/whatsapp.dart';
 
 /// Lista de pacientes, alunos ou clientes (o nome muda com a profissão).
 class ClientsScreen extends StatefulWidget {
@@ -289,7 +290,7 @@ class _ClientProfile extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cadastre um telefone com DDD.')));
       return;
     }
-    await launchUrl(Uri.parse('https://wa.me/$phone'), mode: LaunchMode.externalApplication);
+    await launchUrl(whatsAppLink(phone), mode: LaunchMode.externalApplication);
   }
 
   @override

@@ -9,6 +9,7 @@ import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
+import '../ui/whatsapp.dart';
 
 /// Vocabulário da profissão escolhida (aula, sessão, consulta...).
 Terms get _t => BillingStore.instance.terms;
@@ -1984,7 +1985,7 @@ Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
   if (send == null) return;
   var phone = (group?.payerPhone ?? plan.phone).replaceAll(RegExp(r'[^0-9]'), '');
   if (phone.length == 10 || phone.length == 11) phone = '55$phone';
-  final url = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(text)}');
+  final url = whatsAppLink(phone, text: text);
   final ok = await launchUrl(url, mode: LaunchMode.externalApplication);
   if (!ok && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
