@@ -170,7 +170,7 @@ class _ClientEditorState extends State<ClientEditor> with SingleTickerProviderSt
                 subtitle:Text('Pagamentos, cobranças e alterações serão registrados por profissional.')),
               const ListTile(leading:Icon(Icons.lock_outline),
                 title:Text('Privacidade'),
-                subtitle:Text('O protótipo não consulta dados do Coach Flow Pessoal.')),
+                subtitle:Text('O Leguno não consulta dados de outros sistemas.')),
             ]),
           ])),
           if(error!=null) Padding(padding:const EdgeInsets.only(bottom:8),

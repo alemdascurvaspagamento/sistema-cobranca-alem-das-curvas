@@ -455,6 +455,6 @@ class _DemoMoreState extends State<DemoMore> {
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.summarize_outlined,color:demoGold),
       title:Text('Relatórios'),subtitle:Text('Indicadores demonstrativos disponíveis em Financeiro.'))),
     const SizedBox(height:12),
-    const Text('Coach Flow Profissional • Protótipo Flutter para validação visual e funcional.',style:TextStyle(color:Color(0xFF64748B))),
+    const Text('Leguno • Agenda e cobrança para profissionais liberais.',style:TextStyle(color:Color(0xFF64748B))),
   ]);
 }
