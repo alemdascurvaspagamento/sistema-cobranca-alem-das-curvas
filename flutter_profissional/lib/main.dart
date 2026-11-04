@@ -104,7 +104,15 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
   @override
   void initState() {
     super.initState();
+    // Links do site: ?demo=1 abre a demonstração; ?cadastro=1 abre direto o "criar conta".
+    final q = Uri.base.queryParameters;
+    final wantsDemo = q['demo'] == '1';
+    if (wantsDemo) mode = _Mode.demoOnboarding;
     if (!_cloudReady) return;
+    if (!wantsDemo && q['cadastro'] == '1' && Supabase.instance.client.auth.currentSession == null) {
+      loginSignup = true;
+      mode = _Mode.login;
+    }
     final auth = Supabase.instance.client.auth;
     // Veio do link "Esqueci minha senha": abre a tela de criar senha nova, e não o app.
     final recovering = Uri.base.queryParameters['nova_senha'] == '1' || Uri.base.fragment.contains('type=recovery');
@@ -127,7 +135,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     });
     if (auth.currentSession != null && recovering) {
       mode = _Mode.newPassword;
-    } else if (auth.currentSession != null) {
+    } else if (auth.currentSession != null && !wantsDemo) {
       mode = _Mode.loading;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
