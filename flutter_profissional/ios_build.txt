@@ -23,3 +23,4 @@ Pedido de montagem do iPhone nº 13 — opções em grade alinhada
 2026-11-03T23:58:09Z teste gratis 30 dias
 2026-11-04T08:39:23Z demonstracao sem numeros reais
 2026-11-04T09:04:04Z ordem das profissoes
+build 2026-11-04T11:09:52Z protecao pagamento em dobro
