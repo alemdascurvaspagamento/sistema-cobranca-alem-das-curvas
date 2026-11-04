@@ -181,7 +181,7 @@ class ProfessionalProfile extends ChangeNotifier {
 
 /// Ordem mostrada na escolha da profissão: primeiro as que mais usam o Leguno,
 /// depois as demais em ordem alfabética e "Outra profissão" por último.
-const _topProfessions = ['personal', 'fisio', 'professor', 'dentista', 'fono', 'massoterapeuta'];
+const _topProfessions = ['personal', 'fisio', 'nutri', 'professor', 'dentista', 'fono', 'massoterapeuta'];
 
 List<ProfessionProfile> get professionsForChoice {
   final top = [for (final id in _topProfessions) ...professionProfiles.where((p) => p.id == id)];
