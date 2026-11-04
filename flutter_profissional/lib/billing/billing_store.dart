@@ -540,9 +540,21 @@ class BillingStore extends ChangeNotifier {
 
   // ---------------------------------------------------------------- pagamentos
 
+  /// Lembra os últimos pagamentos lançados, para não registrar duas vezes
+  /// o mesmo valor quando o botão "Recebi" é tocado de novo por engano.
+  final Map<String, DateTime> _recentPayments = {};
+  static const duplicateWindow = Duration(minutes: 3);
+  DateTime Function() clock = DateTime.now;
+
   void addPayment(String studentId, PaymentEntry entry, {DateTime? month}) {
     if (_locked()) return;
     final m = month ?? selectedMonth;
+    final d = entry.date;
+    final sig = '$studentId|${m.year}-${m.month}|${entry.amount.toStringAsFixed(2)}|${d.year}-${d.month}-${d.day}|${entry.method}';
+    final now = clock();
+    final last = _recentPayments[sig];
+    if (last != null && now.difference(last) < duplicateWindow) return;
+    _recentPayments[sig] = now;
     final e = entry.id.isEmpty ? entry.withId(newUuid()) : entry;
     _payments.putIfAbsent(_payKey(studentId, m), () => []).add(e);
     sink?.addPayment(studentId, DateTime(m.year, m.month), e);
@@ -554,6 +566,7 @@ class BillingStore extends ChangeNotifier {
     final list = _payments[_payKey(studentId, month ?? selectedMonth)];
     if (list == null || list.isEmpty) return;
     final removed = list.removeLast();
+    _recentPayments.removeWhere((k, _) => k.startsWith('$studentId|'));
     if (removed.id.isNotEmpty) sink?.deletePayment(removed.id);
     _changed();
   }
