@@ -1090,7 +1090,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
           const BrandMark(size: 28),
           const SizedBox(width: 8),
           Text.rich(TextSpan(children: [
-            TextSpan(text: 'Le', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
+            TextSpan(text: 'Lé', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
             TextSpan(text: 'g', style: CF.body(20, color: CF.lap, weight: FontWeight.w800)),
             TextSpan(text: 'uno', style: CF.body(20, color: Colors.white, weight: FontWeight.w800)),
           ])),

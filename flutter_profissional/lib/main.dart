@@ -742,7 +742,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 const BrandMark(size: 30),
                 const SizedBox(width: 10),
                 Text.rich(TextSpan(children: [
-                  TextSpan(text: 'Le', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
+                  TextSpan(text: 'Lé', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
                   TextSpan(text: 'g', style: CF.body(21, color: CF.lap, weight: FontWeight.w800)),
                   TextSpan(text: 'uno', style: CF.body(21, color: Colors.white, weight: FontWeight.w800)),
                 ])),
