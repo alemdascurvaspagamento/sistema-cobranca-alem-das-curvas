@@ -41,7 +41,7 @@ class _DemoClientsState extends State<DemoClients> {
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Cadastre um WhatsApp válido com DDD.')));
       return;
     }
-    final message='Olá, ${client.name}! Tudo bem? Aqui é da equipe Leguno. '
+    final message='Olá, ${client.name}! Tudo bem? Aqui é da equipe Léguno. '
       'Estamos entrando em contato sobre ${client.service}. '
       'Podemos confirmar a situação do seu pagamento? '
       'Caso já tenha efetuado, desconsidere esta mensagem. Obrigado!';
@@ -455,6 +455,6 @@ class _DemoMoreState extends State<DemoMore> {
     const Card(color:demoSurface,child:ListTile(leading:Icon(Icons.summarize_outlined,color:demoGold),
       title:Text('Relatórios'),subtitle:Text('Indicadores demonstrativos disponíveis em Financeiro.'))),
     const SizedBox(height:12),
-    const Text('Leguno • Agenda e cobrança para profissionais liberais.',style:TextStyle(color:Color(0xFF64748B))),
+    const Text('Léguno • Agenda e cobrança para profissionais liberais.',style:TextStyle(color:Color(0xFF64748B))),
   ]);
 }

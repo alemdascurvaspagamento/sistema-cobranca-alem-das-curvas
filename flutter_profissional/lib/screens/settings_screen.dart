@@ -45,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Excluir minha conta?'),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             const Text(
-              'Isso apaga para sempre seus clientes, agenda, cobranças, despesas e configurações do Leguno. '
+              'Isso apaga para sempre seus clientes, agenda, cobranças, despesas e configurações do Léguno. '
               'Não dá para desfazer. Se quiser guardar uma cópia, use antes "Baixar meus dados".',
             ),
             const SizedBox(height: 12),
@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       messenger.showSnackBar(SnackBar(
         content: Text(result == 'account_deleted'
             ? 'Sua conta foi excluída.'
-            : 'Seus dados do Leguno foram apagados. Seu login continua porque você usa outro sistema da Além das Curvas.'),
+            : 'Seus dados do Léguno foram apagados. Seu login continua porque você usa outro sistema da Além das Curvas.'),
       ));
       widget.onSignOut?.call();
     } catch (_) {
@@ -241,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: CF.brand,
         title: 'Ajuda e contato',
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Dúvida, problema ou ideia? Fale direto com a equipe do Leguno.',
+          Text('Dúvida, problema ou ideia? Fale direto com a equipe do Léguno.',
               style: CF.body(14.5, color: CF.muted, height: 1.3)),
           const SizedBox(height: 10),
           Wrap(spacing: 8, runSpacing: 8, children: [
@@ -249,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
               onPressed: () => launchUrl(
                 Uri.parse('https://wa.me/${AppConfig.supportContact.replaceAll(RegExp(r'[^0-9]'), '')}'
-                    '?text=${Uri.encodeComponent('Oi! Uso o Leguno e queria falar sobre: ')}'),
+                    '?text=${Uri.encodeComponent('Oi! Uso o Léguno e queria falar sobre: ')}'),
                 mode: LaunchMode.externalApplication,
               ),
               icon: const Icon(Icons.chat_rounded, size: 18),
@@ -257,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             OutlinedButton.icon(
               onPressed: () => launchUrl(
-                Uri(scheme: 'mailto', path: AppConfig.supportEmail, queryParameters: {'subject': 'Leguno: ajuda'}),
+                Uri(scheme: 'mailto', path: AppConfig.supportEmail, queryParameters: {'subject': 'Léguno: ajuda'}),
                 mode: LaunchMode.externalApplication,
               ),
               icon: const Icon(Icons.mail_rounded, size: 18),

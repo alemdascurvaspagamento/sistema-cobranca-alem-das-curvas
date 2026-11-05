@@ -1,7 +1,7 @@
 {
-  "name": "Leguno",
-  "short_name": "Leguno",
-  "description": "Leguno: agenda e cobrança para profissionais liberais.",
+  "name": "Léguno",
+  "short_name": "Léguno",
+  "description": "Léguno: agenda e cobrança para profissionais liberais.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0F2236",

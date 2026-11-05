@@ -59,7 +59,7 @@ class _ProfessionalSecretaryState extends State<ProfessionalSecretary> {
         const ListTile(contentPadding:EdgeInsets.zero,
           leading:CircleAvatar(backgroundColor:Color(0xFFE7EFF9),
             child:Icon(Icons.support_agent,color:gold)),
-          title:Text('Secretária Leguno',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),
+          title:Text('Secretária Léguno',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),
           subtitle:Text('Resumos e próximos passos • assistente demonstrativa')),
         const SizedBox(height:8),
         Card(color:surface,child:Padding(padding:const EdgeInsets.all(16),

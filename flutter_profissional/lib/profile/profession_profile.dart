@@ -179,7 +179,7 @@ class ProfessionalProfile extends ChangeNotifier {
   }
 }
 
-/// Ordem mostrada na escolha da profissão: primeiro as que mais usam o Leguno,
+/// Ordem mostrada na escolha da profissão: primeiro as que mais usam o Léguno,
 /// depois as demais em ordem alfabética e "Outra profissão" por último.
 const _topProfessions = ['personal', 'fisio', 'nutri', 'professor', 'dentista', 'fono', 'massoterapeuta'];
 

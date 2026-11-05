@@ -466,7 +466,7 @@ class _CopyButton extends StatelessWidget {
     final st = store.sessionStats(month);
     final name = '${capitalize(monthNames[month.month - 1])}/${month.year}';
     return [
-      'Leguno · Resumo de $name',
+      'Léguno · Resumo de $name',
       'Receita prevista: ${money(f.incomePlanned)}',
       'Recebido: ${money(f.incomeNow)}',
       'A receber: ${money(f.open)} (${f.openRate}% em aberto)',

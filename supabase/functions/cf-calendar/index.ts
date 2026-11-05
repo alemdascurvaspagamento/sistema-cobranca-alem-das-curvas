@@ -1,4 +1,4 @@
-// Calendário do Leguno em formato .ics (Office 365/Outlook, Google Agenda, Apple).
+// Calendário do Léguno em formato .ics (Office 365/Outlook, Google Agenda, Apple).
 // Acesso só por um código secreto (?t=...). Não precisa de login.
 // Os eventos são publicados pelo próprio app do profissional em cf_calendar_feed.
 
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     'PRODID:-//Leguno//Agenda//PT-BR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:Leguno',
+    'X-WR-CALNAME:Léguno',
     'X-WR-TIMEZONE:America/Sao_Paulo',
     'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
     'X-PUBLISHED-TTL:PT1H',

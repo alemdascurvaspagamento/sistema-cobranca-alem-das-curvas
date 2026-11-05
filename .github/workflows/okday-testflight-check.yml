@@ -1,6 +1,6 @@
-# Confere o TestFlight do Leguno e prepara o teste interno (grupo "Equipe").
+# Confere o TestFlight do Léguno e prepara o teste interno (grupo "Equipe").
 # Roda quando o arquivo flutter_profissional/testflight_check.txt muda.
-name: Leguno TestFlight (conferir)
+name: Léguno TestFlight (conferir)
 
 on:
   push:

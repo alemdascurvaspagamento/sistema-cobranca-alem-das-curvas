@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'cf_theme.dart';
 import 'widgets.dart';
 
-/// Tela de entrada: explica em segundos o que o Leguno resolve e
+/// Tela de entrada: explica em segundos o que o Léguno resolve e
 /// convida a pessoa a experimentar a demonstração.
 class SalesEntry extends StatelessWidget {
   const SalesEntry({super.key, required this.onStart, this.onLogin, this.onSignup});

@@ -132,7 +132,7 @@ class Booking extends ChangeNotifier {
       _poll = Timer.periodic(const Duration(minutes: 2), (_) => loadRequests());
       if (settings!.enabled) unawaited(publishBusy());
     } catch (e) {
-      debugPrint('Leguno: link de horários indisponível ($e)');
+      debugPrint('Léguno: link de horários indisponível ($e)');
     }
     notifyListeners();
   }
@@ -196,7 +196,7 @@ class Booking extends ChangeNotifier {
         ]);
       notifyListeners();
     } catch (e) {
-      debugPrint('Leguno: solicitações indisponíveis ($e)');
+      debugPrint('Léguno: solicitações indisponíveis ($e)');
     }
   }
 
@@ -270,7 +270,7 @@ class Booking extends ChangeNotifier {
         'busy_updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('slug', s.slug);
     } catch (e) {
-      debugPrint('Leguno: não publicou horários ocupados ($e)');
+      debugPrint('Léguno: não publicou horários ocupados ($e)');
     }
   }
 

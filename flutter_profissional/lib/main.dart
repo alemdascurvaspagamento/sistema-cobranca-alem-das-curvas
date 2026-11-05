@@ -57,7 +57,7 @@ class CoachFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Leguno',
+        title: 'Léguno',
         debugShowCheckedModeBanner: false,
         theme: CF.theme(),
         locale: const Locale('pt', 'BR'),
@@ -501,7 +501,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     final c = AppConfig.supportContact.trim();
     Uri? link;
     if (c.contains('@')) {
-      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Leguno: feedback'});
+      link = Uri(scheme: 'mailto', path: c, queryParameters: {'subject': 'Léguno: feedback'});
     } else if (c.isNotEmpty) {
       link = Uri.parse('https://wa.me/${c.replaceAll(RegExp(r'[^0-9]'), '')}');
     }

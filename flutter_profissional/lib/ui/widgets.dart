@@ -531,7 +531,7 @@ class KpiRow extends StatelessWidget {
       });
 }
 
-/// Marca do Leguno: o "L" dobrado (haste âmbar e base turquesa) no quadrado azul-marinho, igual ao ícone do app.
+/// Marca do Léguno: o "L" dobrado (haste âmbar e base turquesa) no quadrado azul-marinho, igual ao ícone do app.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 30});
   final double size;

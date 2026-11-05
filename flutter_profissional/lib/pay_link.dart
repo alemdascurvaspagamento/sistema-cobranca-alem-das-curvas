@@ -67,7 +67,7 @@ class PayLinks {
       }
       return '${AppConfig.publicUrl}/?pagar=$token';
     } catch (e) {
-      debugPrint('Leguno: link de pagamento indisponível ($e)');
+      debugPrint('Léguno: link de pagamento indisponível ($e)');
       return null;
     }
   }

@@ -93,7 +93,7 @@ class _ComparisonsViewState extends State<ComparisonsView> {
               color: CF.amber,
               title: 'Ainda sem dados de ${basePeriod.label}',
               child: Text(
-                'O Leguno começou a registrar em ${monthNames[Snapshots.instance.firstMonth().month - 1]} de '
+                'O Léguno começou a registrar em ${monthNames[Snapshots.instance.firstMonth().month - 1]} de '
                 '${Snapshots.instance.firstMonth().year}. Escolha um período mais recente para comparar, '
                 'ou compare com o período anterior.',
                 style: CF.body(14.5, color: CF.muted, height: 1.35),
