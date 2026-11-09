@@ -1145,9 +1145,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
             const SizedBox(height: 8),
             Text(
               '${capitalize(weekdayLong[day!.weekday - 1].toLowerCase())}, ${ddmm(day!)} às $time.\n'
-              email.text.trim().isEmpty
-                  ? 'O profissional vai responder pelo WhatsApp que você informou.'
-                  : 'Você recebe a resposta (aceito ou não) no e-mail ${email.text.trim()} assim que o profissional decidir.',
+              '${email.text.trim().isEmpty ? 'O profissional vai responder pelo WhatsApp que você informou.' : 'Você recebe a resposta (aceito ou não) no e-mail ${email.text.trim()} assim que o profissional decidir.'}',
               textAlign: TextAlign.center,
               style: CF.body(16, color: CF.muted, height: 1.4),
             ),
