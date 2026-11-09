@@ -72,12 +72,13 @@ class BookingRequest {
     required this.id,
     required this.name,
     required this.phone,
+    this.email = '',
     required this.service,
     required this.date,
     required this.time,
     required this.note,
   });
-  final String id, name, phone, service, time, note;
+  final String id, name, phone, email, service, time, note;
   final DateTime date;
 }
 
@@ -188,6 +189,7 @@ class Booking extends ChangeNotifier {
               id: r['id'] as String,
               name: r['name'] as String,
               phone: r['phone'] as String,
+              email: r['email'] as String? ?? '',
               service: r['service'] as String? ?? '',
               date: DateTime.parse(r['date'] as String),
               time: r['time'] as String,
@@ -302,22 +304,38 @@ class Booking extends ChangeNotifier {
       ));
     }
     await _setStatus(r, 'accepted');
-    if (context.mounted) {
-      await _whatsApp(r.phone,
-          'Oi, ${r.name.split(' ').first}! Confirmado: ${r.service.isEmpty ? 'atendimento' : r.service.toLowerCase()} '
-          '${_dayText(r.date)} às ${r.time}. Até lá! 👍');
-    }
+    notice = await _notify(context, r, 'accepted',
+        'Oi, ${r.name.split(' ').first}! Confirmado: ${r.service.isEmpty ? 'atendimento' : r.service.toLowerCase()} '
+        '${_dayText(r.date)} às ${r.time}. Até lá! 👍');
     return client == null ? 'sem cadastro' : null;
   }
 
-  Future<void> decline(BuildContext context, BookingRequest r) async {
+  Future<String> decline(BuildContext context, BookingRequest r) async {
     await _setStatus(r, 'declined');
     final link = settings?.link ?? '';
-    if (context.mounted) {
-      await _whatsApp(r.phone,
-          'Oi, ${r.name.split(' ').first}! Infelizmente ${_dayText(r.date)} às ${r.time} não vai dar. '
-          'Pode escolher outro horário aqui? $link');
+    return notice = await _notify(context, r, 'declined',
+        'Oi, ${r.name.split(' ').first}! Infelizmente ${_dayText(r.date)} às ${r.time} não vai dar. '
+        'Pode escolher outro horário aqui? $link');
+  }
+
+  /// Última resposta enviada (para o aviso na tela).
+  String notice = '';
+
+  /// Avisa o cliente: por e-mail, automático, quando ele deixou e-mail;
+  /// senão abre o WhatsApp com a mensagem pronta (você só aperta enviar).
+  Future<String> _notify(BuildContext context, BookingRequest r, String status, String whatsText) async {
+    if (r.email.isNotEmpty) {
+      try {
+        final res = await _db.functions.invoke('cf-booking-reply', body: {'id': r.id, 'status': status});
+        final d = res.data;
+        if (d is Map && d['sent'] == 1) return 'email';
+      } catch (_) {}
     }
+    if (context.mounted) {
+      await _whatsApp(r.phone, whatsText);
+      return 'whatsapp';
+    }
+    return '';
   }
 
   Future<void> _setStatus(BookingRequest r, String status) async {
@@ -900,6 +918,8 @@ class _RequestTile extends StatelessWidget {
                 '${r.service.isEmpty ? '' : '${r.service} · '}${capitalize(Booking._dayText(r.date))} às ${r.time}',
                 style: CF.body(14, color: CF.text, weight: FontWeight.w600),
               ),
+              Text(r.email.isNotEmpty ? 'Resposta automática por e-mail' : 'Sem e-mail: a resposta vai pelo WhatsApp',
+                  style: CF.body(13, color: CF.muted)),
               Text(client != null ? 'Já é seu ${BillingStore.instance.terms.client}' : 'Ainda não cadastrad${BillingStore.instance.terms.g('a', 'o')}',
                   style: CF.body(13, color: CF.muted)),
               if (r.note.isNotEmpty) Text('"${r.note}"', style: CF.body(13, color: CF.muted)),
@@ -912,10 +932,11 @@ class _RequestTile extends StatelessWidget {
             onPressed: () async {
               final res = await b.accept(context, r);
               if (context.mounted) {
+                final sent = b.notice == 'email' ? ' Aviso enviado por e-mail.' : '';
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(res == null
-                      ? 'Aceito: já está na agenda e na cobrança.'
-                      : 'Aceito: horário reservado na agenda. Cadastre ${r.name.split(' ').first} para entrar na cobrança.'),
+                      ? 'Aceito: já está na agenda e na cobrança.$sent'
+                      : 'Aceito: horário reservado na agenda. Cadastre ${r.name.split(' ').first} para entrar na cobrança.$sent'),
                 ));
               }
             },
@@ -924,7 +945,12 @@ class _RequestTile extends StatelessWidget {
             label: const Text('Aceitar'),
           ),
           OutlinedButton.icon(
-            onPressed: () => b.decline(context, r),
+            onPressed: () async {
+              final how = await b.decline(context, r);
+              if (context.mounted && how == 'email') {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recusado. Aviso enviado por e-mail.')));
+              }
+            },
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
             icon: const Icon(Icons.close_rounded, size: 18, color: CF.red),
             label: const Text('Recusar'),
@@ -956,6 +982,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
   String? service;
   final name = TextEditingController();
   final phone = TextEditingController();
+  final email = TextEditingController();
   final note = TextEditingController();
   bool sending = false;
   String? error;
@@ -971,6 +998,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
   void dispose() {
     name.dispose();
     phone.dispose();
+    email.dispose();
     note.dispose();
     super.dispose();
   }
@@ -1062,6 +1090,7 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
         'p_date': _d(day!),
         'p_time': time,
         'p_note': note.text,
+        'p_email': email.text,
       });
       if (r == 'ok') {
         setState(() => done = true);
@@ -1116,7 +1145,9 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
             const SizedBox(height: 8),
             Text(
               '${capitalize(weekdayLong[day!.weekday - 1].toLowerCase())}, ${ddmm(day!)} às $time.\n'
-              'Você recebe a confirmação pelo WhatsApp assim que for aprovado.',
+              email.text.trim().isEmpty
+                  ? 'O profissional vai responder pelo WhatsApp que você informou.'
+                  : 'Você recebe a resposta (aceito ou não) no e-mail ${email.text.trim()} assim que o profissional decidir.',
               textAlign: TextAlign.center,
               style: CF.body(16, color: CF.muted, height: 1.4),
             ),
@@ -1214,6 +1245,9 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
               const SizedBox(height: 10),
               TextField(controller: phone, keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(labelText: 'Seu WhatsApp com DDD', hintText: '(11) 99999-9999')),
+              const SizedBox(height: 10),
+              TextField(controller: email, keyboardType: TextInputType.emailAddress, autocorrect: false,
+                  decoration: const InputDecoration(labelText: 'Seu e-mail (para receber a resposta)', hintText: 'voce@email.com')),
               const SizedBox(height: 10),
               TextField(controller: note, maxLength: 300, decoration: const InputDecoration(labelText: 'Recado (opcional)')),
               if (error != null) ...[
