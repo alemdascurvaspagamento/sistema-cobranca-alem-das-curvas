@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
   const ok = status === 'accepted';
   const subject = ok ? `Horário confirmado: ${day} às ${r.time}` : 'Seu pedido de horário não pôde ser aceito';
   const lines = ok
-    ? [`Oi, ${first}!`, `${who} confirmou seu horário.`, `${what} · ${day} às ${r.time}`, 'Até lá!']
+    ? [`Oi, ${first}!`, `${who} confirmou seu horário.`, `${r.service || 'Atendimento'} · ${day} às ${r.time}`, 'Até lá!']
     : [`Oi, ${first}!`, `${who} não conseguiu atender ${day} às ${r.time}.`, link ? 'Você pode escolher outro horário pelo mesmo link de agendamento.' : 'Entre em contato para combinar outro horário.'];
   const text = lines.join('\n\n') + (!ok && link ? `\n\n${link}` : '');
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0E1A2B">
