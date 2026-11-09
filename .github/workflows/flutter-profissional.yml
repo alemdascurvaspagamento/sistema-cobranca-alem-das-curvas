@@ -120,9 +120,9 @@ jobs:
       - name: Preparar o projeto Android
         run: |
           # A pasta android é gerada aqui, só para montar o app de teste.
-          flutter create --platforms=android --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
+          flutter create --platforms=android --org br.com.leguno --project-name coachflow_profissional . >/dev/null
           # Identificador definitivo (o mesmo do iPhone) e ícone do app.
-          sed -i -E 's/applicationId = "[^"]*"/applicationId = "br.com.alemdascurvas.coachflow"/' android/app/build.gradle.kts
+          sed -i -E 's/applicationId = "[^"]*"/applicationId = "br.com.leguno.app"/' android/app/build.gradle.kts
           grep applicationId android/app/build.gradle.kts
           flutter pub get
           dart run flutter_launcher_icons -f tool/icons_android.yaml > "$RUNNER_TEMP/icons.txt" 2>&1 || { echo "::error title=Ícone::$(tail -15 "$RUNNER_TEMP/icons.txt" | tr '\n' ' ')"; exit 1; }

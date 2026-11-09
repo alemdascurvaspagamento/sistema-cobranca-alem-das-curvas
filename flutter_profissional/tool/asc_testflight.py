@@ -8,7 +8,7 @@ import os, sys, time, json, urllib.request, urllib.error, urllib.parse
 import jwt
 
 API = "https://api.appstoreconnect.apple.com/v1"
-BUNDLE_ID = os.environ.get("BUNDLE_ID", "br.com.alemdascurvas.coachflow")
+BUNDLE_ID = os.environ.get("BUNDLE_ID", "br.com.leguno.app")
 
 def token():
     now = int(time.time())

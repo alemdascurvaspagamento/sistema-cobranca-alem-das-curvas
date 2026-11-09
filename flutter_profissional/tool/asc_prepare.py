@@ -19,7 +19,7 @@ import jwt  # PyJWT
 
 APP_NAME = os.environ.get("APP_NAME", "")  # nome na App Store (opcional)
 
-BUNDLE_ID = os.environ.get("BUNDLE_ID", "br.com.alemdascurvas.coachflow")
+BUNDLE_ID = os.environ.get("BUNDLE_ID", "br.com.leguno.app")
 API = "https://api.appstoreconnect.apple.com/v1"
 
 
@@ -65,7 +65,7 @@ if found:
 else:
     bundle = call("POST", "/bundleIds", {
         "data": {"type": "bundleIds", "attributes": {
-            "identifier": BUNDLE_ID, "name": "Coach Flow Professional", "platform": "IOS"}}
+            "identifier": BUNDLE_ID, "name": "Léguno", "platform": "IOS"}}
     })["data"]
     print(f"::notice title=Identificador criado::{BUNDLE_ID}")
 
