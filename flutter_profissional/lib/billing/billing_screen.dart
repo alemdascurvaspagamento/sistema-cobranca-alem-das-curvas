@@ -90,6 +90,22 @@ class _BillingScreenState extends State<BillingScreen> {
                 onTap: () => setState(() { filter = f; page = 0; }),
               ),
           ]),
+          Builder(builder: (context) {
+            final queue = _chargeQueue();
+            if (queue.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(backgroundColor: CF.whatsapp, minimumSize: const Size(0, 44)),
+                  onPressed: () => showChargeQueue(context),
+                  icon: const Icon(Icons.forward_to_inbox_rounded, size: 20),
+                  label: Text('Cobrar todos (${queue.length})'),
+                ),
+              ),
+            );
+          }),
           SizedBox(key: listKey, height: 12),
           if (shown.isEmpty)
             _EmptyState(filter: filter, onShowAll: () => setState(() => filter = _Filter.all))
@@ -2210,4 +2226,199 @@ Future<bool?> openSecondPixSettings(BuildContext context) {
       ],
     ),
   );
+}
+
+
+// ---------------------------------------------------------------------------
+// Fila de cobrança: abre o WhatsApp de cada pessoa, uma depois da outra
+// ---------------------------------------------------------------------------
+
+class _QueueItem {
+  _QueueItem(this.plan, this.group, this.amount, this.phone, this.overdue);
+  final StudentPlan plan;
+  final PayGroup? group;
+  final double amount;
+  final String phone;
+  final bool overdue;
+  String get key => group != null ? 'g:${group!.members.first.id}' : plan.id;
+  String get name => group?.payerFirst ?? plan.name.split(' ').first;
+}
+
+String _qDigits(String v) => v.replaceAll(RegExp(r'[^0-9]'), '');
+
+/// Quem tem valor a receber e WhatsApp cadastrado. Uma pessoa por conta (responsável financeiro junta todos).
+List<_QueueItem> _chargeQueue({bool withoutPhone = false}) {
+  final store = BillingStore.instance;
+  final seen = <String>{};
+  final out = <_QueueItem>[];
+  for (final p in store.activePlans) {
+    final g = store.groupFor(p);
+    final key = g != null ? 'g:${g.members.first.id}' : p.id;
+    if (!seen.add(key)) continue;
+    final amount = g != null ? store.groupRemaining(g) : store.remaining(p);
+    if (amount <= 0.009) continue;
+    final phone = _qDigits(g?.payerPhone ?? p.phone);
+    final hasPhone = phone.length >= 10;
+    if (hasPhone == withoutPhone) continue;
+    final st = store.status(g?.members.first ?? p);
+    out.add(_QueueItem(p, g, amount, phone, st == BillStatus.overdue));
+  }
+  out.sort((a, b) => (a.overdue ? 0 : 1).compareTo(b.overdue ? 0 : 1));
+  return out;
+}
+
+Future<bool> _openQueueItem(_QueueItem it) async {
+  final store = BillingStore.instance;
+  final g = it.group;
+  final first = g?.members.first ?? it.plan;
+  final payLink = await PayLinks.linkFor(
+    clientId: first.id,
+    payerFirst: g?.payerFirst ?? it.plan.name.split(' ').first,
+    amount: it.amount,
+    due: g != null ? store.groupDue(g) : store.dueDate(it.plan),
+    pixKey: store.pixFor(first).key,
+    pixCode: g != null ? store.groupPixCode(g) : store.pixCodeFor(it.plan),
+  );
+  final text = g != null ? groupBillingMessage(g, payLink: payLink) : billingMessage(it.plan, payLink: payLink);
+  var phone = it.phone;
+  if (phone.length == 10 || phone.length == 11) phone = '55$phone';
+  return launchUrl(whatsAppLink(phone, text: text), mode: LaunchMode.externalApplication);
+}
+
+Future<void> showChargeQueue(BuildContext context) => showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => const _ChargeQueueSheet(),
+    );
+
+class _ChargeQueueSheet extends StatefulWidget {
+  const _ChargeQueueSheet();
+  @override
+  State<_ChargeQueueSheet> createState() => _ChargeQueueSheetState();
+}
+
+class _ChargeQueueSheetState extends State<_ChargeQueueSheet> {
+  /// Andamento por mês, enquanto o app está aberto: chave da pessoa -> 'sent' ou 'skip'.
+  static final Map<String, Map<String, String>> _progress = {};
+
+  late final List<_QueueItem> items = _chargeQueue();
+  final noPhone = _chargeQueue(withoutPhone: true);
+  bool busy = false;
+
+  String get _month {
+    final m = BillingStore.instance.selectedMonth;
+    return '${m.year}-${m.month}';
+  }
+
+  Map<String, String> get done => _progress.putIfAbsent(_month, () => {});
+
+  _QueueItem? get next {
+    for (final it in items) {
+      if (!done.containsKey(it.key)) return it;
+    }
+    return null;
+  }
+
+  Future<void> _open(_QueueItem it) async {
+    if (busy) return;
+    setState(() => busy = true);
+    final ok = await _openQueueItem(it);
+    if (!mounted) return;
+    setState(() {
+      busy = false;
+      if (ok) done[it.key] = 'sent';
+    });
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o WhatsApp neste aparelho.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final handled = items.where((i) => done.containsKey(i.key)).length;
+    final n = next;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('Cobrar todos', style: CF.body(22, weight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(
+              'Toque no botão: o WhatsApp abre com a mensagem pronta de cada pessoa. '
+              'Você só toca em enviar e volta aqui. Nada é enviado sem você.',
+              style: CF.body(14.5, color: CF.muted, height: 1.3),
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(value: items.isEmpty ? 0 : handled / items.length, minHeight: 8),
+            ),
+            const SizedBox(height: 4),
+            Text('$handled de ${items.length}', style: CF.body(13, color: CF.muted)),
+            const SizedBox(height: 8),
+            Flexible(
+              child: ListView(shrinkWrap: true, children: [
+                for (final it in items)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      done[it.key] == 'sent'
+                          ? Icons.check_circle_rounded
+                          : done[it.key] == 'skip'
+                              ? Icons.remove_circle_outline_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                      color: done[it.key] == 'sent' ? CF.green : CF.muted,
+                    ),
+                    title: Text(it.name, style: CF.body(16, weight: FontWeight.w700)),
+                    subtitle: Text(
+                      '${money(it.amount)}${it.overdue ? ' · em atraso' : ''}'
+                      '${done[it.key] == 'sent' ? ' · aberto no WhatsApp' : done[it.key] == 'skip' ? ' · pulado' : ''}',
+                      style: CF.body(13.5, color: it.overdue && !done.containsKey(it.key) ? CF.red : CF.muted),
+                    ),
+                    trailing: Wrap(spacing: 0, children: [
+                      if (!done.containsKey(it.key))
+                        TextButton(onPressed: busy ? null : () => setState(() => done[it.key] = 'skip'), child: const Text('Pular')),
+                      TextButton(
+                        onPressed: busy ? null : () => _open(it),
+                        child: Text(done[it.key] == 'sent' ? 'Abrir de novo' : 'Abrir'),
+                      ),
+                    ]),
+                  ),
+                if (noPhone.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Sem WhatsApp cadastrado (não entram na fila): ${noPhone.map((e) => e.name).join(', ')}.',
+                      style: CF.body(13, color: CF.muted, height: 1.3),
+                    ),
+                  ),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            if (n != null)
+              FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: CF.whatsapp, minimumSize: const Size(0, 48)),
+                onPressed: busy ? null : () => _open(n),
+                icon: busy
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.chat_rounded, size: 20),
+                label: Text(handled == 0 ? 'Começar: ${n.name}' : 'Próxima cobrança: ${n.name}'),
+              )
+            else
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Text('Fila concluída!', textAlign: TextAlign.center, style: CF.body(17, weight: FontWeight.w700, color: CF.green)),
+                TextButton(onPressed: () => setState(() => done.clear()), child: const Text('Recomeçar a fila')),
+              ]),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar')),
+          ]),
+        ),
+      ),
+    );
+  }
 }
