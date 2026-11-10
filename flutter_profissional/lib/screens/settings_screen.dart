@@ -242,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: CF.brand,
         title: 'Ajuda e contato',
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Dúvida, problema ou ideia? Fale direto com a equipe do Léguno.',
+          Text('Dúvida, problema ou ideia? Escreva para a equipe do Léguno.',
               style: CF.body(14.5, color: CF.muted, height: 1.3)),
           const SizedBox(height: 10),
           if (widget.onSignOut != null) ...[
@@ -254,16 +254,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
           ],
           Wrap(spacing: 8, runSpacing: 8, children: [
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
-              onPressed: () => launchUrl(
-                Uri.parse('https://wa.me/${AppConfig.supportContact.replaceAll(RegExp(r'[^0-9]'), '')}'
-                    '?text=${Uri.encodeComponent('Oi! Uso o Léguno e queria falar sobre: ')}'),
-                mode: LaunchMode.externalApplication,
-              ),
-              icon: const Icon(Icons.chat_rounded, size: 18),
-              label: const Text('WhatsApp'),
-            ),
             OutlinedButton.icon(
               onPressed: () => launchUrl(
                 Uri(scheme: 'mailto', path: AppConfig.supportEmail, queryParameters: {'subject': 'Léguno: ajuda'}),

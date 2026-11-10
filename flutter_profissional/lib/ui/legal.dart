@@ -13,7 +13,7 @@ class _Item {
   final String title, body;
 }
 
-String get _contact => AppConfig.supportContact.contains('@') ? AppConfig.supportContact : 'WhatsApp (11) 99182-7006 ou ${AppConfig.supportEmail}';
+String get _contact => AppConfig.supportEmail;
 
 List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
     ? [
