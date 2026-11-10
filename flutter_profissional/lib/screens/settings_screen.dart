@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config.dart';
 import '../ui/legal.dart';
+import '../ui/support_request.dart';
 
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
@@ -244,6 +245,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text('Dúvida, problema ou ideia? Fale direto com a equipe do Léguno.',
               style: CF.body(14.5, color: CF.muted, height: 1.3)),
           const SizedBox(height: 10),
+          if (widget.onSignOut != null) ...[
+            FilledButton.icon(
+              onPressed: () => showSupportRequest(context),
+              icon: const Icon(Icons.edit_note_rounded, size: 20),
+              label: const Text('Escrever para a equipe'),
+            ),
+            const SizedBox(height: 8),
+          ],
           Wrap(spacing: 8, runSpacing: 8, children: [
             FilledButton.icon(
               style: FilledButton.styleFrom(backgroundColor: CF.whatsapp),
