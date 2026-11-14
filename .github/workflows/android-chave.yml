@@ -4,6 +4,9 @@ name: Android - criar chave (uma vez)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [etapa1-regras-cobranca]
+    paths: ['flutter_profissional/android_chave.txt']
 
 jobs:
   chave:

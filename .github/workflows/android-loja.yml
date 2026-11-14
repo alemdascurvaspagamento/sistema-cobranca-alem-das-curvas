@@ -5,6 +5,9 @@ name: Android para a loja
 
 on:
   workflow_dispatch:
+  push:
+    branches: [etapa1-regras-cobranca]
+    paths: ['flutter_profissional/android_build.txt']
 
 jobs:
   aab:
