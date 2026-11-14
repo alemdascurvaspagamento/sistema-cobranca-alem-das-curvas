@@ -26,3 +26,4 @@ Pedido de montagem do iPhone nº 13 — opções em grade alinhada
 build 2026-11-04T11:09:52Z protecao pagamento em dobro
 build 2026-11-05T12:44:52Z nome Léguno
 build 2026-11-05T13:17:30Z acento no topo
+build 2026-11-14T12:13:59Z blocos 3 e 4, agenda do mes
