@@ -84,7 +84,7 @@ jobs:
 
       - name: Preparar o projeto iPhone
         run: |
-          flutter create --platforms=ios --org br.com.leguno --project-name coachflow_profissional . >/dev/null
+          flutter create --platforms=ios --org br.com.alemdascurvas --project-name coachflow_profissional . >/dev/null
           flutter pub get
           dart run flutter_launcher_icons -f tool/icons_ios.yaml
           # Identificador definitivo do app.
