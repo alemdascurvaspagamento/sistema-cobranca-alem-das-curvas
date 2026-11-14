@@ -25,6 +25,7 @@ import 'screens/home_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'ui/cf_theme.dart';
+import 'data/morning_brief.dart';
 import 'ui/confirmations.dart';
 import 'ui/start_guide.dart';
 import 'ui/widgets.dart';
@@ -182,6 +183,7 @@ class _CoachFlowEntryState extends State<CoachFlowEntry> {
     CalendarFeed.instance.clear();
     Snapshots.instance.clear();
     Confirmations.instance.clear();
+    MorningBrief.instance.clear();
     StartGuide.instance.clear();
     if (!mounted) return;
     setState(() {

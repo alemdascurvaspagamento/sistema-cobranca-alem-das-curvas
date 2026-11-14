@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +11,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
 import 'cloud_sink.dart';
+import 'morning_brief.dart';
 import 'subscription.dart';
 
 /// Situação da gravação: quantas mudanças estão sendo enviadas e o último erro.
@@ -329,6 +332,7 @@ class CloudService implements CloudSink {
     await Booking.instance.load();
     await CalendarFeed.instance.load();
     await Snapshots.instance.load();
+    unawaited(MorningBrief.instance.load());
     return true;
   }
 

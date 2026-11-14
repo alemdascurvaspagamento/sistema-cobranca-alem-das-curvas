@@ -165,10 +165,21 @@ class _DaySummary extends StatelessWidget {
 }
 
 /// Itens que pedem ação, com o botão certo em cada um.
-class _Secretary extends StatelessWidget {
+class _Secretary extends StatefulWidget {
   const _Secretary({required this.onBilling, this.onFinance});
   final VoidCallback onBilling;
   final VoidCallback? onFinance;
+
+  @override
+  State<_Secretary> createState() => _SecretaryState();
+}
+
+class _SecretaryState extends State<_Secretary> {
+  bool showAll = false;
+  static const _limit = 5;
+
+  VoidCallback get onBilling => widget.onBilling;
+  VoidCallback? get onFinance => widget.onFinance;
 
   @override
   Widget build(BuildContext context) {
@@ -177,13 +188,15 @@ class _Secretary extends StatelessWidget {
     final today = store.today;
     final current = DateTime(today.year, today.month);
     final nowMin = DateTime.now().hour * 60 + DateTime.now().minute;
-    final items = <Widget>[];
+    // Cada item leva uma prioridade: 0 é o mais urgente.
+    final entries = <(int, Widget)>[];
+    void add(int priority, Widget w) => entries.add((priority, w));
 
     // Atendimentos de hoje que já passaram e não foram confirmados.
     for (final (p, line) in store.sessionsOn(today)) {
       final pending = line.record == null || (line.isExtra && line.record?.status == LessonStatus.scheduled);
       if (line.outcome == LessonOutcome.charged && pending && line.time.isNotEmpty && _minutes(line.time) < nowMin) {
-        items.add(_TodoItem(
+        add(1, _TodoItem(
           icon: Icons.fact_check_rounded,
           color: CF.blue,
           title: 'Confirme ${t.theSession} das ${line.time}',
@@ -199,7 +212,7 @@ class _Secretary extends StatelessWidget {
       final st = store.status(p, month: current);
       final left = store.remaining(p, month: current);
       if (st == BillStatus.overdue) {
-        items.add(_TodoItem(
+        add(0, _TodoItem(
           icon: Icons.error_rounded,
           color: CF.red,
           title: '${p.name} está com pagamento atrasado',
@@ -211,7 +224,7 @@ class _Secretary extends StatelessWidget {
       } else if ((st == BillStatus.pending || st == BillStatus.partial)) {
         final days = store.dueDate(p, month: current).difference(today).inDays;
         if (days >= 0 && days <= 3) {
-          items.add(_TodoItem(
+          add(2, _TodoItem(
             icon: Icons.schedule_rounded,
             color: CF.amber,
             title: days == 0 ? 'Vence hoje: ${p.name}' : '${p.name} vence em $days dia${days == 1 ? '' : 's'}',
@@ -225,7 +238,7 @@ class _Secretary extends StatelessWidget {
       if (p.model == BillingModel.package) {
         final b = store.bill(p, month: current);
         if (b.packageRemaining <= 2) {
-          items.add(_TodoItem(
+          add(3, _TodoItem(
             icon: Icons.inventory_2_rounded,
             color: CF.violet,
             title: 'Pacote de ${p.name} está acabando',
@@ -242,7 +255,7 @@ class _Secretary extends StatelessWidget {
     for (final e in store.billsDue()) {
       final overdue = dateOnly(e.date).isBefore(today);
       final isToday = dateOnly(e.date) == today;
-      items.add(_TodoItem(
+      add((overdue ? 0 : 2), _TodoItem(
         icon: Icons.receipt_long_rounded,
         color: overdue ? CF.red : CF.amber,
         title: overdue
@@ -255,18 +268,34 @@ class _Secretary extends StatelessWidget {
       ));
     }
 
+    // Mais urgente primeiro; na mesma urgência, a ordem em que apareceram.
+    final order = List<int>.generate(entries.length, (i) => i)
+      ..sort((a, b) {
+        final c = entries[a].$1.compareTo(entries[b].$1);
+        return c != 0 ? c : a.compareTo(b);
+      });
+    final items = [for (final i in order) entries[i].$2];
+    final shown = showAll || items.length <= _limit ? items : items.sublist(0, _limit);
     return Panel(
       icon: Icons.support_agent_rounded,
       color: CF.amber,
-      title: 'Secretária: o que precisa de você',
+      title: items.length > 1 ? 'Secretária: ${items.length} itens para você' : 'Secretária: o que precisa de você',
       ringing: items.isNotEmpty,
       child: items.isEmpty
           ? const EmptyNote(icon: Icons.task_alt_rounded, text: 'Tudo em dia por aqui.')
           : Column(children: [
-              for (var i = 0; i < items.length; i++) ...[
-                FadeInUp(delayMs: 140 * (i + 1), child: items[i]),
-                if (i < items.length - 1) const Divider(height: 1),
+              for (var i = 0; i < shown.length; i++) ...[
+                FadeInUp(delayMs: 140 * (i + 1), child: shown[i]),
+                if (i < shown.length - 1) const Divider(height: 1),
               ],
+              if (items.length > _limit)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => setState(() => showAll = !showAll),
+                    child: Text(showAll ? 'Mostrar só os mais urgentes' : 'Ver todos (${items.length})'),
+                  ),
+                ),
             ]),
     );
   }

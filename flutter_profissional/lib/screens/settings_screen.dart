@@ -8,6 +8,7 @@ import '../ui/support_request.dart';
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
 import '../data/export.dart';
+import '../data/morning_brief.dart';
 import '../ui/cf_theme.dart';
 import '../booking.dart';
 import '../calendar_feed.dart';
@@ -223,6 +224,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () => openConfirmTemplate(context),
         ),
       ),
+      if (cloud) ...[
+        const SizedBox(height: 14),
+        const _MorningBriefPanel(),
+      ],
       const SizedBox(height: 14),
       Panel(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -437,3 +442,89 @@ class _SubscriptionPanel extends StatelessWidget {
   }
 }
 
+
+
+/// Resumo da manhã por e-mail: liga, escolhe a hora e manda um teste.
+class _MorningBriefPanel extends StatefulWidget {
+  const _MorningBriefPanel();
+  @override
+  State<_MorningBriefPanel> createState() => _MorningBriefPanelState();
+}
+
+class _MorningBriefPanelState extends State<_MorningBriefPanel> {
+  final brief = MorningBrief.instance;
+  bool busy = false;
+  String? notice;
+
+  Future<void> _set({bool? on, int? hour}) async {
+    setState(() {
+      busy = true;
+      notice = null;
+    });
+    final ok = await brief.setChoice(on: on, hour: hour);
+    if (!mounted) return;
+    setState(() {
+      busy = false;
+      if (!ok) notice = 'Não foi possível salvar. Confira a internet e tente de novo.';
+    });
+  }
+
+  Future<void> _test() async {
+    setState(() {
+      busy = true;
+      notice = null;
+    });
+    final err = await brief.sendTest();
+    if (!mounted) return;
+    setState(() {
+      busy = false;
+      notice = err ?? 'Enviamos um resumo de teste para o e-mail da sua conta.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: brief,
+        builder: (context, _) => Panel(
+          icon: Icons.wb_sunny_rounded,
+          color: CF.amber,
+          title: 'Resumo da manhã',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: brief.emailOn,
+              onChanged: busy || !brief.loaded ? null : (v) => _set(on: v),
+              title: Text('Receber por e-mail', style: CF.body(16, weight: FontWeight.w700)),
+              subtitle: Text(
+                'Todo dia, seus atendimentos, cobranças a receber e contas a pagar, no e-mail da sua conta.',
+                style: CF.body(14, color: CF.muted),
+              ),
+            ),
+            if (brief.emailOn) ...[
+              const SizedBox(height: 6),
+              Row(children: [
+                Expanded(child: Text('Horário do envio', style: CF.body(15, weight: FontWeight.w600))),
+                DropdownButton<int>(
+                  value: brief.sendHour,
+                  onChanged: busy ? null : (h) => h == null ? null : _set(hour: h),
+                  items: [
+                    for (var h = 5; h <= 11; h++)
+                      DropdownMenuItem(value: h, child: Text('${h.toString().padLeft(2, '0')}:00')),
+                  ],
+                ),
+              ]),
+            ],
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: busy || !brief.loaded ? null : _test,
+                icon: const Icon(Icons.send_rounded, size: 18),
+                label: const Text('Enviar um teste agora'),
+              ),
+            ),
+            if (notice != null) Text(notice!, style: CF.body(14, color: CF.muted)),
+          ]),
+        ),
+      );
+}

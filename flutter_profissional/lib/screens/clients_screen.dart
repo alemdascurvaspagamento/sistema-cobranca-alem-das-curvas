@@ -6,6 +6,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
+import '../ui/client_import.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
 import '../ui/whatsapp.dart';
@@ -53,11 +54,18 @@ class _ClientsScreenState extends State<ClientsScreen> {
             icon: Icons.groups_rounded,
             color: CF.violet,
             subtitle: '${store.activePlans.length} ativ${store.activePlans.length == 1 ? 'o' : 'os'}',
-            trailing: FilledButton.icon(
-              onPressed: () => openClientForm(context),
-              icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
-              label: const Text('Novo'),
-            ),
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton(
+                tooltip: 'Importar lista',
+                onPressed: () => openClientImport(context),
+                icon: const Icon(Icons.upload_file_rounded, color: CF.ink),
+              ),
+              FilledButton.icon(
+                onPressed: () => openClientForm(context),
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
+                label: const Text('Novo'),
+              ),
+            ]),
           ),
           const SizedBox(height: 14),
           KpiRow([
