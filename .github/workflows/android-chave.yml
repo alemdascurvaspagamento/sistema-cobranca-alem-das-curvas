@@ -1,0 +1,29 @@
+# Cria a chave de envio do Android UMA vez. Só roda quando você manda.
+# O resultado vai num arquivo .zip que só quem tem acesso ao repositório baixa, e some em 1 dia.
+name: Android - criar chave (uma vez)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  chave:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Criar a chave
+        run: |
+          mkdir out
+          pass=$(openssl rand -hex 16)
+          keytool -genkeypair -v -storetype PKCS12 -keystore out/leguno-upload.jks -alias upload \
+            -keyalg RSA -keysize 2048 -validity 10000 -storepass "$pass" -keypass "$pass" \
+            -dname "CN=Leguno, O=Daniel Barsottini ME, C=BR" >/dev/null 2>&1
+          echo -n "$pass" > out/1-SENHA.txt
+          echo -n "upload" > out/2-APELIDO.txt
+          base64 -w0 out/leguno-upload.jks > out/3-CHAVE-em-texto.txt
+          ls -la out
+      - name: Guardar por 1 dia
+        uses: actions/upload-artifact@v4
+        with:
+          name: chave-android-leguno
+          path: out/
+          retention-days: 1
