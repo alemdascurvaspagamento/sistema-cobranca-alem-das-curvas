@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BUNDLE_ID: br.com.leguno.app
+  BUNDLE_ID: br.com.alemdascurvas.coachflow
   APP_NAME: "Léguno: Agenda e Cobrança"
 
 jobs:
