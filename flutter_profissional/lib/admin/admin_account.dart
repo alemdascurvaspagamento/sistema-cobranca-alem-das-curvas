@@ -132,7 +132,7 @@ class _AccountViewState extends State<_AccountView> {
               ? ('Teste até', a.trialEndsAt == null ? '—' : dmy(a.trialEndsAt!))
               : ('Período até', a.currentPeriodEnd == null ? '—' : dmy(a.currentPeriodEnd!));
 
-          return ListView(padding: const EdgeInsets.all(18), shrinkWrap: true, children: [
+          return SingleChildScrollView(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
               Expanded(child: Text(a.email, style: CF.body(19, weight: FontWeight.w700))),
               IconButton(tooltip: 'Fechar', onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded)),
@@ -224,7 +224,7 @@ class _AccountViewState extends State<_AccountView> {
                 ]),
               ),
             ],
-          ]);
+          ]));
         },
       );
 }

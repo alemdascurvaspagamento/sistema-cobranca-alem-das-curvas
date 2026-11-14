@@ -136,7 +136,7 @@ class BarSeries extends StatelessWidget {
   Widget build(BuildContext context) {
     final top = values.fold<double>(0, (m, v) => v > m ? v : m);
     return SizedBox(
-      height: 132,
+      height: 150,
       child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         for (var i = 0; i < values.length; i++)
           Expanded(
