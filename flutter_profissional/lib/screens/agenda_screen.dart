@@ -536,6 +536,7 @@ class _MonthView extends StatelessWidget {
                         isToday: d == today,
                         wide: wide,
                         items: data[d] ?? const [],
+                        events: AgendaEvents.instance.on(d),
                         holiday: store.holidayOn(d),
                         onTap: () => onOpenDay(d),
                       );
@@ -551,6 +552,7 @@ class _MonthView extends StatelessWidget {
         _Legend(color: CF.amber, text: 'Falta cobrada ou remarcação'),
         _Legend(color: CF.red, text: t.g('Cancelada', 'Cancelado')),
         _Legend(color: CF.violet, text: 'Crédito'),
+        _Legend(color: CF.inkSoft, text: 'Compromisso'),
         _Legend(color: CF.grey, text: 'Feriado'),
       ]),
     ]);
@@ -563,19 +565,34 @@ class _MonthCell extends StatelessWidget {
     required this.isToday,
     required this.wide,
     required this.items,
+    required this.events,
     required this.holiday,
     required this.onTap,
   });
   final DateTime day;
   final bool isToday, wide;
   final List<(StudentPlan, LessonLine)> items;
+  final List<PersonalEvent> events;
   final Holiday? holiday;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final shown = wide ? items.take(3).toList() : const <(StudentPlan, LessonLine)>[];
-    final extra = items.length - shown.length;
+    // Na ordem: feriado, compromissos (ex.: meia maratona) e depois os atendimentos.
+    final tags = <Widget>[
+      if (holiday != null) _MiniTag(text: holiday!.name, fg: CF.muted, bg: Colors.transparent),
+      for (final e in events)
+        _MiniTag(
+          text: '${e.allDay ? '' : '${e.time} '}${e.title}',
+          fg: CF.inkSoft,
+          bg: CF.greyBg,
+          onTap: () => openEventForm(context, event: e),
+        ),
+      for (final (p, line) in items) _MiniSession(plan: p, line: line, dense: true),
+    ];
+    const maxShown = 3;
+    final shownTags = wide ? tags.take(maxShown).toList() : const <Widget>[];
+    final extra = tags.length - shownTags.length;
     return Padding(
       padding: const EdgeInsets.all(2),
       child: Material(
@@ -601,20 +618,24 @@ class _MonthCell extends StatelessWidget {
               ]),
               const SizedBox(height: 2),
               if (wide) ...[
-                for (final (p, line) in shown)
-                  Padding(padding: const EdgeInsets.only(bottom: 2), child: _MiniSession(plan: p, line: line, dense: true)),
+                for (final w in shownTags) Padding(padding: const EdgeInsets.only(bottom: 2), child: w),
                 if (extra > 0) Text('+$extra', style: CF.body(11, color: CF.muted, weight: FontWeight.w700)),
-              ] else if (items.isNotEmpty) ...[
-                // Celular: bolinhas coloridas (até 4) e o total.
+              ] else if (items.isNotEmpty || events.isNotEmpty) ...[
+                // Celular: bolinhas coloridas (até 4) e o total. Compromissos aparecem como quadradinhos escuros.
                 Wrap(spacing: 2, runSpacing: 2, children: [
-                  for (final (_, line) in items.take(4))
+                  for (final _ in events.take(2))
+                    Container(
+                      width: 7, height: 7,
+                      decoration: BoxDecoration(color: CF.inkSoft, borderRadius: BorderRadius.circular(2)),
+                    ),
+                  for (final (_, line) in items.take(4 - events.take(2).length))
                     Container(
                       width: 7, height: 7,
                       decoration: BoxDecoration(color: CF.forOutcome(line.outcome).$1, shape: BoxShape.circle),
                     ),
                 ]),
                 const Spacer(),
-                Text('${items.length}', style: CF.body(11, color: CF.muted, weight: FontWeight.w700)),
+                Text('${items.length + events.length}', style: CF.body(11, color: CF.muted, weight: FontWeight.w700)),
               ],
             ]),
           ),
@@ -622,6 +643,30 @@ class _MonthCell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Etiqueta pequena do mês para feriado e compromissos.
+class _MiniTag extends StatelessWidget {
+  const _MiniTag({required this.text, required this.fg, required this.bg, this.onTap});
+  final String text;
+  final Color fg, bg;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border(left: BorderSide(color: fg, width: 3))),
+            child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: CF.body(11, color: fg, weight: FontWeight.w600)),
+          ),
+        ),
+      );
 }
 
 class _Legend extends StatelessWidget {
