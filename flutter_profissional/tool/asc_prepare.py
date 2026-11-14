@@ -65,7 +65,7 @@ if found:
 else:
     bundle = call("POST", "/bundleIds", {
         "data": {"type": "bundleIds", "attributes": {
-            "identifier": BUNDLE_ID, "name": "Léguno", "platform": "IOS"}}
+            "identifier": BUNDLE_ID, "name": "Leguno", "platform": "IOS"}}
     })["data"]
     print(f"::notice title=Identificador criado::{BUNDLE_ID}")
 
