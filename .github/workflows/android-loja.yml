@@ -55,25 +55,7 @@ jobs:
           # Assinatura: a chave vem dos segredos e nunca fica no código.
           echo "$KS_B64" | base64 -d > android/app/upload.jks
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload.jks\n' "$KS_PASS" "$KS_PASS" "$KS_ALIAS" > android/key.properties
-          python3 - <<'PY'
-          p='android/app/build.gradle.kts'
-          s=open(p).read()
-          s='import java.util.Properties\n'+s
-          s=s.replace('android {','''val keyProps = Properties().apply { load(rootProject.file("key.properties").inputStream()) }
-
-android {''',1)
-          s=s.replace('buildTypes {','''signingConfigs {
-        create("upload") {
-            keyAlias = keyProps["keyAlias"] as String
-            keyPassword = keyProps["keyPassword"] as String
-            storeFile = file(keyProps["storeFile"] as String)
-            storePassword = keyProps["storePassword"] as String
-        }
-    }
-    buildTypes {''',1)
-          s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("upload")')
-          open(p,'w').write(s)
-          PY
+          python3 tool/android_sign.py
           grep -n "signingConfig" android/app/build.gradle.kts
 
       - name: Montar o arquivo da loja
