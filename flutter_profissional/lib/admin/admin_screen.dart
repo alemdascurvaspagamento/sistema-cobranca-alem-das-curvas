@@ -155,25 +155,25 @@ class _OverviewTabState extends State<_OverviewTab> {
     }
 
     final kpis = KpiGrid(children: [
-      KpiCard(label: 'Contas', value: '$total', note: '+${_i(o['new_period'])} nos últimos $days dias', noteColor: CF.green),
-      KpiCard(
+      AdminKpi(label: 'Contas', value: '$total', note: '+${_i(o['new_period'])} nos últimos $days dias', noteColor: CF.green),
+      AdminKpi(
           label: 'Em teste grátis',
           value: '${_i(o['trialing'])}',
           note: endingSoon > 0 ? '$endingSoon ${endingSoon == 1 ? 'acaba' : 'acabam'} em 7 dias' : 'nenhum acaba em 7 dias',
           noteColor: endingSoon > 0 ? CF.amber : CF.muted),
-      KpiCard(
+      AdminKpi(
           label: 'Pagantes',
           value: '$paying',
           note: total > 0 ? '${(100 * paying / total).round()}% das contas' : 'sem contas ainda',
           noteColor: CF.green),
-      KpiCard(label: 'Receita mensal', value: moneyCompact(_n(o['mrr'])), note: 'estimada pelos planos'),
-      KpiCard(
+      AdminKpi(label: 'Receita mensal', value: moneyCompact(_n(o['mrr'])), note: 'estimada pelos planos'),
+      AdminKpi(
           label: 'Em atraso',
           value: '$lateCount',
           valueColor: lateCount > 0 ? CF.red : CF.text,
           note: lateCount > 0 ? '${moneyCompact(_n(o['late_amount']))} a receber' : 'ninguém em atraso',
           noteColor: lateCount > 0 ? CF.red : CF.muted),
-      KpiCard(label: 'Ativos na semana', value: '${_i(o['active_week'])}', note: 'abriram o app nos últimos 7 dias'),
+      AdminKpi(label: 'Ativos na semana', value: '${_i(o['active_week'])}', note: 'abriram o app nos últimos 7 dias'),
     ]);
 
     final weeklyPanel = Panel(
@@ -442,11 +442,11 @@ class _FinanceTab extends StatelessWidget {
                 ]),
               ),
             KpiGrid(children: [
-              KpiCard(label: 'Receita mensal', value: moneyCompact(_n(f['mrr'])), note: 'assinaturas ativas'),
-              KpiCard(label: 'Recebido no mês', value: moneyCompact(_n(f['received_month'])), valueColor: CF.green, note: real ? 'confirmado pelo Asaas' : 'sem dados do Asaas'),
-              KpiCard(label: 'A receber até o fim do mês', value: moneyCompact(_n(f['to_receive_month']))),
-              KpiCard(label: 'Em atraso', value: moneyCompact(overdue), valueColor: overdue > 0 ? CF.red : CF.text),
-              KpiCard(label: 'Cancelamentos no mês', value: '${_i(f['canceled_month'])}'),
+              AdminKpi(label: 'Receita mensal', value: moneyCompact(_n(f['mrr'])), note: 'assinaturas ativas'),
+              AdminKpi(label: 'Recebido no mês', value: moneyCompact(_n(f['received_month'])), valueColor: CF.green, note: real ? 'confirmado pelo Asaas' : 'sem dados do Asaas'),
+              AdminKpi(label: 'A receber até o fim do mês', value: moneyCompact(_n(f['to_receive_month']))),
+              AdminKpi(label: 'Em atraso', value: moneyCompact(overdue), valueColor: overdue > 0 ? CF.red : CF.text),
+              AdminKpi(label: 'Cancelamentos no mês', value: '${_i(f['canceled_month'])}'),
             ]),
             const SizedBox(height: 12),
             Panel(

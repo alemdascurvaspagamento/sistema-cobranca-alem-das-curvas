@@ -70,8 +70,8 @@ class StatusChip extends StatelessWidget {
 }
 
 /// Cartão de número grande, no estilo placar do app.
-class KpiCard extends StatelessWidget {
-  const KpiCard({
+class AdminKpi extends StatelessWidget {
+  const AdminKpi({
     super.key,
     required this.label,
     required this.value,
