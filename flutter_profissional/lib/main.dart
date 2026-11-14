@@ -13,6 +13,8 @@ import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
 import 'billing/rules_screen.dart';
 import 'booking_requests.dart';
+import 'admin/admin_api.dart';
+import 'admin/admin_screen.dart';
 import 'config.dart';
 import 'pay_link.dart';
 import 'reports/comparisons.dart';
@@ -383,7 +385,7 @@ class _NavBadge extends StatelessWidget {
       );
 }
 
-enum Section { inicio, agenda, cobrancas, clientes, financeiro, relatorios, regras, mais }
+enum Section { inicio, agenda, cobrancas, clientes, financeiro, relatorios, regras, mais, admin }
 
 extension SectionDetails on Section {
   String get label => switch (this) {
@@ -395,6 +397,7 @@ extension SectionDetails on Section {
         Section.relatorios => 'Relatórios',
         Section.regras => 'Regras e feriados',
         Section.mais => 'Configurações',
+        Section.admin => 'Painel',
       };
   Color get color => switch (this) {
         Section.inicio => CF.lap,
@@ -405,6 +408,7 @@ extension SectionDetails on Section {
         Section.relatorios => CF.violet,
         Section.regras => CF.amber,
         Section.mais => CF.muted,
+        Section.admin => CF.ink,
       };
   IconData get icon => switch (this) {
         Section.inicio => Icons.home_rounded,
@@ -415,6 +419,7 @@ extension SectionDetails on Section {
         Section.relatorios => Icons.insights_rounded,
         Section.regras => Icons.rule_rounded,
         Section.mais => Icons.tune_rounded,
+        Section.admin => Icons.admin_panel_settings_rounded,
       };
 }
 
@@ -453,6 +458,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     };
     Booking.instance.onError = AgendaEvents.instance.onError;
     scroll.addListener(() => showTop.value = scroll.hasClients && scroll.offset > 500);
+    // Painel do administrador: só aparece para quem é administrador (e só no navegador).
+    if (widget.cloud != null) AdminAccess.load(widget.cloud!.db);
   }
 
   @override
@@ -460,6 +467,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
     if (BillingStore.instance.onLocked == _showLocked) BillingStore.instance.onLocked = null;
     scroll.dispose();
     showTop.dispose();
+    AdminAccess.clear();
     super.dispose();
   }
 
@@ -635,6 +643,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               (Section.relatorios, 'Meta do ano, relatório do mês e ano mês a mês'),
               (Section.regras, 'Faltas, feriados, remarcações e profissão'),
               (Section.mais, 'Chave Pix e sincronização de agenda'),
+              if (AdminAccess.isAdmin.value) (Section.admin, 'Contas, uso e financeiro do Léguno'),
             ])
               ListTile(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -682,6 +691,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         return const ReportsScreen();
       case Section.regras:
         return RulesScreen(onChangeProfession: _changeProfession);
+      case Section.admin:
+        return AdminAccess.isAdmin.value ? const AdminScreen() : const SizedBox.shrink();
       case Section.mais:
         return SettingsScreen(
           email: widget.email,
@@ -738,10 +749,14 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             ),
             body: Row(children: [
               if (desktop)
-                NavigationRail(
+                ValueListenableBuilder<bool>(
+                  valueListenable: AdminAccess.isAdmin,
+                  builder: (context, isAdmin, _) {
+                    final visible = [for (final s in Section.values) if (s != Section.admin || isAdmin) s];
+                    return NavigationRail(
                   backgroundColor: CF.ink,
-                  selectedIndex: selected.index,
-                  onDestinationSelected: (i) => go(Section.values[i]),
+                  selectedIndex: visible.contains(selected) ? visible.indexOf(selected) : 0,
+                  onDestinationSelected: (i) => go(visible[i]),
                   extended: constraints.maxWidth >= 1150,
                   indicatorColor: Colors.transparent,
                   selectedIconTheme: const IconThemeData(color: CF.lap),
@@ -749,13 +764,15 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                   selectedLabelTextStyle: CF.body(15, color: Colors.white, weight: FontWeight.w700),
                   unselectedLabelTextStyle: CF.body(15, color: const Color(0xFFC9D6E8)),
                   destinations: [
-                    for (final s in Section.values)
+                    for (final s in visible)
                       NavigationRailDestination(
                         icon: _NavBadge(s, selected: false),
                         selectedIcon: _NavBadge(s, selected: true),
                         label: Text(s.label),
                       ),
                   ],
+                    );
+                  },
                 ),
               Expanded(
                 child: SafeArea(
