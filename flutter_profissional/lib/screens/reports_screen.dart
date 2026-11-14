@@ -8,6 +8,7 @@ import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
+import '../reports/charts_view.dart';
 import '../reports/comparisons_view.dart';
 import 'finance_screen.dart' show editAnnualGoal;
 
@@ -20,7 +21,7 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  bool compare = false;
+  int tab = 0; // 0 visão geral, 1 comparativos, 2 gráficos
 
   @override
   void initState() {
@@ -32,12 +33,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     final tabs = Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: PillGrid(columns: 2, narrowColumns: 2, gap: 6, children: [
-        Pill(label: 'Visão geral', selected: !compare, onTap: () => setState(() => compare = false)),
-        Pill(label: 'Comparativos', selected: compare, onTap: () => setState(() => compare = true)),
+      child: PillGrid(columns: 3, narrowColumns: 3, gap: 6, children: [
+        Pill(label: 'Visão geral', selected: tab == 0, onTap: () => setState(() => tab = 0)),
+        Pill(label: 'Comparativos', selected: tab == 1, onTap: () => setState(() => tab = 1)),
+        Pill(label: 'Gráficos', selected: tab == 2, onTap: () {
+          Usage.track('graficos_aberto');
+          setState(() => tab = 2);
+        }),
       ]),
     );
-    if (compare) {
+    if (tab == 2) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Seus números em gráficos'),
+        const SizedBox(height: 8),
+        tabs,
+        const ChartsView(),
+      ]);
+    }
+    if (tab == 1) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const PageTitle('Relatórios', icon: Icons.insights_rounded, color: CF.violet, subtitle: 'Compare períodos e entenda o que mudou'),
         const SizedBox(height: 8),
