@@ -13,6 +13,7 @@ import '../profile/profession_profile.dart';
 import 'cloud_sink.dart';
 import 'morning_brief.dart';
 import 'subscription.dart';
+import 'usage.dart';
 
 /// Situação da gravação: quantas mudanças estão sendo enviadas e o último erro.
 class SyncStatus {
@@ -333,6 +334,7 @@ class CloudService implements CloudSink {
     await CalendarFeed.instance.load();
     await Snapshots.instance.load();
     unawaited(MorningBrief.instance.load());
+    Usage.track('app_aberto');
     return true;
   }
 

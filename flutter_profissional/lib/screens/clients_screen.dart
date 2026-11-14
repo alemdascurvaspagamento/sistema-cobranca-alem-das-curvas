@@ -6,6 +6,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../profile/profession_profile.dart';
+import '../data/usage.dart';
 import '../ui/client_import.dart';
 import '../ui/cf_theme.dart';
 import '../ui/widgets.dart';
@@ -603,7 +604,9 @@ class _ClientFormState extends State<_ClientForm> {
       payerName: payerMode == 2 ? payerName.text.trim() : '',
       payerPhone: payerMode == 2 ? payerPhone.text.replaceAll(RegExp(r'[^0-9]'), '') : '',
     );
+    final isNew = widget.plan == null;
     store.savePlan(p);
+    if (isNew) Usage.track('cliente_novo');
     Navigator.pop(context);
     ScaffoldMessenger.of(widget.messengerContext).showSnackBar(SnackBar(
       content: Text(widget.plan == null ? 'Cadastro de ${p.name} criado. Já aparece na agenda e nas cobranças.' : 'Cadastro de ${p.name} atualizado.'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
+import '../data/usage.dart';
 import '../profile/profession_profile.dart';
 import 'cf_theme.dart';
 
@@ -102,6 +103,7 @@ class _ClientImportState extends State<_ClientImport> {
       existing.add(_norm(r.name));
       added++;
     }
+    if (added > 0) Usage.track('cliente_importado');
     final left = rows.length - added - repeated;
     Navigator.pop(context);
     final t = store.terms;

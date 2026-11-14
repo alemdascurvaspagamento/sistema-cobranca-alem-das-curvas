@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../agenda_events.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
+import 'usage.dart';
 
 /// Resumo da manhã por e-mail.
 ///
@@ -150,6 +151,7 @@ class MorningBrief extends ChangeNotifier {
     if (hour != null) sendHour = hour;
     notifyListeners();
     final ok = await _save(includeChoice: true);
+    if (ok && on == true) Usage.track('resumo_manha_ligado');
     if (!ok) {
       emailOn = oldOn;
       sendHour = oldHour;

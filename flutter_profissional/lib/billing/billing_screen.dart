@@ -9,6 +9,7 @@ import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import 'billing_engine.dart';
 import 'billing_store.dart';
+import '../data/usage.dart';
 import '../ui/whatsapp.dart';
 
 /// Vocabulário da profissão escolhida (aula, sessão, consulta...).
@@ -1942,6 +1943,7 @@ String groupBillingMessage(PayGroup g, {String? payLink}) {
 }
 
 Future<void> openWhatsAppBilling(BuildContext context, StudentPlan plan) async {
+  Usage.track('cobranca_whatsapp');
   final store = BillingStore.instance;
   final group = store.groupFor(plan);
   final first = group?.members.first ?? plan;

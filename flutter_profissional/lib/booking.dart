@@ -10,6 +10,7 @@ import 'billing/billing_engine.dart';
 import 'billing/billing_store.dart';
 import 'config.dart';
 import 'data/ids.dart';
+import 'data/usage.dart';
 import 'ui/cf_theme.dart';
 import 'ui/motion.dart';
 import 'ui/widgets.dart';
@@ -77,9 +78,14 @@ class BookingRequest {
     required this.date,
     required this.time,
     required this.note,
+    this.kind = 'new',
   });
   final String id, name, phone, email, service, time, note;
   final DateTime date;
+
+  /// 'new' (pedido de horário), 'change' (quer remarcar) ou 'cancel' (quer cancelar).
+  final String kind;
+  bool get isChange => kind != 'new';
 }
 
 String _d(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -178,7 +184,7 @@ class Booking extends ChangeNotifier {
           .from('cf_booking_requests')
           .select()
           .eq('status', 'pending')
-          .gte('date', _d(BillingStore.instance.today))
+          .or('date.gte.${_d(BillingStore.instance.today)},kind.neq.new')
           .order('date')
           .order('time');
       pending
@@ -194,6 +200,7 @@ class Booking extends ChangeNotifier {
               date: DateTime.parse(r['date'] as String),
               time: r['time'] as String,
               note: r['note'] as String? ?? '',
+              kind: r['kind'] as String? ?? 'new',
             ),
         ]);
       notifyListeners();
@@ -204,6 +211,7 @@ class Booking extends ChangeNotifier {
 
   Future<void> save(BookingSettings s) async {
     settings = s;
+    if (s.enabled) Usage.track('agendamento_online_ligado');
     notifyListeners();
     if (!_cloud) return;
     try {
@@ -309,6 +317,19 @@ class Booking extends ChangeNotifier {
         '${_dayText(r.date)} às ${r.time}. Até lá! 👍');
     return client == null ? 'sem cadastro' : null;
   }
+
+  /// Pedido de remarcar ou cancelar: abre o WhatsApp com a resposta pronta e marca como resolvido.
+  Future<void> answerChange(BuildContext context, BookingRequest r) async {
+    final first = r.name.split(' ').first;
+    final text = r.kind == 'cancel'
+        ? 'Oi, $first! Recebi seu pedido de cancelamento. Está registrado. Quando quiser marcar de novo, é só pedir por aqui: ${settings?.link ?? ''}'
+        : 'Oi, $first! Recebi seu pedido para remarcar. Vamos combinar o novo horário? Me diga o que fica melhor para você.';
+    await _setStatus(r, 'accepted');
+    if (context.mounted) await _whatsApp(r.phone, text);
+  }
+
+  /// Só marca como resolvido, sem mandar mensagem.
+  Future<void> resolveChange(BookingRequest r) => _setStatus(r, 'accepted');
 
   Future<String> decline(BuildContext context, BookingRequest r) async {
     await _setStatus(r, 'declined');
@@ -915,11 +936,14 @@ class _RequestTile extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(r.name, style: CF.body(16, weight: FontWeight.w700)),
               Text(
-                '${r.service.isEmpty ? '' : '${r.service} · '}${capitalize(Booking._dayText(r.date))} às ${r.time}',
-                style: CF.body(14, color: CF.text, weight: FontWeight.w600),
+                r.isChange
+                    ? (r.kind == 'cancel' ? 'Quer cancelar um horário' : 'Quer remarcar um horário')
+                    : '${r.service.isEmpty ? '' : '${r.service} · '}${capitalize(Booking._dayText(r.date))} às ${r.time}',
+                style: CF.body(14, color: r.isChange ? CF.amber : CF.text, weight: FontWeight.w600),
               ),
-              Text(r.email.isNotEmpty ? 'Resposta automática por e-mail' : 'Sem e-mail: a resposta vai pelo WhatsApp',
-                  style: CF.body(13, color: CF.muted)),
+              if (!r.isChange)
+                Text(r.email.isNotEmpty ? 'Resposta automática por e-mail' : 'Sem e-mail: a resposta vai pelo WhatsApp',
+                    style: CF.body(13, color: CF.muted)),
               Text(client != null ? 'Já é seu ${BillingStore.instance.terms.client}' : 'Ainda não cadastrad${BillingStore.instance.terms.g('a', 'o')}',
                   style: CF.body(13, color: CF.muted)),
               if (r.note.isNotEmpty) Text('"${r.note}"', style: CF.body(13, color: CF.muted)),
@@ -927,6 +951,22 @@ class _RequestTile extends StatelessWidget {
           ),
         ]),
         const SizedBox(height: 8),
+        if (r.isChange)
+          Wrap(spacing: 8, runSpacing: 6, children: [
+            FilledButton.icon(
+              onPressed: () => b.answerChange(context, r),
+              style: FilledButton.styleFrom(backgroundColor: CF.whatsapp, minimumSize: const Size(0, 40)),
+              icon: const Icon(Icons.chat_rounded, size: 18),
+              label: const Text('Responder no WhatsApp'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => b.resolveChange(r),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+              icon: const Icon(Icons.check_rounded, size: 18),
+              label: const Text('Já resolvi'),
+            ),
+          ])
+        else
         Wrap(spacing: 8, runSpacing: 6, children: [
           FilledButton.icon(
             onPressed: () async {
@@ -1171,7 +1211,23 @@ class _BookingPublicPageState extends State<BookingPublicPage> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text('${m['title']}', style: CF.body(26, weight: FontWeight.w800)),
             Text('Escolha um horário livre e peça para marcar.', style: CF.body(15, color: CF.muted)),
-            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (sheet) => Padding(
+                    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheet).bottom),
+                    child: _ChangeSheet(slug: widget.slug),
+                  ),
+                ),
+                icon: const Icon(Icons.edit_calendar_rounded, size: 18),
+                label: const Text('Já tenho horário e quero remarcar ou cancelar'),
+              ),
+            ),
+            const SizedBox(height: 10),
             if (services.isNotEmpty) ...[
               Text('O que você quer marcar?', style: CF.body(16, weight: FontWeight.w700)),
               const SizedBox(height: 6),
@@ -1396,6 +1452,119 @@ class _InviteSheetState extends State<_InviteSheet> {
           ]),
         ),
       ),
+    );
+  }
+}
+
+
+/// Pedido de remarcação ou cancelamento feito pelo cliente, pelo link.
+/// Não muda a agenda: vira um aviso para o profissional responder.
+class _ChangeSheet extends StatefulWidget {
+  const _ChangeSheet({required this.slug});
+  final String slug;
+  @override
+  State<_ChangeSheet> createState() => _ChangeSheetState();
+}
+
+class _ChangeSheetState extends State<_ChangeSheet> {
+  String kind = 'change';
+  final name = TextEditingController();
+  final phone = TextEditingController();
+  final note = TextEditingController();
+  bool sending = false, done = false;
+  String? error;
+
+  @override
+  void dispose() {
+    name.dispose();
+    phone.dispose();
+    note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    setState(() {
+      sending = true;
+      error = null;
+    });
+    try {
+      final r = await Supabase.instance.client.rpc('cf_request_change', params: {
+        'p_slug': widget.slug,
+        'p_name': name.text,
+        'p_phone': phone.text,
+        'p_kind': kind,
+        'p_note': note.text,
+      });
+      if (r == 'ok') {
+        done = true;
+      } else {
+        error = '$r';
+      }
+    } catch (_) {
+      error = 'Não foi possível enviar. Confira a internet e tente de novo.';
+    }
+    if (mounted) setState(() => sending = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (done) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const PopCheck(color: CF.green, size: 64),
+          const SizedBox(height: 12),
+          Text('Pedido enviado!', style: CF.body(24, weight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Text('O profissional vai responder pelo WhatsApp que você informou.',
+              textAlign: TextAlign.center, style: CF.body(16, color: CF.muted, height: 1.4)),
+          const SizedBox(height: 14),
+          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar')),
+        ]),
+      );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('Remarcar ou cancelar', style: CF.body(22, weight: FontWeight.w800)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, children: [
+          for (final (k, label) in const [('change', 'Remarcar'), ('cancel', 'Cancelar')])
+            ChoiceChip(
+              label: Text(label),
+              selected: kind == k,
+              showCheckmark: false,
+              selectedColor: CF.brand,
+              labelStyle: CF.body(15, weight: FontWeight.w600, color: kind == k ? Colors.white : CF.text),
+              onSelected: (_) => setState(() => kind = k),
+            ),
+        ]),
+        const SizedBox(height: 12),
+        TextField(controller: name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Seu nome')),
+        const SizedBox(height: 10),
+        TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Seu WhatsApp com DDD', hintText: '(11) 99999-9999')),
+        const SizedBox(height: 10),
+        TextField(
+          controller: note,
+          maxLength: 300,
+          decoration: InputDecoration(
+            labelText: kind == 'cancel' ? 'Qual horário você quer cancelar?' : 'Qual horário e para quando?',
+            hintText: kind == 'cancel' ? 'Ex.: quarta, 10h' : 'Ex.: quarta 10h para sexta 15h',
+          ),
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 4),
+          Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),
+        ],
+        const SizedBox(height: 10),
+        FilledButton(
+          onPressed: sending ? null : _send,
+          child: Text(sending ? 'Enviando...' : (kind == 'cancel' ? 'Pedir cancelamento' : 'Pedir remarcação')),
+        ),
+        const SizedBox(height: 8),
+        Text('Seu pedido vai para o profissional, que responde pelo WhatsApp. A agenda só muda quando ele confirmar.',
+            textAlign: TextAlign.center, style: CF.body(13, color: CF.muted)),
+      ]),
     );
   }
 }

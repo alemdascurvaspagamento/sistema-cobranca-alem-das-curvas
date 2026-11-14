@@ -4,7 +4,7 @@ import '../config.dart';
 import 'cf_theme.dart';
 
 /// Versão dos textos legais. Muda quando os termos mudarem (fica gravada no cadastro).
-const legalVersion = '2026-11-10';
+const legalVersion = '2026-11-14';
 
 enum LegalDoc { terms, privacy }
 
@@ -53,7 +53,7 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
             'DANIEL BARSOTTINI - ME (CNPJ 21.828.670/0001-70) é o controlador dos dados da sua conta. '
                 'Contato sobre dados: $_contact.'),
         _Item('Que dados guardamos',
-            'Da sua conta: nome do negócio, e-mail, profissão, chave Pix e dados de uso. '
+            'Da sua conta: nome do negócio, e-mail, profissão, chave Pix e dados de uso. Os dados de uso são só o nome da função usada e o dia (por exemplo, “cadastrou um cliente”), sem nomes, valores ou telefones de clientes. '
                 'Sobre os seus clientes, o que você cadastrar: nome, telefone, serviço, horários, valores e pagamentos. '
                 'Essas informações são suas: você decide o que cadastrar. Não cadastre dados de saúde nem anotações clínicas; '
                 'o app não foi feito para prontuário.'),

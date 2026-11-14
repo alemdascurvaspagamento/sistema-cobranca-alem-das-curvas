@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../data/usage.dart';
 import 'package:flutter/services.dart';
 
 import '../billing/billing_engine.dart';
@@ -19,6 +21,12 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   bool compare = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Usage.track('relatorios_aberto');
+  }
 
   @override
   Widget build(BuildContext context) {
