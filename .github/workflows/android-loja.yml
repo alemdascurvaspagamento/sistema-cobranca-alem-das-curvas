@@ -1,0 +1,90 @@
+# Monta o app do Léguno para a Google Play (arquivo .aab assinado).
+# Só roda quando você manda: Actions > "Android para a loja" > Run workflow.
+# Precisa de 3 segredos no GitHub: ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS.
+name: Android para a loja
+
+on:
+  workflow_dispatch:
+
+jobs:
+  aab:
+    name: Montar o arquivo para a Google Play
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    env:
+      KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+      KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Conferir a chave
+        run: |
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ] || [ -z "$KS_ALIAS" ]; then
+            echo "::error title=Chave::Faltam os segredos da chave de assinatura Android no GitHub."; exit 1
+          fi
+
+      - name: Instalar o Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Instalar o Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar o projeto Android
+        run: |
+          flutter create --platforms=android --org br.com.leguno --project-name coachflow_profissional . >/dev/null
+          sed -i -E 's/applicationId = "[^"]*"/applicationId = "br.com.leguno.app"/' android/app/build.gradle.kts
+          flutter pub get
+          dart run flutter_launcher_icons -f tool/icons_android.yaml > "$RUNNER_TEMP/icons.txt" 2>&1 || { echo "::error title=Ícone::$(tail -15 "$RUNNER_TEMP/icons.txt" | tr '\n' ' ')"; exit 1; }
+          manifest=android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="[^"]*"/android:label="Léguno"/' "$manifest"
+          grep -q 'android.permission.INTERNET' "$manifest" || \
+            sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$manifest"
+          grep -q '<queries>' "$manifest" && \
+            sed -i 's#<queries>#<queries>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>#' "$manifest"
+          # Assinatura: a chave vem dos segredos e nunca fica no código.
+          echo "$KS_B64" | base64 -d > android/app/upload.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload.jks\n' "$KS_PASS" "$KS_PASS" "$KS_ALIAS" > android/key.properties
+          python3 - <<'PY'
+          p='android/app/build.gradle.kts'
+          s=open(p).read()
+          s='import java.util.Properties\n'+s
+          s=s.replace('android {','''val keyProps = Properties().apply { load(rootProject.file("key.properties").inputStream()) }
+
+android {''',1)
+          s=s.replace('buildTypes {','''signingConfigs {
+        create("upload") {
+            keyAlias = keyProps["keyAlias"] as String
+            keyPassword = keyProps["keyPassword"] as String
+            storeFile = file(keyProps["storeFile"] as String)
+            storePassword = keyProps["storePassword"] as String
+        }
+    }
+    buildTypes {''',1)
+          s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("upload")')
+          open(p,'w').write(s)
+          PY
+          grep -n "signingConfig" android/app/build.gradle.kts
+
+      - name: Montar o arquivo da loja
+        run: |
+          flutter build appbundle --release --build-number=${{ github.run_number }}
+          ls -la build/app/outputs/bundle/release/
+          keytool -list -v -keystore android/app/upload.jks -storepass "$KS_PASS" -alias "$KS_ALIAS" | grep -E "SHA256|Válido|Valid" | head -3
+
+      - name: Guardar o arquivo
+        uses: actions/upload-artifact@v4
+        with:
+          name: leguno-loja-android
+          path: flutter_profissional/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 14
