@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../config.dart';
 import '../data/cloud_sink.dart';
 import '../data/ids.dart';
 import '../data/subscription.dart';
@@ -42,8 +43,9 @@ class BillingStore extends ChangeNotifier {
 
   bool get canEdit => !isCloud || (subscription?.canWrite ?? true);
 
-  static const lockedMessage =
-      'Sua conta está no modo somente leitura. Assine para voltar a lançar; seus dados continuam aqui.';
+  static String get lockedMessage => AppConfig.hidePricing
+      ? 'Sua conta está no modo somente leitura; seus dados continuam aqui.'
+      : 'Sua conta está no modo somente leitura. Assine para voltar a lançar; seus dados continuam aqui.';
 
   void setSubscription(SubscriptionInfo? info) {
     subscription = info;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config.dart';
 import 'cf_theme.dart';
 import 'widgets.dart';
 
@@ -177,7 +178,7 @@ class _Pitch extends StatelessWidget {
       const SizedBox(height: 12),
       Text(
           onSignup != null
-              ? '30 dias grátis, sem cartão. Depois, a partir de R\$ 34,90 por mês. '
+              ? '${AppConfig.hidePricing ? '30 dias grátis, sem cartão. ' : '30 dias grátis, sem cartão. Depois, a partir de R\$ 34,90 por mês. '}'
                   'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros profissionais.'
               : 'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros '
                   'profissionais. Sem cadastro: você escolhe a profissão e entra numa conta de exemplo.',

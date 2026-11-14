@@ -575,11 +575,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
             Icon(icon, color: fg, size: 20),
             const SizedBox(width: 10),
             Expanded(child: Text(text, style: CF.body(14.5, color: fg, weight: FontWeight.w600))),
-            TextButton(
-              onPressed: () => go(Section.mais),
-              style: TextButton.styleFrom(foregroundColor: fg),
-              child: const Text('Assinatura'),
-            ),
+            if (!AppConfig.hidePricing)
+              TextButton(
+                onPressed: () => go(Section.mais),
+                style: TextButton.styleFrom(foregroundColor: fg),
+                child: const Text('Assinatura'),
+              ),
           ]),
         );
       },

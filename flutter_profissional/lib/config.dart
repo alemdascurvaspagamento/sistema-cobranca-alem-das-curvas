@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Endereço do banco e chave pública do Coach Flow Profissional.
 ///
 /// A chave "publishable" é feita para ficar dentro do app (navegador e celular).
@@ -26,6 +28,11 @@ class AppConfig {
 
   /// Desliga o login (usado nos testes automáticos, que não têm internet).
   static const offline = bool.fromEnvironment('CF_OFFLINE');
+
+  /// Nos apps das lojas (iPhone e Android) não aparecem preços, planos nem botão de assinatura:
+  /// as lojas só aceitam venda de assinatura pelos meios delas. No navegador tudo continua igual.
+  static bool get hidePricing =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
 
   static bool get cloudEnabled => !offline && supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
 }

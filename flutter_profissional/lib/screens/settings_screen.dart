@@ -365,7 +365,7 @@ class _SubscriptionPanel extends StatelessWidget {
           CF.green,
         ),
       'grace' => ('Pagamento em atraso', 'Acesso garantido até ${date(sub!.currentPeriodEnd?.add(const Duration(days: 7)))}.', CF.red),
-      'read_only' => ('Somente leitura', 'Você vê e baixa seus dados. Para voltar a lançar, assine um plano.', CF.red),
+      'read_only' => ('Somente leitura', AppConfig.hidePricing ? 'Você vê e baixa seus dados.' : 'Você vê e baixa seus dados. Para voltar a lançar, assine um plano.', CF.red),
       _ => (
           'Teste grátis',
           sub == null
@@ -375,14 +375,15 @@ class _SubscriptionPanel extends StatelessWidget {
         ),
     };
     final t = store.terms;
+    final storeApp = AppConfig.hidePricing;
     return Panel(
       icon: Icons.workspace_premium_rounded,
       color: CF.amber,
-      title: 'Assinatura',
+      title: storeApp ? 'Sua conta' : 'Assinatura',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(title, style: CF.body(18, weight: FontWeight.w700, color: color)),
         Text(detail, style: CF.body(14.5, color: CF.muted, height: 1.35)),
-        if (sub?.isCourtesy != true) ...[
+        if (sub?.isCourtesy != true && !storeApp) ...[
           const SizedBox(height: 12),
           LayoutBuilder(builder: (context, box) {
             final w = box.maxWidth >= 520 ? (box.maxWidth - 10) / 2 : box.maxWidth;
