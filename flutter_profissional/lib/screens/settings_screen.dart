@@ -19,12 +19,10 @@ import '../ui/widgets.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
-    required this.onCalendarSync,
     this.email,
     this.onSignOut,
     this.onLeaveDemo,
   });
-  final VoidCallback onCalendarSync;
   final String? email;
   final VoidCallback? onSignOut;
   final VoidCallback? onLeaveDemo;
@@ -424,7 +422,7 @@ class _SubscriptionPanel extends StatelessWidget {
                   child: Text.rich(TextSpan(children: [
                     TextSpan(text: 'Oferta de fundador: ', style: CF.body(14.5, weight: FontWeight.w800, color: CF.amber)),
                     TextSpan(
-                      text: 'assine durante o teste e tenha o Profissional por R\$ 39,90/mês para sempre. '
+                      text: 'assine durante o teste e tenha o Profissional por R\$ 39,90/mês, preço mantido enquanto a assinatura estiver ativa. '
                           'Só para as primeiras 100 contas.',
                       style: CF.body(14.5, color: CF.text, height: 1.35),
                     ),
@@ -433,9 +431,6 @@ class _SubscriptionPanel extends StatelessWidget {
               ]),
             ),
           ],
-          const SizedBox(height: 10),
-          Text('A assinatura é feita pelo site, que abre em breve; você entra no app com este mesmo e-mail.',
-              style: CF.body(13.5, color: CF.muted, height: 1.35)),
         ],
       ]),
     );

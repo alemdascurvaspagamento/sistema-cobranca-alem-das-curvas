@@ -13,7 +13,6 @@ import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
 import 'billing/rules_screen.dart';
 import 'booking_requests.dart';
-import 'calendar_connections.dart';
 import 'config.dart';
 import 'pay_link.dart';
 import 'reports/comparisons.dart';
@@ -438,7 +437,6 @@ class CoachFlowShell extends StatefulWidget {
 
 class _CoachFlowShellState extends State<CoachFlowShell> {
   Section selected = Section.inicio;
-  bool calendarSettings = false;
   final scroll = ScrollController();
   final showTop = ValueNotifier(false);
 
@@ -587,7 +585,6 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   void go(Section s) {
     setState(() {
       selected = s;
-      calendarSettings = false;
     });
     // Cada tela começa do topo, sem avisos da tela anterior.
     if (scroll.hasClients) scroll.jumpTo(0);
@@ -681,21 +678,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
       case Section.regras:
         return RulesScreen(onChangeProfession: _changeProfession);
       case Section.mais:
-        if (calendarSettings) {
-          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => calendarSettings = false),
-                icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Voltar às configurações'),
-              ),
-            ),
-            const CalendarConnections(),
-          ]);
-        }
         return SettingsScreen(
-          onCalendarSync: () => setState(() => calendarSettings = true),
           email: widget.email,
           onSignOut: widget.demo ? null : widget.onLeave,
           onLeaveDemo: widget.demo ? widget.onLeave : null,

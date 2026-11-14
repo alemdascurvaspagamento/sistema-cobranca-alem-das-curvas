@@ -801,6 +801,24 @@ class _NewSessionState extends State<_NewSession> {
   }
   String? error;
 
+  /// Atendimentos e compromissos que batem com o dia e horário escolhidos.
+  List<String> get _clashes {
+    final t = time;
+    if (t == null || t.isEmpty) return const [];
+    final plan = clientId == null ? null : store.plan(clientId!);
+    final start = minutesOf(t), end = start + (plan?.durationMinutes ?? 60);
+    return [
+      for (final (p, line) in store.sessionsOn(date))
+        if (p.id != clientId &&
+            store.happens(line.outcome) &&
+            line.time.isNotEmpty &&
+            minutesOf(line.time) < end &&
+            start < minutesOf(line.time) + p.durationMinutes)
+          '${line.time} ${p.name.split(' ').first}',
+      for (final e in AgendaEvents.instance.clashes(date, t, end - start)) '${e.time} ${e.title}',
+    ];
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -870,6 +888,22 @@ class _NewSessionState extends State<_NewSession> {
                   }),
                 ),
             ]),
+            if (_clashes.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 14),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: CF.amberBg, borderRadius: BorderRadius.circular(12)),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Icon(Icons.warning_amber_rounded, color: CF.amber),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Esse horário já tem: ${_clashes.join(', ')}. Dá para marcar mesmo assim.',
+                      style: CF.body(14, color: CF.text),
+                    ),
+                  ),
+                ]),
+              ),
             if (error != null) ...[
               const SizedBox(height: 10),
               Text(error!, style: CF.body(15, color: CF.red, weight: FontWeight.w600)),
