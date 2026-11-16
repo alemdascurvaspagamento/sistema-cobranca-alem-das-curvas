@@ -146,7 +146,7 @@ class CalendarFeed extends ChangeNotifier {
 
 Future<void> openCalendarFeed(BuildContext context) async {
   if (!ProGate.check(context, 'A agenda no Outlook e no Google')) return;
-  return Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const _CalendarFeedScreen()));
+  await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const _CalendarFeedScreen()));
 }
 
 class _CalendarFeedScreen extends StatelessWidget {

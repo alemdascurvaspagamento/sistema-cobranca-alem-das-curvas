@@ -431,7 +431,7 @@ class Booking extends ChangeNotifier {
 /// Horários do agendamento online. Com [activate], já abre com o link ligado.
 Future<void> openBookingSettings(BuildContext context, {bool activate = false}) async {
   if (!ProGate.check(context, 'O agendamento online')) return;
-  return _openBookingSettings(context, activate: activate);
+  await _openBookingSettings(context, activate: activate);
 }
 
 Future<void> _openBookingSettings(BuildContext context, {bool activate = false}) => Navigator.of(context).push(
