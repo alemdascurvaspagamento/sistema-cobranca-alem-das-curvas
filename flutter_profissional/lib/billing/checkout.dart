@@ -196,10 +196,31 @@ Future<void> startCheckout(BuildContext context, BillingStore store, String plan
     return;
   }
   if (url != null) {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Abrimos a página de pagamento. Assim que o pagamento for confirmado, o plano é ativado sozinho.')));
+    final link = url;
+    // O navegador só abre uma janela nova depois de um clique da pessoa, por isso o botão.
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.check_circle_rounded, color: CF.green, size: 36),
+        title: const Text('Sua fatura está pronta'),
+        content: Text(
+          'Toque no botão para abrir a página de pagamento (Pix, boleto ou cartão). '
+          'Assim que o pagamento for confirmado, o plano é ativado sozinho.',
+          style: CF.body(15, height: 1.4),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Depois')),
+          FilledButton.icon(
+            onPressed: () {
+              launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+              Navigator.of(ctx).pop();
+            },
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Abrir pagamento'),
+          ),
+        ],
+      ),
+    );
   } else {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pronto! Você agora está no plano $name.')));
   }
