@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
+import '../billing/pro_gate.dart';
 import 'whatsapp.dart';
 
 /// Confirmação dos atendimentos do dia pelo WhatsApp.
@@ -81,6 +82,7 @@ class Confirmations extends ChangeNotifier {
 
   /// Abre o WhatsApp com a mensagem pronta e marca como enviada.
   Future<void> send(BuildContext context, StudentPlan plan, LessonLine line) async {
+    if (!ProGate.check(context, 'A confirmação pelo WhatsApp')) return;
     var phone = plan.phone.replaceAll(RegExp(r'[^0-9]'), '');
     if (phone.length == 10 || phone.length == 11) phone = '55$phone';
     final url = whatsAppLink(phone, text: messageFor(plan, line));

@@ -7,6 +7,7 @@ import '../ui/support_request.dart';
 
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
+import '../billing/checkout.dart';
 import '../data/export.dart';
 import '../data/morning_brief.dart';
 import '../ui/cf_theme.dart';
@@ -385,33 +386,7 @@ class _SubscriptionPanel extends StatelessWidget {
         Text(detail, style: CF.body(14.5, color: CF.muted, height: 1.35)),
         if (sub?.isCourtesy != true && !storeApp) ...[
           const SizedBox(height: 12),
-          LayoutBuilder(builder: (context, box) {
-            final w = box.maxWidth >= 520 ? (box.maxWidth - 10) / 2 : box.maxWidth;
-            Widget plan(String name, String price, String yearly, String what, bool highlight) => Container(
-                  width: w,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: highlight ? const Color(0xFFDDF3F5) : CF.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: highlight ? CF.brand : CF.line, width: highlight ? 2 : 1),
-                  ),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(name, style: CF.body(16, weight: FontWeight.w700)),
-                    Text(price, style: CF.score(28)),
-                    Text(yearly, style: CF.body(13, color: CF.green, weight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text(what, style: CF.body(14, color: CF.muted, height: 1.3)),
-                  ]),
-                );
-            return Wrap(spacing: 10, runSpacing: 10, children: [
-              plan('Essencial', 'R\$ 34,90/mês', 'ou R\$ 349/ano (2 meses grátis)',
-                  'Até 15 ${t.clients} ativos. Agenda, cobrança e Pix.', false),
-              plan('Profissional', 'R\$ 59,90/mês', 'ou R\$ 599/ano (2 meses grátis)',
-                  '${t.clientsTitle} ilimitados, agendamento online, confirmação pelo WhatsApp, '
-                      'agenda no Outlook/Google e relatórios.',
-                  true),
-            ]);
-          }),
+          PlanChooser(store: store, clients: t.clients, clientsTitle: t.clientsTitle),
           if (sub?.state == 'trialing' || sub == null) ...[
             const SizedBox(height: 10),
             Container(

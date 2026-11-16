@@ -30,11 +30,20 @@ function stamp(d: Date) {
 Deno.serve(async (req) => {
   const token = new URL(req.url).searchParams.get('t') ?? '';
   if (!/^[a-f0-9]{32,64}$/.test(token)) return new Response('Link inválido', { status: 404 });
-  const r = await fetch(`${URL_}/rest/v1/cf_calendar_feed?token=eq.${token}&select=events,updated_at`, {
+  const r = await fetch(`${URL_}/rest/v1/cf_calendar_feed?token=eq.${token}&select=events,updated_at,owner_id`, {
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });
   const rows = r.ok ? await r.json() : [];
   if (!rows.length) return new Response('Link inválido', { status: 404 });
+  // Agenda no Outlook e no Google é do plano Profissional (no teste grátis fica liberada).
+  const pro = await fetch(`${URL_}/rest/v1/rpc/_cf_is_pro`, {
+    method: 'POST',
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_owner: rows[0].owner_id }),
+  });
+  if (!pro.ok || (await pro.json()) !== true) {
+    return new Response('A agenda no Outlook e no Google faz parte do plano Profissional do Léguno.', { status: 403 });
+  }
   const events: Array<Record<string, unknown>> = rows[0].events ?? [];
   const now = stamp(new Date());
   const lines = [

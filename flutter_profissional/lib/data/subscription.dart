@@ -8,6 +8,9 @@ class SubscriptionInfo {
     this.currentPeriodEnd,
     this.founder = false,
     this.clientLimit,
+    this.pro = true,
+    this.cycle = 'monthly',
+    this.hasSubscription = false,
   });
 
   /// `essencial` ou `profissional`.
@@ -26,6 +29,15 @@ class SubscriptionInfo {
   /// Máximo de clientes ativos (só no Essencial).
   final int? clientLimit;
 
+  /// Tem as funções do Profissional (teste grátis, cortesia ou plano Profissional em dia).
+  final bool pro;
+
+  /// `monthly` ou `annual`.
+  final String cycle;
+
+  /// Já tem assinatura criada no Asaas (troca de plano em vez de assinatura nova).
+  final bool hasSubscription;
+
   factory SubscriptionInfo.fromJson(Map<String, dynamic> j) => SubscriptionInfo(
         plan: j['plan'] as String? ?? 'profissional',
         status: j['status'] as String? ?? 'trialing',
@@ -35,6 +47,9 @@ class SubscriptionInfo {
             j['current_period_end'] == null ? null : DateTime.parse(j['current_period_end'] as String).toLocal(),
         founder: j['founder'] as bool? ?? false,
         clientLimit: (j['client_limit'] as num?)?.toInt(),
+        pro: j['pro'] as bool? ?? true,
+        cycle: j['cycle'] as String? ?? 'monthly',
+        hasSubscription: j['has_subscription'] as bool? ?? false,
       );
 
   bool get canWrite => state != 'read_only';

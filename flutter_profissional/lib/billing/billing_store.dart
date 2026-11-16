@@ -43,6 +43,9 @@ class BillingStore extends ChangeNotifier {
 
   bool get canEdit => !isCloud || (subscription?.canWrite ?? true);
 
+  /// Funções do Profissional liberadas? (Na demonstração, sim.)
+  bool get isPro => !isCloud || (subscription?.pro ?? true);
+
   static String get lockedMessage => AppConfig.hidePricing
       ? 'Sua conta está no modo somente leitura; seus dados continuam aqui.'
       : 'Sua conta está no modo somente leitura. Assine para voltar a lançar; seus dados continuam aqui.';

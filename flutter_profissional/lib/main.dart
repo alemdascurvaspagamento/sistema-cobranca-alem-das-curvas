@@ -11,6 +11,7 @@ import 'calendar_feed.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
+import 'billing/pro_gate.dart';
 import 'billing/rules_screen.dart';
 import 'booking_requests.dart';
 import 'admin/admin_api.dart';
@@ -452,6 +453,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   @override
   void initState() {
     super.initState();
+    ProGate.openPlans = () => go(Section.mais);
     BillingStore.instance.onLocked = _showLocked;
     AgendaEvents.instance.onError = (msg) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -464,6 +466,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
 
   @override
   void dispose() {
+    ProGate.openPlans = null;
     if (BillingStore.instance.onLocked == _showLocked) BillingStore.instance.onLocked = null;
     scroll.dispose();
     showTop.dispose();
@@ -688,7 +691,11 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           onReports: () => go(Section.relatorios),
         );
       case Section.relatorios:
-        return const ReportsScreen();
+        return BillingStore.instance.isPro
+            ? const ReportsScreen()
+            : const ProLockedView(
+                title: 'Relatórios',
+                what: 'Gráficos, comparativos entre meses, meta do ano e indicadores do seu trabalho.');
       case Section.regras:
         return RulesScreen(onChangeProfession: _changeProfession);
       case Section.admin:

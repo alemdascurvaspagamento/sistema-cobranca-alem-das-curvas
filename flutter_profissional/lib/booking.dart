@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'agenda_events.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_store.dart';
+import 'billing/pro_gate.dart';
 import 'config.dart';
 import 'data/ids.dart';
 import 'data/usage.dart';
@@ -428,7 +429,12 @@ class Booking extends ChangeNotifier {
 // ---------------------------------------------------------------------------
 
 /// Horários do agendamento online. Com [activate], já abre com o link ligado.
-Future<void> openBookingSettings(BuildContext context, {bool activate = false}) => Navigator.of(context).push(
+Future<void> openBookingSettings(BuildContext context, {bool activate = false}) async {
+  if (!ProGate.check(context, 'O agendamento online')) return;
+  return _openBookingSettings(context, activate: activate);
+}
+
+Future<void> _openBookingSettings(BuildContext context, {bool activate = false}) => Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => _BookingSettingsScreen(activate: activate)),
     );
 

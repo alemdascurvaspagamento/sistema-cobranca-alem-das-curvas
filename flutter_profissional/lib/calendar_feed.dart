@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'billing/pro_gate.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -143,8 +144,10 @@ class CalendarFeed extends ChangeNotifier {
   }
 }
 
-Future<void> openCalendarFeed(BuildContext context) =>
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const _CalendarFeedScreen()));
+Future<void> openCalendarFeed(BuildContext context) async {
+  if (!ProGate.check(context, 'A agenda no Outlook e no Google')) return;
+  return Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const _CalendarFeedScreen()));
+}
 
 class _CalendarFeedScreen extends StatelessWidget {
   const _CalendarFeedScreen();
