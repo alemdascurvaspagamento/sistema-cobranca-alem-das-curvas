@@ -264,23 +264,23 @@ class _HolidayList extends StatelessWidget {
         KpiCard(icon: Icons.event_available_rounded, label: 'Com atendimento', value: '${list.where((h) => !h.noClass).length}', color: CF.green, accent: true),
       ]),
       const SizedBox(height: 12),
-      _HolidayList(list: list, today: today, year: year),
+      _HolidayFold(list: list, today: today, year: year),
     ]);
   }
 }
 
 /// Lista de feriados que recolhe: fechada, mostra só o próximo feriado.
-class _HolidayList extends StatefulWidget {
-  const _HolidayList({required this.list, required this.today, required this.year});
+class _HolidayFold extends StatefulWidget {
+  const _HolidayFold({required this.list, required this.today, required this.year});
   final List<Holiday> list;
   final DateTime today;
   final int year;
 
   @override
-  State<_HolidayList> createState() => _HolidayListState();
+  State<_HolidayFold> createState() => _HolidayFoldState();
 }
 
-class _HolidayListState extends State<_HolidayList> {
+class _HolidayFoldState extends State<_HolidayFold> {
   static bool _open = false;
 
   @override
