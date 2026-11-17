@@ -3,3 +3,4 @@ build 2026-11-16T13:59:22Z
 build 2026-11-16T15:17:02Z v1.0.0
 build 2026-11-17T19:28:37Z v1.0.1: planos, relevo, listas que fecham
 build 2026-11-17T19:50:56Z v1.0.1 com relevo em todos os botões
+build 2026-11-17T20:54:24Z v1.0.1 alunos de 5 em 5 e botão de relatórios
