@@ -569,6 +569,13 @@ class _BookingSettingsScreenState extends State<_BookingSettingsScreen> {
                       icon: Icons.event_available_rounded,
                       color: CF.green,
                       title: 'Quando atendo',
+                      collapsible: true,
+                      summary: () {
+                        final abertos = [for (var d = 1; d <= 7; d++) if ((s.days[d] ?? const []).isNotEmpty) d];
+                        if (abertos.isEmpty) return 'Nenhum dia aberto';
+                        const nomes = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+                        return '${abertos.map((d) => nomes[d - 1]).join(', ')} · ${abertos.length} ${abertos.length == 1 ? 'dia aberto' : 'dias abertos'}';
+                      }(),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         Text('Abra só as faixas que quiser em cada dia. Dia sem faixa fica fechado.',
                             style: CF.body(14, color: CF.muted)),

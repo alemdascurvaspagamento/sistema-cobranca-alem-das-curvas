@@ -362,14 +362,16 @@ class _ByClient extends StatelessWidget {
       icon: Icons.groups_rounded,
       color: CF.blue,
       title: 'Por ${t.client} em ${monthNames[month.month - 1]}',
+      collapsible: true,
+      memoryKey: 'por-cliente',
+      summary: '${rows.length} ${rows.length == 1 ? t.client : t.clients}',
+      preview: Wrap(spacing: 8, runSpacing: 8, children: [
+        _Count('Pagos', count(BillStatus.paid), CF.green, CF.greenBg),
+        _Count('Em parte', count(BillStatus.partial), CF.amber, CF.amberBg),
+        _Count('A receber', count(BillStatus.pending), CF.blue, const Color(0xFFE6EEFB)),
+        _Count('Atrasados', count(BillStatus.overdue), CF.red, CF.redBg),
+      ]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          _Count('Pagos', count(BillStatus.paid), CF.green, CF.greenBg),
-          _Count('Em parte', count(BillStatus.partial), CF.amber, CF.amberBg),
-          _Count('A receber', count(BillStatus.pending), CF.blue, const Color(0xFFE6EEFB)),
-          _Count('Atrasados', count(BillStatus.overdue), CF.red, CF.redBg),
-        ]),
-        const SizedBox(height: 10),
         if (rows.isEmpty)
           EmptyNote(icon: Icons.groups_rounded, text: 'Nenhum ${t.client} ativo.')
         else
@@ -447,6 +449,9 @@ class _YearTable extends StatelessWidget {
       icon: Icons.table_chart_rounded,
       color: CF.green,
       title: '$year mês a mês',
+      collapsible: true,
+      memoryKey: 'ano-mes-a-mes',
+      summary: 'Entrou ${moneyCompact(sumIn)} · sobrou ${moneyCompact(sumIn - sumOut)}',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         row([
           cell('Mês', bold: true, color: CF.muted, end: false),

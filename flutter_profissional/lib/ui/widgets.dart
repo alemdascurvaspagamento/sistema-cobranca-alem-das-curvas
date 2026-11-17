@@ -31,7 +31,10 @@ class PageTitle extends StatelessWidget {
 }
 
 /// Caixa branca com borda suave, usada em todas as telas.
-class Panel extends StatelessWidget {
+///
+/// Com [collapsible], o título vira um botão que abre e fecha o conteúdo
+/// (bom para listas longas). Fechada, mostra o [summary] e o [preview].
+class Panel extends StatefulWidget {
   const Panel({
     super.key,
     required this.child,
@@ -41,6 +44,11 @@ class Panel extends StatelessWidget {
     this.color = CF.blue,
     this.padding = const EdgeInsets.all(16),
     this.ringing = false,
+    this.collapsible = false,
+    this.initiallyOpen = false,
+    this.summary,
+    this.preview,
+    this.memoryKey,
   });
   final Widget child;
   final String? title;
@@ -54,9 +62,84 @@ class Panel extends StatelessWidget {
   final Widget? action;
   final EdgeInsets padding;
 
+  /// Abre e fecha ao tocar no título.
+  final bool collapsible;
+  final bool initiallyOpen;
+
+  /// Uma linha de resumo embaixo do título (ex.: "R\$ 2.400 · 12 pagamentos").
+  final String? summary;
+
+  /// Aparece sempre, mesmo fechado (ex.: o próximo feriado, etiquetas de status).
+  final Widget? preview;
+
+  /// Nome para lembrar se o usuário deixou aberto ou fechado (padrão: o título).
+  final String? memoryKey;
+
   @override
-  Widget build(BuildContext context) => FadeInUp(child: Container(
-        padding: padding,
+  State<Panel> createState() => _PanelState();
+}
+
+class _PanelState extends State<Panel> {
+  /// Lembra, enquanto o app está aberto, quais seções o usuário abriu.
+  static final Map<String, bool> _remembered = {};
+
+  String get _key => widget.memoryKey ?? widget.title ?? '';
+  late bool _open = _remembered[_key] ?? widget.initiallyOpen;
+
+  void _toggle() => setState(() {
+        _open = !_open;
+        _remembered[_key] = _open;
+      });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = widget;
+    final canCollapse = w.collapsible && w.title != null;
+    final open = !canCollapse || _open;
+    final titleBlock = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(w.title ?? '', style: CF.body(18, weight: FontWeight.w700)),
+      if (w.summary != null && w.summary!.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(w.summary!, style: CF.body(14, color: CF.muted)),
+        ),
+    ]);
+    final header = Row(children: [
+      if (w.icon != null) ...[
+        w.ringing
+            ? RingingLoop(child: IconBadge(w.icon!, color: w.color, size: 34))
+            : IconBadge(w.icon!, color: w.color, size: 34),
+        const SizedBox(width: 10),
+      ],
+      Expanded(
+        child: canCollapse
+            ? Semantics(
+                button: true,
+                expanded: open,
+                label: '${w.title}, ${open ? 'toque para fechar' : 'toque para abrir'}',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: _toggle,
+                  child: Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: ExcludeSemantics(child: titleBlock)),
+                ),
+              )
+            : titleBlock,
+      ),
+      if (w.action != null) w.action!,
+      if (canCollapse) ...[
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: _toggle,
+          child: AnimatedRotation(
+            turns: open ? 0.5 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: const RaisedIconBox(icon: Icons.expand_more_rounded, size: 34),
+          ),
+        ),
+      ],
+    ]);
+    return FadeInUp(child: Container(
+        padding: w.padding,
         decoration: BoxDecoration(
           color: CF.surface,
           borderRadius: BorderRadius.circular(20),
@@ -64,25 +147,26 @@ class Panel extends StatelessWidget {
         ),
         foregroundDecoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border(top: BorderSide(color: color, width: 3)),
+          border: Border(top: BorderSide(color: w.color, width: 3)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (title != null) ...[
-            Row(children: [
-              if (icon != null) ...[
-                ringing
-                    ? RingingLoop(child: IconBadge(icon!, color: color, size: 34))
-                    : IconBadge(icon!, color: color, size: 34),
-                const SizedBox(width: 10),
-              ],
-              Expanded(child: Text(title!, style: CF.body(18, weight: FontWeight.w700))),
-              if (action != null) action!,
-            ]),
-            const SizedBox(height: 12),
+          if (w.title != null) ...[
+            header,
+            if (w.preview != null || open) const SizedBox(height: 12),
           ],
-          child,
+          if (w.preview != null) ...[
+            w.preview!,
+            if (open) const SizedBox(height: 12),
+          ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: open ? w.child : const SizedBox(width: double.infinity),
+          ),
         ]),
       ));
+  }
 }
 
 /// Seletor de mês compartilhado (o mesmo mês em Cobranças e Financeiro).
@@ -249,8 +333,8 @@ class SessionRow extends StatelessWidget {
             ),
             if (trailing != null) trailing!,
             if (!compact) ...[
-              const SizedBox(width: 2),
-              const Icon(Icons.edit_note_rounded, color: CF.muted, size: 24),
+              const SizedBox(width: 8),
+              const RaisedIconBox(icon: Icons.edit_note_rounded),
             ],
           ]),
         ),
@@ -258,42 +342,45 @@ class SessionRow extends StatelessWidget {
       if ((quick || confirm) && !compact)
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          child: Wrap(spacing: 8, runSpacing: 6, children: [
+          // Os botões ficam lado a lado e do mesmo tamanho, em relevo.
+          child: Row(children: [
             if (confirm)
-              Confirmations.instance.sent(plan.id, line.date)
-                  ? OutlinedButton.icon(
-                      onPressed: () => Confirmations.instance.send(context, plan, line),
-                      icon: const Icon(Icons.done_all_rounded, size: 18, color: CF.whatsapp),
-                      label: const Text('Confirmação enviada'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: CF.whatsapp,
-                        minimumSize: const Size(0, 38),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+              Expanded(
+                child: Confirmations.instance.sent(plan.id, line.date)
+                    ? RaisedActionButton(
+                        icon: Icons.done_all_rounded,
+                        iconColor: CF.whatsapp,
+                        label: 'Enviada',
+                        onPressed: () => Confirmations.instance.send(context, plan, line),
+                      )
+                    : RaisedActionButton(
+                        icon: Icons.chat_rounded,
+                        label: 'Confirmar',
+                        filled: CF.whatsapp,
+                        onPressed: () => Confirmations.instance.send(context, plan, line),
                       ),
-                    )
-                  : FilledButton.icon(
-                      onPressed: () => Confirmations.instance.send(context, plan, line),
-                      icon: const Icon(Icons.chat_rounded, size: 18),
-                      label: const Text('Confirmar'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: CF.whatsapp,
-                        minimumSize: const Size(0, 38),
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                      ),
-                    ),
+              ),
+            if (confirm && quick) const SizedBox(width: 8),
             if (quick) ...[
-            OutlinedButton.icon(
-              onPressed: () => register(LessonStatus.completed, t.g('realizada', 'realizado')),
-              icon: const Icon(Icons.check_rounded, size: 18, color: CF.green),
-              label: Text(t.g('Realizada', 'Realizado')),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => register(LessonStatus.cancelled, 'falta registrada'),
-              icon: const Icon(Icons.close_rounded, size: 18, color: CF.red),
-              label: const Text('Faltou'),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 12)),
-            ),
+              Expanded(
+                child: RaisedActionButton(
+                  icon: Icons.check_rounded,
+                  iconColor: CF.green,
+                  iconBg: CF.greenBg,
+                  label: t.g('Realizada', 'Realizado'),
+                  onPressed: () => register(LessonStatus.completed, t.g('realizada', 'realizado')),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: RaisedActionButton(
+                  icon: Icons.close_rounded,
+                  iconColor: CF.red,
+                  iconBg: CF.redBg,
+                  label: 'Faltou',
+                  onPressed: () => register(LessonStatus.cancelled, 'falta registrada'),
+                ),
+              ),
             ],
           ]),
         ),
@@ -301,6 +388,113 @@ class SessionRow extends StatelessWidget {
     );
     }));
   }
+}
+
+/// Botão "em relevo": brilho claro em cima e sombra embaixo, como uma tecla.
+/// Com [filled], vira o botão principal colorido (ex.: Confirmar no WhatsApp).
+class RaisedActionButton extends StatelessWidget {
+  const RaisedActionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.filled,
+    this.iconColor,
+    this.iconBg,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final Color? filled;
+  final Color? iconColor;
+  final Color? iconBg;
+
+  @override
+  Widget build(BuildContext context) {
+    final main = filled;
+    final top = main != null ? Color.lerp(main, Colors.white, 0.12)! : CF.surface;
+    final bottom = main != null ? Color.lerp(main, Colors.black, 0.08)! : const Color(0xFFEEF2F7);
+    final edge = main != null ? Color.lerp(main, Colors.black, 0.22)! : const Color(0xFFCBD5E1);
+    final fg = main != null ? Colors.white : CF.text;
+    final radius = BorderRadius.circular(14);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Container(
+        height: 46,
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [top, bottom]),
+          border: Border.all(color: main != null ? edge : const Color(0xFFD5DDE7)),
+          boxShadow: [
+            BoxShadow(color: edge, offset: const Offset(0, 3)),
+            BoxShadow(
+              color: (main ?? CF.ink).withValues(alpha: main != null ? 0.28 : 0.10),
+              offset: const Offset(0, 6),
+              blurRadius: 12,
+            ),
+          ],
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onPressed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                if (iconBg != null)
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+                    child: Icon(icon, size: 15, color: iconColor ?? fg),
+                  )
+                else
+                  Icon(icon, size: 18, color: iconColor ?? fg),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CF.body(15, weight: FontWeight.w700, color: fg)),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quadradinho de ícone em relevo (ex.: anotar ou alterar o atendimento).
+class RaisedIconBox extends StatelessWidget {
+  const RaisedIconBox({super.key, required this.icon, this.size = 40, this.color = CF.ink});
+  final IconData icon;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(size * 0.3),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [CF.surface, Color(0xFFEEF2F7)],
+          ),
+          border: Border.all(color: const Color(0xFFD5DDE7)),
+          boxShadow: [
+            const BoxShadow(color: Color(0xFFCBD5E1), offset: Offset(0, 2)),
+            BoxShadow(color: CF.ink.withValues(alpha: 0.10), offset: const Offset(0, 5), blurRadius: 10),
+          ],
+        ),
+        child: Icon(icon, size: size * 0.55, color: color),
+      );
 }
 
 /// Texto curto da forma de cobrança e do valor de um cliente.

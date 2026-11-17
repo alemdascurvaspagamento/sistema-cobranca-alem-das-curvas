@@ -264,25 +264,82 @@ class _HolidayList extends StatelessWidget {
         KpiCard(icon: Icons.event_available_rounded, label: 'Com atendimento', value: '${list.where((h) => !h.noClass).length}', color: CF.green, accent: true),
       ]),
       const SizedBox(height: 12),
-      Container(
-        decoration: BoxDecoration(
-          color: CF.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: CF.line),
-        ),
-        child: Column(children: [
-          for (final h in list) ...[
-            _HolidayRow(holiday: h, past: h.date.isBefore(today)),
-            if (h != list.last) const Divider(height: 1, indent: 16, endIndent: 16),
-          ],
-          if (list.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text('Nenhum feriado cadastrado para $year.', style: CF.body(15, color: CF.muted)),
-            ),
-        ]),
-      ),
+      _HolidayList(list: list, today: today, year: year),
     ]);
+  }
+}
+
+/// Lista de feriados que recolhe: fechada, mostra só o próximo feriado.
+class _HolidayList extends StatefulWidget {
+  const _HolidayList({required this.list, required this.today, required this.year});
+  final List<Holiday> list;
+  final DateTime today;
+  final int year;
+
+  @override
+  State<_HolidayList> createState() => _HolidayListState();
+}
+
+class _HolidayListState extends State<_HolidayList> {
+  static bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final list = widget.list;
+    final today = widget.today;
+    final next = list.where((h) => !h.date.isBefore(today)).toList();
+    final shown = _open ? list : (next.isNotEmpty ? [next.first] : (list.isNotEmpty ? [list.last] : <Holiday>[]));
+    return Container(
+      decoration: BoxDecoration(
+        color: CF.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: CF.line),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (!_open && shown.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(next.isNotEmpty ? 'Próximo feriado' : 'Último feriado do ano',
+                style: CF.body(13, color: CF.blue, weight: FontWeight.w700)),
+          ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: Column(children: [
+            for (final h in shown) ...[
+              _HolidayRow(holiday: h, past: h.date.isBefore(today)),
+              if (h != shown.last) const Divider(height: 1, indent: 16, endIndent: 16),
+            ],
+          ]),
+        ),
+        if (list.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text('Nenhum feriado cadastrado para ${widget.year}.', style: CF.body(15, color: CF.muted)),
+          )
+        else if (list.length > 1) ...[
+          const Divider(height: 1),
+          InkWell(
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+            onTap: () => setState(() => _open = !_open),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text(_open ? 'Recolher a lista' : 'Ver todos os ${list.length} feriados',
+                    style: CF.body(15, color: CF.blue, weight: FontWeight.w700)),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: _open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const RaisedIconBox(icon: Icons.expand_more_rounded, size: 30),
+                ),
+              ]),
+            ),
+          ),
+        ],
+      ]),
+    );
   }
 }
 

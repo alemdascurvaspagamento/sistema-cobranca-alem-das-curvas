@@ -338,10 +338,14 @@ class _Incomes extends StatelessWidget {
     final payments = store.paymentsIn(month);
     final extras = store.incomesFor(month);
     final open = store.activePlans.fold(0.0, (s, p) => s + store.remaining(p, month: month));
+    final totalIn = payments.fold(0.0, (s, x) => s + x.$2.amount) + extras.fold(0.0, (s, x) => s + x.amount);
+    final nIn = payments.length + extras.length;
     return Panel(
       icon: Icons.south_west_rounded,
       color: CF.green,
       title: 'Entradas',
+      collapsible: true,
+      summary: nIn == 0 ? 'Nenhuma entrada neste mês' : '${moneyCompact(totalIn)} · $nIn ${nIn == 1 ? 'entrada' : 'entradas'}',
       action: TextButton.icon(
         onPressed: () => _openEntrySheet(context, expense: false),
         icon: const Icon(Icons.add_rounded, size: 18),
@@ -418,6 +422,12 @@ class _Expenses extends StatelessWidget {
       icon: Icons.north_east_rounded,
       color: CF.red,
       title: 'Despesas',
+      collapsible: true,
+      summary: list.isEmpty
+          ? 'Nenhuma despesa neste mês'
+          : open > 0
+              ? 'Falta pagar ${moneyCompact(open)} de ${moneyCompact(store.expensesTotal(month))}'
+              : '${moneyCompact(store.expensesTotal(month))} · todas pagas',
       action: Row(mainAxisSize: MainAxisSize.min, children: [
         IconButton(
           tooltip: 'Calendário de despesas',
