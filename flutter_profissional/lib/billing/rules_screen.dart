@@ -326,8 +326,12 @@ class _HolidayFoldState extends State<_HolidayFold> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(_open ? 'Recolher a lista' : 'Ver todos os ${list.length} feriados',
-                    style: CF.body(15, color: CF.blue, weight: FontWeight.w700)),
+                Flexible(
+                  child: Text(_open ? 'Recolher a lista' : 'Ver todos os ${list.length} feriados',
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      style: CF.body(15, color: CF.blue, weight: FontWeight.w700)),
+                ),
                 const SizedBox(width: 8),
                 AnimatedRotation(
                   turns: _open ? 0.5 : 0,
