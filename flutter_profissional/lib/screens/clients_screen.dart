@@ -813,6 +813,7 @@ class _ClientFormState extends State<_ClientForm> {
             const SizedBox(height: 6),
             Row(children: [
               IconButton.outlined(
+                style: CF.raisedIcon,
                 onPressed: dueDay > 1 ? () => setState(() => dueDay--) : null,
                 icon: const Icon(Icons.remove_rounded),
               ),
@@ -820,6 +821,7 @@ class _ClientFormState extends State<_ClientForm> {
                 child: Text('Todo dia $dueDay', textAlign: TextAlign.center, style: CF.score(26)),
               ),
               IconButton.outlined(
+                style: CF.raisedIcon,
                 onPressed: dueDay < 31 ? () => setState(() => dueDay++) : null,
                 icon: const Icon(Icons.add_rounded),
               ),

@@ -49,12 +49,14 @@ class _ChartsViewState extends State<ChartsView> {
           const SizedBox(height: 10),
           Row(children: [
             IconButton.outlined(
+                style: CF.raisedIcon,
               tooltip: 'Período anterior',
               onPressed: () => setState(() => period = period.previous),
               icon: const Icon(Icons.chevron_left_rounded),
             ),
             Expanded(child: Text(period.label, textAlign: TextAlign.center, style: CF.body(19, weight: FontWeight.w800))),
             IconButton.outlined(
+                style: CF.raisedIcon,
               tooltip: 'Próximo período',
               onPressed: _canGoNext ? () => setState(() => period = period.next) : null,
               icon: const Icon(Icons.chevron_right_rounded),

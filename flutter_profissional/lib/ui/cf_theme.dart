@@ -94,6 +94,54 @@ class CF {
         LessonOutcome.credit => (violet, violetBg),
       };
 
+  /// Borda clara dos botões brancos em relevo.
+  static const raisedLine = Color(0xFFD5DDE7);
+
+  /// "Degrau" embaixo dos botões brancos em relevo.
+  static const raisedEdge = Color(0xFFCBD5E1);
+
+  /// Padrão único de botão em relevo (como uma tecla): brilho em cima,
+  /// um degrau embaixo e uma sombra suave. Vale para todos os botões do app.
+  static ButtonStyle raised({bool filled = false, double radius = 14}) => ButtonStyle(
+        elevation: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.disabled)
+            ? 0
+            : s.contains(WidgetState.pressed)
+                ? 1
+                : 3),
+        shadowColor: WidgetStatePropertyAll(ink.withValues(alpha: filled ? 0.35 : 0.22)),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        backgroundBuilder: (context, states, child) => states.contains(WidgetState.disabled)
+            ? (child ?? const SizedBox())
+            : CustomPaint(
+                painter: _KeyEdgePainter(
+                  color: filled ? Colors.black.withValues(alpha: 0.22) : raisedEdge,
+                  radius: radius,
+                  depth: states.contains(WidgetState.pressed) ? 1 : 3,
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(radius),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: filled
+                          ? [Colors.white.withValues(alpha: 0.14), Colors.white.withValues(alpha: 0), Colors.black.withValues(alpha: 0.07)]
+                          : [Colors.white.withValues(alpha: 0), const Color(0xFFEEF2F7).withValues(alpha: 0.9)],
+                    ),
+                  ),
+                  child: child,
+                ),
+              ),
+      );
+
+  /// Para IconButton.outlined: quadradinho branco em relevo.
+  static ButtonStyle get raisedIcon => IconButton.styleFrom(
+        backgroundColor: surface,
+        foregroundColor: ink,
+        side: const BorderSide(color: raisedLine),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ).merge(raised(radius: 12));
+
   static ThemeData theme() {
     final base = ThemeData(
       useMaterial3: true,
@@ -135,24 +183,40 @@ class CF {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: shape,
           textStyle: _barlow(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
+        ).merge(raised(filled: true)),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: ink,
+          backgroundColor: surface,
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: shape,
+          side: const BorderSide(color: raisedLine),
+          textStyle: _barlow(fontSize: 16, fontWeight: FontWeight.w600),
+        ).merge(raised()),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ink,
           backgroundColor: surface,
-          side: const BorderSide(color: line, width: 1.5),
+          side: const BorderSide(color: raisedLine),
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: shape,
           textStyle: _barlow(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        ).merge(raised()),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: blue,
-          textStyle: _barlow(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
+          backgroundColor: surface,
+          side: const BorderSide(color: raisedLine),
+          minimumSize: const Size(0, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: _barlow(fontSize: 15, fontWeight: FontWeight.w700),
+        ).merge(raised(radius: 12)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -310,3 +374,24 @@ String routineText(StudentPlan p) {
 }
 
 String capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+
+/// Desenha o "degrau" embaixo do botão (só a parte que aparece por baixo).
+class _KeyEdgePainter extends CustomPainter {
+  const _KeyEdgePainter({required this.color, required this.radius, required this.depth});
+  final Color color;
+  final double radius;
+  final double depth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = Radius.circular(radius.clamp(0, size.shortestSide / 2).toDouble());
+    final body = RRect.fromRectAndRadius(Offset.zero & size, r);
+    final below = RRect.fromRectAndRadius(Offset(0, depth) & size, r);
+    final path = Path.combine(PathOperation.difference, Path()..addRRect(below), Path()..addRRect(body));
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_KeyEdgePainter old) => old.color != color || old.depth != depth || old.radius != radius;
+}
