@@ -149,7 +149,7 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" \
             -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" > "$log" 2>&1 || {
               echo "::error title=Envio para a Apple::$(grep -E 'error|Error|ERROR|failed' "$log" | tail -25 | sed -e 's/%/%25/g' | tr '\n' '|')"; exit 1; }
-          echo "::notice title=TestFlight::Versão 1.0.0 (${{ github.run_number }}) enviada. A Apple processa em 10 a 30 minutos."
+          echo "::notice title=TestFlight::Versão 1.0.1 (${{ github.run_number }}) enviada. A Apple processa em 10 a 30 minutos."
 
       - name: Apagar a chave
         if: always()
