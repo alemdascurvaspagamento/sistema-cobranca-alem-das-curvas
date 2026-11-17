@@ -395,14 +395,18 @@ class SessionRow extends StatelessWidget {
 class RaisedActionButton extends StatelessWidget {
   const RaisedActionButton({
     super.key,
-    required this.icon,
+    this.icon,
     required this.label,
     required this.onPressed,
     this.filled,
     this.iconColor,
     this.iconBg,
+    this.height = 46,
+    this.pill = false,
   });
-  final IconData icon;
+  final IconData? icon;
+  final double height;
+  final bool pill;
   final String label;
   final VoidCallback onPressed;
   final Color? filled;
@@ -416,13 +420,13 @@ class RaisedActionButton extends StatelessWidget {
     final bottom = main != null ? Color.lerp(main, Colors.black, 0.08)! : const Color(0xFFEEF2F7);
     final edge = main != null ? Color.lerp(main, Colors.black, 0.22)! : const Color(0xFFCBD5E1);
     final fg = main != null ? Colors.white : CF.text;
-    final radius = BorderRadius.circular(14);
+    final radius = BorderRadius.circular(pill ? 999 : 14);
     return Semantics(
       button: true,
       label: label,
       excludeSemantics: true,
       child: Container(
-        height: 46,
+        height: height,
         decoration: BoxDecoration(
           borderRadius: radius,
           gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [top, bottom]),
@@ -444,7 +448,9 @@ class RaisedActionButton extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                if (iconBg != null)
+                if (icon == null)
+                  const SizedBox.shrink()
+                else if (iconBg != null)
                   Container(
                     width: 22,
                     height: 22,
@@ -453,7 +459,7 @@ class RaisedActionButton extends StatelessWidget {
                   )
                 else
                   Icon(icon, size: 18, color: iconColor ?? fg),
-                const SizedBox(width: 6),
+                if (icon != null) const SizedBox(width: 6),
                 Flexible(
                   child: Text(label,
                       maxLines: 1,
@@ -467,6 +473,31 @@ class RaisedActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Escolha entre poucas opções (ex.: Dia, Semana, Mês), com botões em relevo lado a lado.
+/// A opção escolhida fica colorida; as outras, brancas.
+class RaisedToggle<T> extends StatelessWidget {
+  const RaisedToggle({super.key, required this.options, required this.selected, required this.onChanged});
+  final List<(T, IconData?, String)> options;
+  final T selected;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        for (var i = 0; i < options.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: RaisedActionButton(
+              icon: options[i].$2,
+              label: options[i].$3,
+              filled: options[i].$1 == selected ? CF.brand : null,
+              iconColor: options[i].$1 == selected ? null : CF.ink,
+              onPressed: () => onChanged(options[i].$1),
+            ),
+          ),
+        ],
+      ]);
 }
 
 /// Quadradinho de ícone em relevo (ex.: anotar ou alterar o atendimento).
@@ -599,20 +630,15 @@ class LayoutToggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => SegmentedButton<bool>(
-        showSelectedIcon: false,
-        segments: const [
-          ButtonSegment(value: true, icon: Icon(Icons.table_rows_rounded), label: Text('Tabela')),
-          ButtonSegment(value: false, icon: Icon(Icons.grid_view_rounded), label: Text('Cartões')),
-        ],
-        selected: {table},
-        onSelectionChanged: (v) => onChanged(v.first),
-        style: ButtonStyle(
-          foregroundColor:
-              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : CF.ink),
-          backgroundColor:
-              WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? CF.brand : CF.surface),
-          side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
+  Widget build(BuildContext context) => SizedBox(
+        width: 260,
+        child: RaisedToggle<bool>(
+          options: const [
+            (true, Icons.table_rows_rounded, 'Tabela'),
+            (false, Icons.grid_view_rounded, 'Cartões'),
+          ],
+          selected: table,
+          onChanged: onChanged,
         ),
       );
 }
@@ -673,8 +699,14 @@ class KpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: on ? Color.alphaBlend(color.withValues(alpha: .08), CF.surface) : CF.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: on ? color : CF.line, width: on ? 2 : 1),
-        boxShadow: on ? [BoxShadow(color: color.withValues(alpha: .18), blurRadius: 12, offset: const Offset(0, 4))] : null,
+        border: Border.all(color: on ? color : (onTap != null ? const Color(0xFFD5DDE7) : CF.line), width: on ? 2 : 1),
+        // Quadro que funciona como botão fica em relevo, como as teclas do app.
+        boxShadow: onTap != null
+            ? [
+                BoxShadow(color: on ? Color.lerp(color, Colors.black, 0.15)! : const Color(0xFFCBD5E1), offset: const Offset(0, 3)),
+                BoxShadow(color: (on ? color : CF.ink).withValues(alpha: on ? .22 : .10), blurRadius: 12, offset: const Offset(0, 6)),
+              ]
+            : null,
       ),
       foregroundDecoration: accent
           ? BoxDecoration(
@@ -858,35 +890,12 @@ class Pill extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: selected ? color : CF.surface,
-        borderRadius: BorderRadius.circular(999),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: selected ? color : CF.line, width: 1.5),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text.rich(
-                TextSpan(children: [
-                  TextSpan(text: label),
-                  if (count != null)
-                    TextSpan(text: '  $count', style: TextStyle(color: selected ? Colors.white70 : CF.muted)),
-                ]),
-                maxLines: 1,
-                style: CF.body(15, weight: FontWeight.w600, color: selected ? Colors.white : CF.text),
-              ),
-            ),
-          ),
-        ),
+  Widget build(BuildContext context) => RaisedActionButton(
+        label: count == null ? label : '$label  $count',
+        filled: selected ? color : null,
+        onPressed: onTap,
+        height: 44,
+        pill: true,
       );
 }
 

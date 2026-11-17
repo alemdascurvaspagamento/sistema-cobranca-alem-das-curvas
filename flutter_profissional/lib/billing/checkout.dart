@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../data/subscription.dart';
 import '../ui/cf_theme.dart';
+import '../ui/widgets.dart';
 import 'billing_store.dart';
 
 /// Preços dos planos (iguais aos do site e dos Termos). O servidor confere de novo.
@@ -68,13 +69,16 @@ class _PlanChooserState extends State<PlanChooser> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Align(
         alignment: Alignment.centerLeft,
-        child: SegmentedButton<String>(
-          segments: const [
-            ButtonSegment(value: 'monthly', label: Text('Mensal')),
-            ButtonSegment(value: 'annual', label: Text('Anual · 2 meses grátis')),
-          ],
-          selected: {cycle},
-          onSelectionChanged: (v) => setState(() => cycle = v.first),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: RaisedToggle<String>(
+            options: const [
+              ('monthly', null, 'Mensal'),
+              ('annual', null, 'Anual · 2 meses grátis'),
+            ],
+            selected: cycle,
+            onChanged: (v) => setState(() => cycle = v),
+          ),
         ),
       ),
       const SizedBox(height: 10),

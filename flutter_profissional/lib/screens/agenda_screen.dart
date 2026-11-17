@@ -126,26 +126,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
           const SizedBox(height: 10),
           _AgendaKpis(weekStart: weekStart),
           const SizedBox(height: 14),
-          SegmentedButton<_View>(
-            showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: _View.day, icon: Icon(Icons.today_rounded), label: Text('Dia')),
-              ButtonSegment(value: _View.week, icon: Icon(Icons.view_week_rounded), label: Text('Semana')),
-              ButtonSegment(value: _View.month, icon: Icon(Icons.calendar_month_rounded), label: Text('Mês')),
+          RaisedToggle<_View>(
+            options: const [
+              (_View.day, Icons.today_rounded, 'Dia'),
+              (_View.week, Icons.view_week_rounded, 'Semana'),
+              (_View.month, Icons.calendar_month_rounded, 'Mês'),
             ],
-            selected: {view},
-            onSelectionChanged: (v) => setState(() {
-              view = v.first;
+            selected: view,
+            onChanged: (v) => setState(() {
+              view = v;
               if (view == _View.month) month = DateTime(day.year, day.month);
             }),
-            style: ButtonStyle(
-              foregroundColor: WidgetStateProperty.resolveWith(
-                  (s) => s.contains(WidgetState.selected) ? Colors.white : CF.ink),
-              backgroundColor: WidgetStateProperty.resolveWith(
-                  (s) => s.contains(WidgetState.selected) ? CF.brand : CF.surface),
-              side: const WidgetStatePropertyAll(BorderSide(color: CF.line)),
-              textStyle: WidgetStatePropertyAll(CF.body(15, weight: FontWeight.w600)),
-            ),
           ),
           const SizedBox(height: 14),
           switch (view) {

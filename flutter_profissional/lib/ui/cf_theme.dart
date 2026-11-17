@@ -227,7 +227,13 @@ class CF {
       ),
       chipTheme: base.chipTheme.copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        side: const BorderSide(color: line),
+        side: const BorderSide(color: raisedLine),
+        // Fichas de escolha também ficam em relevo, no mesmo padrão dos botões.
+        elevation: 2,
+        pressElevation: 0,
+        shadowColor: ink.withValues(alpha: 0.35),
+        selectedShadowColor: ink.withValues(alpha: 0.35),
+        surfaceTintColor: Colors.transparent,
         labelStyle: _barlow(fontSize: 15, fontWeight: FontWeight.w600, color: text),
       ),
       bottomSheetTheme: const BottomSheetThemeData(

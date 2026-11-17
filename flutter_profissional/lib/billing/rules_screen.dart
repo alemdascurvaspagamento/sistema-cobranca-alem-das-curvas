@@ -143,7 +143,7 @@ class _ProfileCard extends StatelessWidget {
         ),
         if (onChange != null)
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: CF.lap),
+            style: TextButton.styleFrom(foregroundColor: CF.blue),
             onPressed: onChange,
             child: const Text('Mudar'),
           ),
