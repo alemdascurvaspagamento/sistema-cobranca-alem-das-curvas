@@ -26,7 +26,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   bool archived = false;
   bool table = true;
   int page = 0;
-  static const perPage = 15;
+  static const perPage = 5;
   final listKey = GlobalKey();
 
   void _goTo(int p) {

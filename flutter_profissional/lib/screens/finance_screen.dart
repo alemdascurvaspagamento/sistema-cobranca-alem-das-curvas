@@ -156,7 +156,7 @@ class _ResultCard extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: onReports,
-              style: TextButton.styleFrom(foregroundColor: CF.lap, padding: EdgeInsets.zero),
+              style: TextButton.styleFrom(foregroundColor: CF.ink),
               icon: const Icon(Icons.insights_rounded, size: 18),
               label: const Text('Ver relatórios e meta do ano'),
             ),
