@@ -12,6 +12,7 @@ import '../data/export.dart';
 import '../data/morning_brief.dart';
 import '../ui/cf_theme.dart';
 import '../booking.dart';
+import '../fiscal/fiscal_demo.dart';
 import '../calendar_feed.dart';
 import '../ui/confirmations.dart';
 import '../ui/start_guide.dart';
@@ -228,6 +229,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (cloud) ...[
         const SizedBox(height: 14),
         const _MorningBriefPanel(),
+      ],
+      if (fiscalDemoEnabled) ...[
+        const SizedBox(height: 14),
+        const FiscalDemoEntry(),
       ],
       const SizedBox(height: 14),
       Panel(
