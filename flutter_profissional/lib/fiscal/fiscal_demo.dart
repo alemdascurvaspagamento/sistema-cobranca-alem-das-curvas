@@ -22,7 +22,9 @@ class FiscalDemoEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Panel(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        child: ListTile(
+        child: Material(
+          type: MaterialType.transparency,
+          child: ListTile(
           leading: const Icon(Icons.receipt_long_rounded, color: CF.brand),
           title: Row(children: [
             Flexible(child: Text('Léguno Fiscal', style: CF.body(16, weight: FontWeight.w700))),
@@ -33,6 +35,7 @@ class FiscalDemoEntry extends StatelessWidget {
               style: CF.body(14, color: CF.muted)),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FiscalDemoScreen())),
+          ),
         ),
       );
 }
@@ -358,21 +361,27 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
       ];
 
   // ---------- Automação ----------
-  Widget _switch(String title, String sub, bool value, ValueChanged<bool> onChanged) => SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        value: value,
-        onChanged: onChanged,
-        title: Text(title, style: CF.body(15.5, weight: FontWeight.w700)),
-        subtitle: Text(sub, style: CF.body(13.5, color: CF.muted, height: 1.25)),
+  Widget _switch(String title, String sub, bool value, ValueChanged<bool> onChanged) => Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: value,
+          onChanged: onChanged,
+          title: Text(title, style: CF.body(15.5, weight: FontWeight.w700)),
+          subtitle: Text(sub, style: CF.body(13.5, color: CF.muted, height: 1.25)),
+        ),
       );
 
-  Widget _radio(int i, String title, String sub) => ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(issuer == i ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
-            color: issuer == i ? CF.brand : CF.grey),
-        title: Text(title, style: CF.body(15.5, weight: FontWeight.w700)),
-        subtitle: Text(sub, style: CF.body(13.5, color: CF.muted, height: 1.25)),
-        onTap: () => setState(() => issuer = i),
+  Widget _radio(int i, String title, String sub) => Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(issuer == i ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+              color: issuer == i ? CF.brand : CF.grey),
+          title: Text(title, style: CF.body(15.5, weight: FontWeight.w700)),
+          subtitle: Text(sub, style: CF.body(13.5, color: CF.muted, height: 1.25)),
+          onTap: () => setState(() => issuer = i),
+        ),
       );
 
   List<Widget> _automacao() => [
