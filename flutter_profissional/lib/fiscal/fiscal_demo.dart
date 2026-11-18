@@ -99,7 +99,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
         title: const Text('Avisar a equipe?'),
         content: Text(
           'Vamos avisar a equipe do Léguno que você quer usar o Léguno Fiscal quando ele ficar pronto. '
-          'Você recebe a resposta no e-mail da sua conta.',
+          'Você recebe um e-mail de confirmação na conta que usa no Léguno.',
           style: CF.body(15.5, height: 1.4),
         ),
         actions: [
@@ -112,11 +112,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
     var done = false;
     if (AppConfig.cloudEnabled) {
       try {
-        final res = await Supabase.instance.client.functions.invoke('cf-support-request', body: {
-          'message': 'Interesse no Léguno Fiscal: quero ser avisado quando a emissão de notas ficar pronta.',
-          'platform': 'web',
-          'version': 'demo-fiscal',
-        });
+        final res = await Supabase.instance.client.functions.invoke('cf-fiscal-interest');
         final d = res.data;
         done = d is Map && d['ok'] == true;
       } catch (_) {
