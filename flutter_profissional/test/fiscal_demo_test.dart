@@ -23,6 +23,7 @@ void main() {
         await tester.pump();
         expect(tester.takeException(), isNull, reason: tab);
       }
+      await tester.scrollUntilVisible(find.text('Quero ser avisado'), 300, scrollable: find.byType(Scrollable).first);
       expect(find.text('Quero ser avisado'), findsOneWidget);
       await tester.binding.setSurfaceSize(null);
     });
