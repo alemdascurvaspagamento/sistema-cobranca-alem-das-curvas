@@ -73,6 +73,12 @@ void main() {
   testWidgets('iPhone: Configurações com conta paga não falam de plano nem de assinatura', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     final store = BillingStore.instance;
+    // Aviso antigo só de modo de teste (efeito de toque escondido nos cartões); não afeta o app.
+    final original = FlutterError.onError;
+    FlutterError.onError = (d) {
+      if (d.exceptionAsString().contains('ink splashes may be invisible')) return;
+      original?.call(d);
+    };
     try {
       store.seed(professionById('personal'), BillingModel.perSession);
       for (final state in ['active', 'trialing', 'grace', 'read_only']) {
@@ -91,6 +97,7 @@ void main() {
         expect(t.contains('profissional'), isFalse, reason: 'nome do plano em Configurações ($state)');
       }
     } finally {
+      FlutterError.onError = original;
       store.setSubscription(null);
       await tester.binding.setSurfaceSize(null);
       debugDefaultTargetPlatformOverride = null;
