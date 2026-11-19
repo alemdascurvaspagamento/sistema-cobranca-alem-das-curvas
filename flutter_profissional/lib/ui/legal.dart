@@ -74,6 +74,7 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
         _Item('Com quem compartilhamos',
             'Só com as empresas que contratamos para o app funcionar: Supabase (banco de dados e login), '
                 'Vercel (hospedagem do site) e Resend (envio de e-mails)${AppConfig.hidePricing ? '' : '; o Asaas processa os pagamentos das assinaturas feitas pelo site'}. '
+                'O app também baixa as fontes de letra do Google Fonts (Google) ao abrir; nesse momento o Google recebe só o endereço de internet do aparelho, sem nenhum dado da sua conta ou dos seus clientes. '
                 'Alguns servidores ficam fora do Brasil. Essas empresas só tratam os dados para prestar o serviço contratado '
                 'e seguem regras de proteção iguais ou equivalentes às desta política e da LGPD.'),
         _Item('Seus clientes',
