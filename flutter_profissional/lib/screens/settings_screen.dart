@@ -109,8 +109,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (context, _) => KpiRow([
           KpiCard(
             icon: Icons.workspace_premium_rounded,
-            label: 'Plano',
-            value: store.subscription?.planName ?? 'Demonstração',
+            label: AppConfig.hidePricing ? 'Conta' : 'Plano',
+            value: store.subscription == null
+                ? 'Demonstração'
+                : (AppConfig.hidePricing ? 'Ativa' : store.subscription!.planName),
             color: CF.amber,
             accent: true,
           ),

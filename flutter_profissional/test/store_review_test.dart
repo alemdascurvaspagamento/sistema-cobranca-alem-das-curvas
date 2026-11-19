@@ -1,4 +1,9 @@
+import 'package:coachflow_profissional/billing/billing_engine.dart';
+import 'package:coachflow_profissional/billing/billing_store.dart';
 import 'package:coachflow_profissional/billing/pro_gate.dart';
+import 'package:coachflow_profissional/data/subscription.dart';
+import 'package:coachflow_profissional/profile/profession_profile.dart';
+import 'package:coachflow_profissional/screens/settings_screen.dart';
 import 'package:coachflow_profissional/config.dart';
 import 'package:coachflow_profissional/ui/cf_theme.dart';
 import 'package:coachflow_profissional/ui/legal.dart';
@@ -63,5 +68,32 @@ void main() {
   testWidgets('web: a política também fala de inteligência artificial', (tester) async {
     final t = await legalText(tester, LegalDoc.privacy);
     expect(t.contains('inteligência artificial'), isTrue);
+  });
+
+  testWidgets('iPhone: Configurações com conta paga não falam de plano nem de assinatura', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    final store = BillingStore.instance;
+    try {
+      store.seed(professionById('personal'), BillingModel.perSession);
+      for (final state in ['active', 'trialing', 'grace', 'read_only']) {
+        store.setSubscription(SubscriptionInfo(plan: 'profissional', status: state == 'active' ? 'active' : 'trialing', state: state, founder: true));
+        await tester.binding.setSurfaceSize(const Size(800, 6000));
+        await tester.pumpWidget(MaterialApp(
+          theme: CF.theme(),
+          home: const Scaffold(body: SingleChildScrollView(child: SettingsScreen())),
+        ));
+        await tester.pump();
+        final t = allText(tester);
+        for (final w in proibidas) {
+          expect(t.contains(w), isFalse, reason: '"$w" aparece em Configurações ($state)');
+        }
+        expect(t.contains('fundador'), isFalse);
+        expect(t.contains('profissional'), isFalse, reason: 'nome do plano em Configurações ($state)');
+      }
+    } finally {
+      store.setSubscription(null);
+      await tester.binding.setSurfaceSize(null);
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

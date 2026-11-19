@@ -511,7 +511,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
 
   /// Faixa discreta avisando que o app está em teste e como mandar sugestões.
   Widget _betaBanner() {
-    if (widget.demo || _betaDismissed) return const SizedBox.shrink();
+    // Nos apps das lojas não aparece aviso de "versão em teste" (regra 2.2 da Apple).
+    if (widget.demo || _betaDismissed || AppConfig.hidePricing) return const SizedBox.shrink();
     final c = AppConfig.supportContact.trim();
     Uri? link;
     if (c.contains('@')) {
