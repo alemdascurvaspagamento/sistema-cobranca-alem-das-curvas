@@ -66,7 +66,8 @@ void main() {
     expect(blocked, isNull);
     expect(store.plan(first.id).rate, first.rate + 10);
     store.savePlan(StudentPlan(id: 'novo', name: 'Novo cliente', rate: 100, weekdays: {1}));
-    expect(blocked, contains('Essencial'));
+    // Nos testes o app roda como Android (loja): o aviso não fala de plano.
+    expect(blocked, contains('Sua conta vai até'));
     expect(store.plans.where((p) => p.id == 'novo'), isEmpty);
     store.onLocked = null;
     store.seed(professionById('personal'), BillingModel.perSession);

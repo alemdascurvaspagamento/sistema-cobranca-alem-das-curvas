@@ -29,6 +29,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
         home: Scaffold(body: ProLockedView(title: 'Relatórios', what: 'Gráficos e comparativos.'))));
     expect(find.text('Relatórios'), findsOneWidget);
-    expect(find.textContaining('plano Profissional'), findsOneWidget);
+    // Nos testes o app roda como Android (loja): o aviso não fala de plano.
+    expect(find.textContaining('Não está disponível na sua conta'), findsOneWidget);
   });
 }
