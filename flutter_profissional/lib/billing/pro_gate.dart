@@ -26,10 +26,10 @@ class ProGate {
         context: context,
         builder: (ctx) => AlertDialog(
           icon: const Icon(Icons.lock_rounded, color: CF.brand, size: 34),
-          title: const Text('Recurso do plano Profissional'),
+          title: Text(AppConfig.hidePricing ? 'Recurso indisponível' : 'Recurso do plano Profissional'),
           content: Text(
             AppConfig.hidePricing
-                ? '$feature faz parte do plano Profissional.'
+                ? '$feature não está disponível na sua conta.'
                 : '$feature faz parte do plano Profissional. Você pode trocar de plano em Configurações, na parte Assinatura.',
             style: CF.body(15.5, color: CF.text, height: 1.4),
           ),
@@ -71,7 +71,7 @@ class ProLockedView extends StatelessWidget {
               Text(title, textAlign: TextAlign.center, style: CF.body(22, weight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
-                AppConfig.hidePricing ? '$what Faz parte do plano Profissional.' : '$what Faz parte do plano Profissional.',
+                AppConfig.hidePricing ? '$what Não está disponível na sua conta.' : '$what Faz parte do plano Profissional.',
                 textAlign: TextAlign.center,
                 style: CF.body(15.5, color: CF.muted, height: 1.4),
               ),

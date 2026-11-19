@@ -4,7 +4,7 @@ import '../config.dart';
 import 'cf_theme.dart';
 
 /// Versão dos textos legais. Muda quando os termos mudarem (fica gravada no cadastro).
-const legalVersion = '2026-11-14';
+const legalVersion = '2026-11-19';
 
 enum LegalDoc { terms, privacy }
 
@@ -25,16 +25,20 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
             'Ao criar a conta e marcar “Li e concordo”, você aceita estes Termos e a Política de Privacidade. Guardamos a versão aceita, a data e a hora do aceite. Se os termos mudarem de forma importante, pediremos um novo aceite.'),
         _Item('4. Sua conta',
             'Você é responsável pelas informações que cadastra e por manter a senha em segredo. Cada conta é de uma pessoa. É preciso ter 18 anos ou mais.'),
+        if (AppConfig.hidePricing)
+          _Item('5. Acesso à conta',
+              'O acesso é pessoal, com o e-mail e a senha da sua conta. Se houver alguma pendência na conta, ela pode ficar só para consulta: você continua vendo e baixando seus dados, e nada é apagado.')
+        else
         _Item('5. Teste grátis e planos',
-            AppConfig.hidePricing
-                ? 'O teste grátis dura 30 dias, sem cartão. Depois, para continuar editando, é preciso ter uma assinatura ativa. Os valores e as condições são informados no momento da contratação.'
-                : 'O teste grátis dura 30 dias, sem cartão. Depois, para continuar editando, é preciso assinar um plano. Plano Essencial: R\$ 34,90 por mês ou R\$ 349 por ano, até 15 clientes ativos. Plano Profissional: R\$ 59,90 por mês ou R\$ 599 por ano, clientes ilimitados, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Oferta de fundador: Profissional por R\$ 39,90 por mês, para as primeiras 100 contas que assinarem durante o teste grátis. Quem entra nessa oferta mantém esse preço enquanto a assinatura estiver ativa, sem interrupção.'),
+ 'O teste grátis dura 30 dias, sem cartão. Depois, para continuar editando, é preciso assinar um plano. Plano Essencial: R\$ 34,90 por mês ou R\$ 349 por ano, até 15 clientes ativos. Plano Profissional: R\$ 59,90 por mês ou R\$ 599 por ano, clientes ilimitados, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Oferta de fundador: Profissional por R\$ 39,90 por mês, para as primeiras 100 contas que assinarem durante o teste grátis. Quem entra nessa oferta mantém esse preço enquanto a assinatura estiver ativa, sem interrupção.'),
+        if (!AppConfig.hidePricing)
         _Item('6. Pagamento e renovação',
             'A assinatura é cobrada de forma antecipada, pelos meios mostrados na hora de assinar, e renova sozinha pelo mesmo período (mensal ou anual) até você cancelar. Os pagamentos são processados pelo Asaas. Podemos mudar os preços para novas assinaturas. Para quem já assina, avisamos com 30 dias de antecedência e o novo valor só vale na próxima renovação. Se um pagamento falhar, avisamos por e-mail. Sem regularização, a conta passa a ser só para consulta: você continua vendo e baixando seus dados, e nada é apagado.'),
+        if (!AppConfig.hidePricing)
         _Item('7. Cancelamento e devolução',
             'Você pode cancelar quando quiser, sem multa e sem fidelidade. O acesso continua até o fim do período já pago. Por ser uma contratação feita à distância, você pode desistir em até 7 dias depois de assinar e receber o valor de volta por inteiro. Depois disso, não devolvemos valores já pagos de períodos que já começaram, salvo cobrança indevida ou erro nosso.'),
         _Item('8. Dados dos seus clientes',
-            'Você decide quais dados dos seus clientes colocar no app (nome, telefone, horários, valores). Para esses dados, você é o responsável e nós somos o operador: tratamos os dados só para prestar o serviço, seguindo o que você faz no app. Você declara que tem o direito de guardar esses dados e que avisou seus clientes. Não cadastre dados de saúde nem anotações clínicas: o app não é prontuário. Usamos fornecedores para operar o app (Supabase, Vercel, Resend e Asaas) e avisaremos você se houver um incidente de segurança que afete seus dados.'),
+            'Você decide quais dados dos seus clientes colocar no app (nome, telefone, horários, valores). Para esses dados, você é o responsável e nós somos o operador: tratamos os dados só para prestar o serviço, seguindo o que você faz no app. Você declara que tem o direito de guardar esses dados e que avisou seus clientes. Não cadastre dados de saúde nem anotações clínicas: o app não é prontuário. Usamos fornecedores para operar o app (${AppConfig.hidePricing ? 'Supabase, Vercel e Resend' : 'Supabase, Vercel, Resend e Asaas'}) e avisaremos você se houver um incidente de segurança que afete seus dados. O Léguno não usa serviços de inteligência artificial de terceiros e não envia seus dados nem os dos seus clientes a esse tipo de serviço.'),
         _Item('9. Seus dados e a exclusão da conta',
             'Seus dados são seus. Você pode baixar tudo em planilha em Configurações, “Seus dados”. Pode excluir a conta em Ajustes, “Excluir minha conta”, ou pedir pelo e-mail acima. A exclusão apaga seus dados do Léguno. Cópias de segurança do servidor são substituídas em até 30 dias.'),
         _Item('10. O que pode e o que não pode',
@@ -59,13 +63,19 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
                 'Sobre os seus clientes, o que você cadastrar: nome, telefone, serviço, horários, valores e pagamentos. '
                 'Essas informações são suas: você decide o que cadastrar. Não cadastre dados de saúde nem anotações clínicas; '
                 'o app não foi feito para prontuário.'),
+        _Item('Como coletamos',
+            'Só pelo que você digita no app e pelos dados de uso gerados quando você usa as funções. '
+                'O app não acessa seus contatos, fotos, localização, câmera ou microfone, e não usa rastreamento para propaganda.'),
         _Item('Para que usamos',
-            'Para o app funcionar (agenda, cobrança, relatórios), dar suporte e melhorar o produto. '
-                'Não vendemos dados e não os usamos para propaganda.'),
-        _Item('Onde ficam',
-            'Os dados ficam em servidores de empresas que contratamos: Supabase (banco de dados e login), '
-                'Vercel (hospedagem do site) e Resend (envio de e-mails). Alguns ficam fora do Brasil. '
-                'Quando as assinaturas forem ativadas, o Asaas processará os pagamentos.'),
+            'Para o app funcionar (agenda, cobrança, relatórios), enviar os e-mails que você liga (como o resumo da manhã e as respostas de agendamento), '
+                'dar suporte e melhorar o produto. Não vendemos dados e não os usamos para propaganda.'),
+        _Item('Inteligência artificial',
+            'O Léguno não usa serviços de inteligência artificial de terceiros. Nenhum dado seu ou dos seus clientes é enviado a esse tipo de serviço.'),
+        _Item('Com quem compartilhamos',
+            'Só com as empresas que contratamos para o app funcionar: Supabase (banco de dados e login), '
+                'Vercel (hospedagem do site) e Resend (envio de e-mails)${AppConfig.hidePricing ? '' : '; o Asaas processa os pagamentos das assinaturas feitas pelo site'}. '
+                'Alguns servidores ficam fora do Brasil. Essas empresas só tratam os dados para prestar o serviço contratado '
+                'e seguem regras de proteção iguais ou equivalentes às desta política e da LGPD.'),
         _Item('Seus clientes',
             'Você decide sobre os dados dos seus clientes. Avise-os de que guarda o contato e os horários deles '
                 'para organizar o atendimento e a cobrança.'),

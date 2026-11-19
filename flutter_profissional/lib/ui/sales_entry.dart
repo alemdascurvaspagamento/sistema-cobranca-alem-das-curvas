@@ -131,7 +131,7 @@ class _Pitch extends StatelessWidget {
               textStyle: CF.body(18, weight: FontWeight.w700),
             ),
             icon: const Icon(Icons.rocket_launch_rounded),
-            label: const Text('Criar conta grátis'),
+            label: Text(AppConfig.hidePricing ? 'Criar conta' : 'Criar conta grátis'),
           ),
         if (onSignup != null)
           OutlinedButton.icon(
@@ -178,7 +178,7 @@ class _Pitch extends StatelessWidget {
       const SizedBox(height: 12),
       Text(
           onSignup != null
-              ? '${AppConfig.hidePricing ? '30 dias grátis, sem cartão. ' : '30 dias grátis, sem cartão. Depois, a partir de R\$ 34,90 por mês. '}'
+              ? '${AppConfig.hidePricing ? '' : '30 dias grátis, sem cartão. Depois, a partir de R\$ 34,90 por mês. '}'
                   'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros profissionais.'
               : 'Para psicólogos, fisioterapeutas, médicos, nutricionistas, personal trainers e outros '
                   'profissionais. Sem cadastro: você escolhe a profissão e entra numa conta de exemplo.',

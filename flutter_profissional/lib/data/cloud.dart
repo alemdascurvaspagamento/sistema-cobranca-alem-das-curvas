@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../agenda_events.dart';
 import '../booking.dart';
 import '../calendar_feed.dart';
+import '../config.dart';
 import '../reports/comparisons.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
@@ -54,7 +55,9 @@ class CloudService implements CloudSink {
         status.value = SyncStatus(
           pending: status.value.pending - 1,
           error: text.contains('cf_limite_clientes')
-              ? 'O plano Essencial vai até 15 clientes ativos. Esta alteração não foi salva.'
+              ? (AppConfig.hidePricing
+                  ? 'Sua conta chegou ao limite de clientes ativos. Esta alteração não foi salva.'
+                  : 'O plano Essencial vai até 15 clientes ativos. Esta alteração não foi salva.')
               : text.contains('row-level security') || text.contains('42501')
                   ? 'Sua conta está no modo somente leitura. Esta alteração não foi salva.'
                   : 'Não foi possível salvar a última alteração. Confira a internet e tente de novo.',

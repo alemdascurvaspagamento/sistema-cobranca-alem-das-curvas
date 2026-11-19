@@ -492,13 +492,14 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         title: const Text('Não foi possível salvar'),
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              go(Section.mais);
-            },
-            child: const Text('Ver minha assinatura'),
-          ),
+          if (!AppConfig.hidePricing)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                go(Section.mais);
+              },
+              child: const Text('Ver minha assinatura'),
+            ),
           FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendi')),
         ],
       ),
@@ -552,7 +553,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
         final sub = store.subscription;
         if (sub == null) return const SizedBox.shrink();
         final now = DateTime.now();
+        final storeApp = AppConfig.hidePricing;
         final (String text, Color fg, Color bg, IconData icon)? look = switch (sub.state) {
+          'trialing' when storeApp => null,
+          'grace' when storeApp => null,
           'trialing' => (
               sub.trialDaysLeft(now) <= 1
                   ? 'Último dia do teste grátis. Tudo continua liberado até o fim do dia.'

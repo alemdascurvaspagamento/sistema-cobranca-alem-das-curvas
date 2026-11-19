@@ -64,8 +64,10 @@ class BillingStore extends ChangeNotifier {
   bool _overClientLimit() {
     final limit = isCloud ? subscription?.clientLimit : null;
     if (limit == null || activePlans.length < limit) return false;
-    onLocked?.call('O plano Essencial vai até $limit ${terms.clients} ativos. '
-        'Arquive quem parou ou passe para o Profissional, com ${terms.clients} ilimitados.');
+    onLocked?.call(AppConfig.hidePricing
+        ? 'Sua conta vai até $limit ${terms.clients} ativos. Arquive quem parou para cadastrar outro.'
+        : 'O plano Essencial vai até $limit ${terms.clients} ativos. '
+            'Arquive quem parou ou passe para o Profissional, com ${terms.clients} ilimitados.');
     return true;
   }
 

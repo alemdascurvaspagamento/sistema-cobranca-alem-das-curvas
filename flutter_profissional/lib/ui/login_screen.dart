@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(forgot ? 'Recuperar senha' : (signup ? 'Criar conta grátis' : 'Entrar no Léguno'),
+                  Text(forgot ? 'Recuperar senha' : (signup ? (AppConfig.hidePricing ? 'Criar conta' : 'Criar conta grátis') : 'Entrar no Léguno'),
                       style: CF.score(40, color: Colors.white)),
                   const SizedBox(height: 6),
                   Text(
@@ -170,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? 'Digite o e-mail da sua conta. Você recebe um link para criar uma senha nova.'
                         : signup
                             ? (AppConfig.hidePricing
-                                ? '30 dias com tudo liberado, sem cartão.'
+                                ? 'Crie sua conta com e-mail e senha.'
                                 : '30 dias com tudo liberado, sem cartão. Depois você escolhe um plano, '
                                     'a partir de R\$ 34,90 por mês.')
                             : 'Use o e-mail e a senha da sua conta.',

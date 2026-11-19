@@ -361,7 +361,7 @@ class _SubscriptionPanel extends StatelessWidget {
     String date(DateTime? d) => d == null
         ? ''
         : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    final (String title, String detail, Color color) = switch (sub?.state) {
+    var (String title, String detail, Color color) = switch (sub?.state) {
       'courtesy' => ('Conta cortesia', 'Acesso completo, sem cobrança.', CF.green),
       'active' => (
           'Plano ${sub!.planName}${sub.founder ? ' · fundador' : ''}',
@@ -382,6 +382,13 @@ class _SubscriptionPanel extends StatelessWidget {
     };
     final t = store.terms;
     final storeApp = AppConfig.hidePricing;
+    // Nas lojas não aparecem plano, cobrança nem teste grátis (regra da Apple e do Google).
+    if (storeApp) {
+      final ro = sub?.state == 'read_only';
+      title = ro ? 'Somente leitura' : 'Acesso liberado';
+      detail = ro ? 'Você vê e baixa seus dados.' : 'Sua conta está ativa.';
+      color = ro ? CF.red : CF.green;
+    }
     return Panel(
       icon: Icons.workspace_premium_rounded,
       color: CF.amber,
