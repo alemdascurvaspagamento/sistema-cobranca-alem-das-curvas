@@ -1,0 +1,42 @@
+# Gera as telas do Léguno em tamanho de iPad para a App Store (não publica nada).
+name: Capturas do iPad
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [capturas-ipad]
+    paths:
+      - 'flutter_profissional/test_shots/**'
+      - '.github/workflows/capturas-ipad.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Baixar a fonte Barlow
+        run: |
+          mkdir -p fonts
+          for w in Regular Medium SemiBold Bold ExtraBold; do
+            curl -fsSL -o fonts/Barlow-$w.ttf "https://github.com/google/fonts/raw/main/ofl/barlow/Barlow-$w.ttf"
+          done
+          ls -la fonts
+      - name: Gerar as telas
+        run: flutter test test_shots/ipad_shots_test.dart --reporter expanded
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: telas-ipad
+          path: flutter_profissional/shots/*.png
