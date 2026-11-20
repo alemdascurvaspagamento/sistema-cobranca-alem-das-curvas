@@ -31,7 +31,7 @@ void main() {
     await _font('MaterialIcons', ['$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf']);
     final barlow = [for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) 'fonts/Barlow-$w.ttf'];
     // Também com os nomes das fontes padrão (botões e textos sem fonte definida).
-    for (final family in ['Barlow', 'Roboto', 'CupertinoSystemText', 'CupertinoSystemDisplay', '.AppleSystemUIFont', '.SF Pro Text', '.SF UI Text']) {
+    for (final family in ['Barlow', 'FlutterTest', 'Ahem', 'Roboto', 'CupertinoSystemText', 'CupertinoSystemDisplay', '.AppleSystemUIFont', '.SF Pro Text', '.SF UI Text']) {
       await _font(family, barlow);
     }
   });
