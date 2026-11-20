@@ -19,15 +19,25 @@ Deno.serve(async (req) => {
   const sent = req.headers.get("asaas-access-token") ?? "";
   if (!secret || !sameText(secret, sent)) return new Response("unauthorized", { status: 401 });
 
-  let body: { event?: string; payment?: Record<string, unknown> };
+  let body: { event?: string; payment?: Record<string, unknown>; subscription?: Record<string, unknown> };
   try {
     body = await req.json();
   } catch {
     return new Response("json inválido", { status: 400 });
   }
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  // Avisos de assinatura (removida ou inativada no Asaas).
+  if (!body.payment && body.subscription) {
+    const { error } = await db.rpc("cf_asaas_subscription_event", { p_event: body.event ?? "", p_sub: body.subscription });
+    if (error) {
+      console.error("asaas-webhook (assinatura):", error.message);
+      return new Response("erro ao gravar", { status: 500 });
+    }
+    return new Response("ok");
+  }
   if (!body.payment) return new Response("ignorado"); // outros tipos de aviso
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { error } = await db.rpc("cf_asaas_apply", { p_event: body.event ?? "", p_payment: body.payment });
   if (error) {
     console.error("asaas-webhook:", error.message);
