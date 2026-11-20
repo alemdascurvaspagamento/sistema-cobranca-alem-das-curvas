@@ -34,9 +34,14 @@ void main() {
     for (final family in ['Barlow', 'FlutterTest', 'Ahem', 'Roboto', 'CupertinoSystemText', 'CupertinoSystemDisplay', '.AppleSystemUIFont', '.SF Pro Text', '.SF UI Text']) {
       await _font(family, barlow);
     }
+    await _font('BarlowCondensed', [for (final w in ['Medium', 'SemiBold', 'Bold', 'ExtraBold']) 'fonts/BarlowCondensed-$w.ttf']);
   });
 
-  setUp(() => CF.useGoogleFonts = false);
+  setUp(() {
+    CF.useGoogleFonts = false;
+    CF.testFontFamily = 'Barlow';
+    CF.testCondensedFamily = 'BarlowCondensed';
+  });
 
   final shots = <String, IconData?>{
     '1-inicio': null,

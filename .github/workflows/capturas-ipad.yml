@@ -32,6 +32,9 @@ jobs:
           for w in Regular Medium SemiBold Bold ExtraBold; do
             curl -fsSL -o fonts/Barlow-$w.ttf "https://github.com/google/fonts/raw/main/ofl/barlow/Barlow-$w.ttf"
           done
+          for w in Medium SemiBold Bold ExtraBold; do
+            curl -fsSL -o fonts/BarlowCondensed-$w.ttf "https://github.com/google/fonts/raw/main/ofl/barlowcondensed/BarlowCondensed-$w.ttf"
+          done
           ls -la fonts
       - name: Gerar as telas
         run: flutter test test_shots/ipad_shots_test.dart --reporter expanded
