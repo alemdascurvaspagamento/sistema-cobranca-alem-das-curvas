@@ -29,7 +29,11 @@ void main() {
   setUpAll(() async {
     final root = Platform.environment['FLUTTER_ROOT']!;
     await _font('MaterialIcons', ['$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf']);
-    await _font('Barlow', [for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) 'fonts/Barlow-$w.ttf']);
+    final barlow = [for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) 'fonts/Barlow-$w.ttf'];
+    // Também com os nomes das fontes padrão (botões e textos sem fonte definida).
+    for (final family in ['Barlow', 'Roboto', 'CupertinoSystemText', 'CupertinoSystemDisplay', '.AppleSystemUIFont', '.SF Pro Text', '.SF UI Text']) {
+      await _font(family, barlow);
+    }
   });
 
   setUp(() => CF.useGoogleFonts = false);
