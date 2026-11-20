@@ -10,7 +10,7 @@ on:
       - '.github/workflows/capturas-ipad.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   capturas:
@@ -40,3 +40,13 @@ jobs:
         with:
           name: telas-ipad
           path: flutter_profissional/shots/*.png
+      - name: Guardar as telas na pasta de teste
+        working-directory: .
+        run: |
+          mkdir -p capturas/ipad-bruto
+          cp flutter_profissional/shots/*.png capturas/ipad-bruto/
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add capturas/ipad-bruto
+          git commit -m "Telas do iPad geradas automaticamente" || echo "nada novo"
+          git push
