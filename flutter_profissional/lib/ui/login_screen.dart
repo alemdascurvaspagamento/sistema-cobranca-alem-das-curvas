@@ -96,7 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final res = await auth.signUp(
         email: email.text.trim(),
         password: password.text,
-        emailRedirectTo: kIsWeb ? Uri.base.origin : null,
+        // No celular, o link de confirmação abre o Léguno na web (e não o endereço padrão do servidor).
+        emailRedirectTo: kIsWeb ? Uri.base.origin : AppConfig.publicUrl,
         data: {'terms_version': legalVersion, 'terms_accepted_at': DateTime.now().toUtc().toIso8601String()},
       );
       if (res.session == null && mounted) {
