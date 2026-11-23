@@ -37,6 +37,13 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = BillingStore.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    // Léguno Fiscal (demonstração): nos apps, só aparece para contas de teste.
+    loadFiscalBeta();
+  }
+
   /// Excluir a conta (exigência da Apple e da LGPD). Pede para digitar EXCLUIR.
   Future<void> _deleteAccount() async {
     final typed = TextEditingController();
@@ -232,10 +239,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 14),
         const _MorningBriefPanel(),
       ],
-      if (fiscalDemoEnabled) ...[
-        const SizedBox(height: 14),
-        const FiscalDemoEntry(),
-      ],
+      ValueListenableBuilder<bool>(
+        valueListenable: fiscalBetaAllowed,
+        builder: (_, __, ___) => fiscalDemoEnabled
+            ? const Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [SizedBox(height: 14), FiscalDemoEntry()])
+            : const SizedBox.shrink(),
+      ),
       const SizedBox(height: 14),
       Panel(
         padding: const EdgeInsets.symmetric(vertical: 4),
