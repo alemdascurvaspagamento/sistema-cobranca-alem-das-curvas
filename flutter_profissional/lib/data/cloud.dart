@@ -57,7 +57,7 @@ class CloudService implements CloudSink {
           error: text.contains('cf_limite_clientes')
               ? (AppConfig.hidePricing
                   ? 'Sua conta chegou ao limite de clientes ativos. Esta alteração não foi salva.'
-                  : 'O plano Essencial vai até 15 clientes ativos. Esta alteração não foi salva.')
+                  : 'Sua conta chegou ao limite de clientes ativos. Esta alteração não foi salva.')
               : text.contains('row-level security') || text.contains('42501')
                   ? 'Sua conta está no modo somente leitura. Esta alteração não foi salva.'
                   : 'Não foi possível salvar a última alteração. Confira a internet e tente de novo.',

@@ -120,9 +120,9 @@ class _PlanChooserState extends State<PlanChooser> {
         }
 
         return Wrap(spacing: 10, runSpacing: 10, children: [
-          card('essencial', 'Essencial', 'Até 15 ${widget.clients} ativos. Agenda, cobrança e Pix.', false),
+          card('essencial', 'Essencial', '${widget.clientsTitle} ilimitados. Agenda, cobrança no WhatsApp com Pix e financeiro.', false),
           card('profissional', 'Profissional',
-              '${widget.clientsTitle} ilimitados, agendamento online, confirmação pelo WhatsApp, agenda no Outlook/Google e relatórios.', true),
+              'Tudo do Essencial, mais agendamento online, confirmação pelo WhatsApp, agenda no Outlook/Google e relatórios.', true),
         ]);
       }),
       const SizedBox(height: 8),
@@ -149,8 +149,8 @@ Future<void> startCheckout(BuildContext context, BillingStore store, String plan
         content: Text(
           plan == 'profissional'
               ? 'As funções do Profissional ficam liberadas na hora. O novo valor vale a partir da próxima cobrança.'
-              : 'O novo valor vale a partir da próxima cobrança. Nada é apagado: se tiver mais de 15 clientes ativos, '
-                  'só não dá para cadastrar novos até arquivar alguns. O link de agendamento online é desligado.',
+              : 'O novo valor vale a partir da próxima cobrança. Nada é apagado. '
+                  'O link de agendamento online, a confirmação pelo WhatsApp e os relatórios são desligados.',
           style: CF.body(15, height: 1.4),
         ),
         actions: [
