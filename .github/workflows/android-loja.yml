@@ -63,7 +63,7 @@ jobs:
 
       - name: Montar o arquivo da loja
         run: |
-          flutter build appbundle --release --build-name=1.0.1 --build-number=$(( ${{ github.run_number }} + 10 ))
+          flutter build appbundle --release --build-name=1.0.2 --build-number=$(( ${{ github.run_number }} + 10 ))
           ls -la build/app/outputs/bundle/release/
           keytool -list -v -keystore android/app/upload.jks -storepass "$KS_PASS" -alias "$KS_ALIAS" | grep -E "SHA256|Válido|Valid" | head -3
 
