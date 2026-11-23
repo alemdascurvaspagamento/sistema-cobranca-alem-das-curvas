@@ -36,3 +36,4 @@ build 2026-11-17T19:50:56Z v1.0.1 com relevo em todos os botões
 build 2026-11-17T20:54:24Z v1.0.1 alunos de 5 em 5 e botão de relatórios
 build 2026-11-19T15:12:30Z revisao Apple: sem assinatura nas lojas, privacidade sem IA
 build 2026-11-19T15:38:52Z auditoria final: sem nome do plano e sem faixa de teste nas lojas
+build 2026-11-23T12:54:41Z TestFlight: Léguno Fiscal (demonstração) só para contas de teste
