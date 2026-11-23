@@ -560,8 +560,8 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           'grace' when storeApp => null,
           'trialing' => (
               sub.trialDaysLeft(now) <= 1
-                  ? 'Último dia do teste grátis. Tudo continua liberado até o fim do dia.'
-                  : 'Teste grátis: faltam ${sub.trialDaysLeft(now)} dias. Tudo liberado.',
+                  ? 'Último dia do teste grátis. Depois, a agenda continua grátis para sempre.'
+                  : 'Teste grátis: faltam ${sub.trialDaysLeft(now)} dias. Tudo liberado. Depois, a agenda continua grátis.',
               CF.ink,
               CF.amberBg,
               Icons.hourglass_bottom_rounded,
@@ -573,11 +573,12 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               CF.redBg,
               Icons.warning_amber_rounded,
             ),
+          'read_only' when storeApp => null,
           'read_only' => (
-              'Modo somente leitura: você vê e baixa seus dados, mas não lança nada novo.',
-              CF.red,
-              CF.redBg,
-              Icons.lock_rounded,
+              'Agenda Grátis: sua agenda é liberada para sempre. Cobrança, financeiro e relatórios vêm com os planos.',
+              CF.ink,
+              const Color(0xFFDDF3F5),
+              Icons.event_available_rounded,
             ),
           _ => null,
         };
@@ -687,15 +688,33 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
           if (widget.demo) ...[const SizedBox(height: 18), const BookingManagementDemo()],
         ]);
       case Section.cobrancas:
+        if (BillingStore.instance.isFree) {
+          return FreeLockedView(
+              icon: Icons.receipt_long_rounded,
+              title: 'Cobranças',
+              what: 'Valor de cada aluno calculado sozinho e cobrança no WhatsApp com Pix.');
+        }
         return BillingScreen(onOpenRules: () => go(Section.regras));
       case Section.clientes:
         return const ClientsScreen();
       case Section.financeiro:
+        if (BillingStore.instance.isFree) {
+          return FreeLockedView(
+              icon: Icons.account_balance_wallet_rounded,
+              title: 'Financeiro',
+              what: 'Entradas, despesas, contas a pagar e a previsão do mês.');
+        }
         return FinanceScreen(
           onBilling: () => go(Section.cobrancas),
           onReports: () => go(Section.relatorios),
         );
       case Section.relatorios:
+        if (BillingStore.instance.isFree) {
+          return FreeLockedView(
+              icon: Icons.insights_rounded,
+              title: 'Relatórios',
+              what: 'Gráficos, comparativos entre meses, meta do ano e indicadores do seu trabalho.');
+        }
         return BillingStore.instance.isPro
             ? const ReportsScreen()
             : const ProLockedView(

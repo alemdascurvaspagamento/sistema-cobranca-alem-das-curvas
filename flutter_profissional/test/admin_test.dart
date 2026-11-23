@@ -112,7 +112,7 @@ void main() {
     expect(look(_acc('1', 'a@x.com', status: 'active', state: 'active')), 'Pagante');
     expect(look(_acc('1', 'a@x.com', status: 'courtesy', state: 'courtesy')), 'Cortesia');
     expect(look(_acc('1', 'a@x.com', status: 'past_due', state: 'grace')), startsWith('Atraso'));
-    expect(look(_acc('1', 'a@x.com', status: 'trialing', state: 'read_only')), 'Somente leitura');
+    expect(look(_acc('1', 'a@x.com', status: 'trialing', state: 'read_only')), 'Agenda Grátis');
   });
 
   test('último acesso e nomes de ações', () {

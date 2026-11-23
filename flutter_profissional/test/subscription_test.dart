@@ -33,7 +33,7 @@ void main() {
     expect(s.canWrite, isTrue);
   });
 
-  test('somente leitura não deixa lançar nada', () {
+  test('Agenda Grátis: agenda liberada, cobrança e financeiro travados', () {
     final store = BillingStore.instance;
     store.seed(professionById('personal'), BillingModel.perSession);
     final sink = _QuietSink();
@@ -41,15 +41,24 @@ void main() {
     String? blocked;
     store.onLocked = (m) => blocked = m;
     store.setSubscription(_sub('read_only'));
+    expect(store.isFree, isTrue);
+    expect(store.canEdit, isTrue);
     final p = store.activePlans.first;
+    // Agenda: presença, falta e aula avulsa funcionam.
+    expect(store.saveLesson(p.id, store.today, const LessonRecord(status: LessonStatus.cancelled)), isNull);
+    expect(blocked, isNull);
+    // Financeiro: pagamento, despesa e entrada ficam travados.
     final before = store.received(p.id);
     store.addPayment(p.id, PaymentEntry(amount: 50, date: store.today, method: 'Pix'));
     expect(store.received(p.id), before);
+    expect(blocked, BillingStore.freeMessage);
+    blocked = null;
+    final expenses = store.allExpenses.length;
+    store.addExpense(Expense(id: 'x1', description: 'Aluguel', amount: 100, date: store.today));
+    expect(store.allExpenses.length, expenses);
     expect(blocked, isNotNull);
-    expect(store.saveLesson(p.id, store.today, const LessonRecord(status: LessonStatus.cancelled)),
-        BillingStore.lockedMessage);
-    expect(sink.writes, 0);
     store.onLocked = null;
+    store.setSubscription(null);
     store.seed(professionById('personal'), BillingModel.perSession);
   });
 

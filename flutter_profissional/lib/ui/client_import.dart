@@ -99,7 +99,7 @@ class _ClientImportState extends State<_ClientImport> {
         packageStart: DateTime(today.year, today.month),
         dueDay: 10,
       ));
-      if (store.activePlans.length == before) break; // limite do plano ou conta somente leitura
+      if (store.activePlans.length == before) break; // limite do plano
       existing.add(_norm(r.name));
       added++;
     }

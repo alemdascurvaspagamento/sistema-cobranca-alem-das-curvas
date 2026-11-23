@@ -21,6 +21,8 @@ class SubscriptionInfo {
 
   /// Situação efetiva, já considerando as datas:
   /// trialing, active, grace (atraso dentro dos 7 dias), read_only, courtesy.
+  /// `read_only` hoje significa **Agenda Grátis**: a agenda e os alunos seguem
+  /// liberados para sempre; cobrança, financeiro e relatórios pedem um plano.
   final String state;
   final DateTime? trialEndsAt;
   final DateTime? currentPeriodEnd;
@@ -52,7 +54,14 @@ class SubscriptionInfo {
         hasSubscription: j['has_subscription'] as bool? ?? false,
       );
 
-  bool get canWrite => state != 'read_only';
+  /// A agenda sempre pode ser usada (também no Agenda Grátis).
+  bool get canWrite => true;
+
+  /// Plano Agenda Grátis (teste acabou ou não há pagamento em dia).
+  bool get isFree => state == 'read_only';
+
+  /// Cobrança, pagamentos, despesas e entradas liberados?
+  bool get canFinance => !isFree;
   bool get isTrial => state == 'trialing';
   bool get isGrace => state == 'grace';
   bool get isReadOnly => state == 'read_only';

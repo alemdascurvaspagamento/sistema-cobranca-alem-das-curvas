@@ -52,7 +52,7 @@ const usageNames = {
       }
       return ('Pagante', CF.green, CF.greenBg);
     default:
-      return ('Somente leitura', CF.red, CF.redBg);
+      return ('Agenda Grátis', CF.brand, const Color(0xFFDDF3F5));
   }
 }
 
