@@ -763,7 +763,10 @@ class OnlineBookingPanel extends StatelessWidget {
   const OnlineBookingPanel({super.key});
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => AppConfig.agendaOnly
+      // Agendamento online é recurso pago: não existe no app do iPhone/iPad.
+      ? const SizedBox.shrink()
+      : ListenableBuilder(
         listenable: Booking.instance,
         builder: (context, _) {
           final b = Booking.instance;

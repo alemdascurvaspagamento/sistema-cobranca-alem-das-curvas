@@ -6,6 +6,7 @@ import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
 import '../billing/pro_gate.dart';
+import '../config.dart';
 import '../ui/cf_theme.dart';
 import '../ui/confirmations.dart';
 import '../ui/motion.dart';
@@ -709,7 +710,9 @@ class _ConfirmBar extends StatelessWidget {
   final bool tomorrow;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => AppConfig.agendaOnly
+      ? const SizedBox.shrink()
+      : ListenableBuilder(
         listenable: Confirmations.instance,
         builder: (context, _) {
           final c = Confirmations.instance;

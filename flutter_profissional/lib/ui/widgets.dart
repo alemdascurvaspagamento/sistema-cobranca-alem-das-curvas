@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../billing/billing_engine.dart';
 import '../billing/billing_store.dart';
+import '../config.dart';
 import 'cf_theme.dart';
 import 'confirmations.dart';
 import 'motion.dart';
@@ -271,7 +272,8 @@ class SessionRow extends StatelessWidget {
         ));
     }
 
-    final confirm = Confirmations.canConfirm(plan, line, store.today);
+    // Confirmação pelo WhatsApp é recurso pago: não aparece no app do iPhone/iPad.
+    final confirm = !AppConfig.agendaOnly && Confirmations.canConfirm(plan, line, store.today);
 
     return ListenableBuilder(listenable: Confirmations.instance, builder: (context, _) => LayoutBuilder(builder: (context, box) {
     // Em colunas estreitas (semana no computador) fica só o essencial.

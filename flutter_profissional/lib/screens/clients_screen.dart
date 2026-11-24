@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
+import '../config.dart';
 import '../profile/profession_profile.dart';
 import '../data/usage.dart';
 import '../ui/client_import.dart';
@@ -71,8 +72,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
           const SizedBox(height: 14),
           KpiRow([
             KpiCard(icon: Icons.groups_rounded, label: '${t.clientsTitle} ativos', value: '${store.activePlans.length}', color: CF.violet, accent: true),
-            KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber no mês', value: moneyCompact(store.monthRemaining), color: CF.amber, accent: true),
-            KpiCard(icon: Icons.error_rounded, label: 'Em atraso', value: '${store.countStatus(BillStatus.overdue)}', hint: 'Pagamentos vencidos', color: CF.red, accent: true),
+            if (!AppConfig.agendaOnly) KpiCard(icon: Icons.hourglass_bottom_rounded, label: 'A receber no mês', value: moneyCompact(store.monthRemaining), color: CF.amber, accent: true),
+            if (!AppConfig.agendaOnly) KpiCard(icon: Icons.error_rounded, label: 'Em atraso', value: '${store.countStatus(BillStatus.overdue)}', hint: 'Pagamentos vencidos', color: CF.red, accent: true),
             KpiCard(icon: Icons.inventory_2_rounded, label: 'Arquivados', value: '${store.archivedPlans.length}', color: CF.muted, accent: true),
           ]),
           const SizedBox(height: 14),
@@ -195,7 +196,9 @@ class _ClientsTable extends StatelessWidget {
                 maxLines: 2, overflow: TextOverflow.ellipsis, style: CF.body(14)),
             Text('Dia ${p.dueDay}', style: CF.body(14)),
             Text(p.phone.isEmpty ? '—' : _formatPhone(p.phone), style: CF.body(14, color: CF.muted)),
-            p.active ? StatusPill(store.status(p, month: current)) : Text('Arquivado', style: CF.body(14, color: CF.muted)),
+            p.active
+                ? (AppConfig.agendaOnly ? const SizedBox.shrink() : StatusPill(store.status(p, month: current)))
+                : Text('Arquivado', style: CF.body(14, color: CF.muted)),
           ],
       ],
     );
@@ -244,7 +247,7 @@ class _ClientTile extends StatelessWidget {
                 Text(planPriceText(plan, t), style: CF.body(14, color: CF.text, weight: FontWeight.w600)),
               ]),
             ),
-            if (status != null) ...[const SizedBox(width: 8), StatusPill(status)],
+            if (status != null && !AppConfig.agendaOnly) ...[const SizedBox(width: 8), StatusPill(status)],
             const SizedBox(width: 8),
             Tooltip(
               message: 'Editar cadastro',
@@ -365,13 +368,14 @@ class _ClientProfile extends StatelessWidget {
                     value: p.hasRoutine ? routineText(p) : 'Sem dias fixos (${t.sessions} avuls${t.g('as', 'os')})',
                   ),
                   _InfoRow(icon: Icons.event_rounded, label: 'Vencimento', value: 'Todo dia ${p.dueDay}'),
-                  if (store.hasSecondPix)
+                  if (store.hasSecondPix && !AppConfig.agendaOnly)
                     _InfoRow(icon: Icons.pix_rounded, label: 'Pix', value: '${store.pixFor(p).label} · ${store.pixFor(p).key}'),
                   _InfoRow(icon: Icons.phone_rounded, label: 'Telefone', value: p.phone.isEmpty ? 'Não informado' : _formatPhone(p.phone)),
                 ]),
               ),
               const SizedBox(height: 14),
-              if (p.active)
+              // Valores e situação de pagamento: parte de cobrança, fora do app do iPhone/iPad.
+              if (p.active && !AppConfig.agendaOnly)
                 Panel(
                   icon: Icons.bar_chart_rounded,
                   color: CF.violet,
