@@ -5,6 +5,7 @@ import '../booking.dart';
 import '../billing/billing_engine.dart';
 import '../billing/billing_screen.dart';
 import '../billing/billing_store.dart';
+import '../billing/pro_gate.dart';
 import '../ui/cf_theme.dart';
 import '../ui/confirmations.dart';
 import '../ui/motion.dart';
@@ -40,8 +41,12 @@ class HomeScreen extends StatelessWidget {
         final tomorrow = now.hour >= 18 ? store.sessionsOn(tomorrowDay) : const <(StudentPlan, LessonLine)>[];
         final agenda = _TodayAgenda(today: today, tomorrow: tomorrow, onAgenda: onAgenda);
         final month = _MonthGlance(onBilling: onBilling, onReports: onReports);
-        final late = store.overdueByMonth();
-        final overdue = late.isEmpty ? null : _OverdueCard(items: late, onBilling: onBilling);
+        final free = store.isFree;
+        final late = free ? null : store.overdueByMonth();
+        final overdue = (late == null || late.isEmpty) ? null : _OverdueCard(items: late, onBilling: onBilling);
+        // Agenda Grátis: sem cobrança nem financeiro no Início; no lugar, o convite.
+        final Widget todoBox = free ? const FreeInviteCard() : todo;
+        final Widget monthBox = free ? const SizedBox.shrink() : month;
         return LayoutBuilder(builder: (context, box) {
           final wide = box.maxWidth >= 980;
           final t = store.terms;
@@ -59,7 +64,7 @@ class HomeScreen extends StatelessWidget {
               label: Text('Novo ${t.client}'),
             ),
           ]);
-          final starter = _StartHere(onBilling: onBilling);
+          final Widget starter = free ? const SizedBox.shrink() : _StartHere(onBilling: onBilling);
           if (wide) {
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               header,
@@ -80,9 +85,9 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   flex: 5,
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    todo,
+                    todoBox,
                     const SizedBox(height: 14),
-                    month,
+                    monthBox,
                   ]),
                 ),
               ]),
@@ -96,11 +101,11 @@ class HomeScreen extends StatelessWidget {
             if (overdue != null) ...[overdue, const SizedBox(height: 14)],
             summary,
             const SizedBox(height: 14),
-            todo,
+            todoBox,
             const SizedBox(height: 14),
             agenda,
             const SizedBox(height: 14),
-            month,
+            monthBox,
             const SizedBox(height: 8),
           ]);
         });

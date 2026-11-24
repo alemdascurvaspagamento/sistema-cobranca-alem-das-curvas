@@ -295,7 +295,7 @@ class _AccountsTab extends StatefulWidget {
 
 class _AccountsTabState extends State<_AccountsTab> {
   static const _filters = ['all', 'trial', 'paying', 'late', 'readonly', 'internal'];
-  static const _labels = ['Todas', 'Em teste', 'Pagantes', 'Em atraso', 'Somente leitura', 'Internas'];
+  static const _labels = ['Todas', 'Em teste', 'Pagantes', 'Em atraso', 'Agenda Grátis', 'Internas'];
   final controller = TextEditingController();
   Timer? _debounce;
   int f = 0;

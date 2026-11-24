@@ -38,13 +38,28 @@ class BillingStore extends ChangeNotifier {
   /// Assinatura da conta logada. `null` na demonstração.
   SubscriptionInfo? subscription;
 
-  /// Chamado quando uma alteração é recusada (somente leitura ou limite de clientes).
+  /// Chamado quando uma alteração é recusada (Agenda Grátis ou limite de clientes).
   void Function(String message)? onLocked;
 
   bool get canEdit => !isCloud || (subscription?.canWrite ?? true);
 
+  /// Conta no plano Agenda Grátis: agenda liberada, cobrança e financeiro travados.
+  bool get isFree => AppConfig.agendaOnly || (isCloud && (subscription?.isFree ?? false));
+
+  static String get freeMessage => AppConfig.hidePricing
+      ? 'Este recurso ${AppConfig.unavailableHere}. A agenda continua liberada.'
+      : 'No Agenda Grátis a agenda é liberada para sempre. Para lançar pagamentos, despesas e entradas, '
+          'escolha um plano em Configurações.';
+
+  /// Trava das funções pagas (cobrança e financeiro) no Agenda Grátis.
+  bool _financeLocked() {
+    if (!isFree) return false;
+    onLocked?.call(freeMessage);
+    return true;
+  }
+
   /// Funções do Profissional liberadas? (Na demonstração, sim.)
-  bool get isPro => !isCloud || (subscription?.pro ?? true);
+  bool get isPro => !AppConfig.agendaOnly && (!isCloud || (subscription?.pro ?? true));
 
   static String get lockedMessage => AppConfig.hidePricing
       ? 'Sua conta está no modo somente leitura; seus dados continuam aqui.'
@@ -291,7 +306,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Um pagamento do responsável vira baixa de cada pessoa, na ordem, até cobrir o valor.
   void addGroupPayment(PayGroup g, PaymentEntry entry, {DateTime? month}) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     var left = entry.amount;
     for (final m in g.members) {
       if (left <= 0.004) break;
@@ -554,7 +569,7 @@ class BillingStore extends ChangeNotifier {
   DateTime Function() clock = DateTime.now;
 
   void addPayment(String studentId, PaymentEntry entry, {DateTime? month}) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final m = month ?? selectedMonth;
     final d = entry.date;
     final sig = '$studentId|${m.year}-${m.month}|${entry.amount.toStringAsFixed(2)}|${d.year}-${d.month}-${d.day}|${entry.method}';
@@ -569,7 +584,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void removeLastPayment(String studentId, {DateTime? month}) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final list = _payments[_payKey(studentId, month ?? selectedMonth)];
     if (list == null || list.isEmpty) return;
     final removed = list.removeLast();
@@ -579,7 +594,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void setDueDay(String studentId, int day) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final i = plans.indexWhere((p) => p.id == studentId);
     if (i < 0) return;
     plans[i] = plans[i].copyWith(dueDay: day);
@@ -590,7 +605,7 @@ class BillingStore extends ChangeNotifier {
   // ---------------------------------------------------------------- regras e feriados
 
   void setRules(BillingRules value) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     rules = value;
     sink?.saveProfile({
       'cancel_rule': value.cancel.name,
@@ -811,7 +826,7 @@ class BillingStore extends ChangeNotifier {
         ..sort((a, b) => a.date.compareTo(b.date));
 
   void addExpense(Expense e) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     _expenses.add(e);
     sink?.saveExpense(e);
     _changed();
@@ -819,7 +834,7 @@ class BillingStore extends ChangeNotifier {
 
   /// Avulsa: apaga. Fixa: deixa de repetir a partir do mês informado.
   void removeExpense(String id, {DateTime? fromMonth}) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final i = _expenses.indexWhere((e) => e.id == id);
     if (i < 0) return;
     final e = _expenses[i];
@@ -869,7 +884,7 @@ class BillingStore extends ChangeNotifier {
     DateTime? fromMonth,
     int? installments,
   }) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final i = _expenses.indexWhere((e) => e.id == id);
     if (i < 0) return;
     final old = _expenses[i];
@@ -923,7 +938,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void updateIncome(ExtraIncome e) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final i = _incomes.indexWhere((x) => x.id == e.id);
     if (i < 0) return;
     _incomes[i] = e;
@@ -932,14 +947,14 @@ class BillingStore extends ChangeNotifier {
   }
 
   void addIncome(ExtraIncome e) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     _incomes.add(e);
     sink?.addIncome(e);
     _changed();
   }
 
   void removeIncome(String id) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     _incomes.removeWhere((e) => e.id == id);
     sink?.deleteIncome(id);
     _changed();
@@ -968,7 +983,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void payExpense(Expense e, {DateTime? on}) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     final paidOn = dateOnly(on ?? today);
     _expensePaid[_expKey(e.id, e.date)] = paidOn;
     sink?.payExpense(e.id, DateTime(e.date.year, e.date.month), paidOn);
@@ -976,7 +991,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   void unpayExpense(Expense e) {
-    if (_locked()) return;
+    if (_financeLocked()) return;
     _expensePaid.remove(_expKey(e.id, e.date));
     sink?.unpayExpense(e.id, DateTime(e.date.year, e.date.month));
     _changed();

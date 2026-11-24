@@ -1,5 +1,6 @@
 import 'package:coachflow_profissional/fiscal/fiscal_demo.dart';
 import 'package:coachflow_profissional/ui/cf_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,6 +15,8 @@ void main() {
 
   for (final size in const [Size(390, 900), Size(1400, 1000)]) {
     testWidgets('abas da demonstração em ${size.width.toInt()} px', (tester) async {
+      // Como no navegador (com a aba Planos). A versão dos apps tem teste próprio.
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       await tester.binding.setSurfaceSize(size);
       await tester.pumpWidget(MaterialApp(theme: CF.theme(), home: const FiscalDemoScreen()));
       await tester.pump();
@@ -26,6 +29,7 @@ void main() {
       await tester.scrollUntilVisible(find.text('Quero ser avisado'), 300, scrollable: find.byType(Scrollable).first);
       expect(find.text('Quero ser avisado'), findsOneWidget);
       await tester.binding.setSurfaceSize(null);
+      debugDefaultTargetPlatformOverride = null;
     });
   }
 }

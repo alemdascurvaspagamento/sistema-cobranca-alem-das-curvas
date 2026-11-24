@@ -11,9 +11,31 @@ import '../ui/widgets.dart';
 /// Mostra como vai ser a emissão de notas fiscais, só com dados de exemplo.
 /// Nada aqui emite nota, fala com prefeitura, Focus NFe ou Asaas, nem mexe no banco.
 /// A única ação real é "Quero ser avisado", que manda um aviso à equipe pela
-/// caixa de ajuda que já existe. Aparece só no navegador, nunca nos apps das lojas.
+/// caixa de ajuda que já existe.
+///
+/// Onde aparece:
+/// - no navegador, para todos (como antes);
+/// - nos apps das lojas (iPhone/Android), SÓ para contas de teste marcadas no banco
+///   (tabela cf_beta_testers). A conta de revisão da Apple não está lá, então não vê.
+///   Nos apps a aba "Planos" e qualquer menção a plano/preço ficam escondidas.
+const bool _fiscalFlag = bool.fromEnvironment('FISCAL_DEMO', defaultValue: true);
+
+/// Liga a demonstração nos apps das lojas para contas de teste. Começa desligado.
+final ValueNotifier<bool> fiscalBetaAllowed = ValueNotifier<bool>(false);
+
 bool get fiscalDemoEnabled =>
-    kIsWeb && !AppConfig.hidePricing && const bool.fromEnvironment('FISCAL_DEMO', defaultValue: true);
+    _fiscalFlag && ((kIsWeb && !AppConfig.hidePricing) || (AppConfig.hidePricing && fiscalBetaAllowed.value));
+
+/// Pergunta ao banco se esta conta é de teste do Léguno Fiscal. Qualquer erro = não mostra.
+Future<void> loadFiscalBeta() async {
+  if (!_fiscalFlag || !AppConfig.hidePricing || !AppConfig.cloudEnabled) return;
+  try {
+    final r = await Supabase.instance.client.rpc('cf_has_beta', params: {'p_feature': 'fiscal_demo'});
+    fiscalBetaAllowed.value = r == true;
+  } catch (_) {
+    fiscalBetaAllowed.value = false;
+  }
+}
 
 /// Cartão que abre a demonstração, para ficar em Configurações.
 class FiscalDemoEntry extends StatelessWidget {
@@ -152,7 +174,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
               ),
               const SizedBox(height: 12),
               PillGrid(columns: 3, narrowColumns: 2, children: [
-                for (final t in _Tab.values) Pill(label: t.label, selected: tab == t, onTap: () => setState(() => tab = t)),
+                for (final t in _Tab.values.where((t) => !(AppConfig.hidePricing && t == _Tab.planos))) Pill(label: t.label, selected: tab == t, onTap: () => setState(() => tab = t)),
               ]),
               const SizedBox(height: 14),
               ...switch (tab) {
@@ -195,7 +217,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
         Panel(
           icon: Icons.verified_rounded,
           color: CF.brand,
-          title: 'Fiscal Plus',
+          title: AppConfig.hidePricing ? 'Notas do mês' : 'Fiscal Plus',
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('14 de 50 notas usadas em novembro', style: CF.body(15, weight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -204,7 +226,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
               child: const LinearProgressIndicator(value: 14 / 50, minHeight: 10, color: CF.brand, backgroundColor: CF.greyBg),
             ),
             const SizedBox(height: 6),
-            Text('Restam 36 notas no plano', style: CF.body(13.5, color: CF.muted)),
+            Text(AppConfig.hidePricing ? 'Restam 36 notas neste mês' : 'Restam 36 notas no plano', style: CF.body(13.5, color: CF.muted)),
           ]),
         ),
         _gap(),
@@ -386,7 +408,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
           color: CF.lap,
           title: 'Quando a nota é emitida',
           child: Column(children: [
-            _switch('Emitir quando o pagamento for confirmado', 'A nota é pedida assim que o Asaas avisa o pagamento.',
+            _switch('Emitir quando o pagamento for confirmado', AppConfig.hidePricing ? 'A nota é pedida assim que o pagamento é confirmado.' : 'A nota é pedida assim que o Asaas avisa o pagamento.',
                 autoAfterPayment, (v) => setState(() => autoAfterPayment = v)),
             _switch('Emitir no fechamento do mês', 'Para quem cobra por atendimentos realizados.', autoMonthClose,
                 (v) => setState(() => autoMonthClose = v)),
@@ -401,7 +423,7 @@ class _FiscalDemoScreenState extends State<FiscalDemoScreen> {
           title: 'Quem emite as notas',
           child: Column(children: [
             _radio(0, 'Léguno Fiscal', 'Recomendado para este profissional.'),
-            _radio(1, 'Emissão própria do Asaas', 'Fica desligada para não duplicar nota.'),
+            _radio(1, AppConfig.hidePricing ? 'Emissão própria da cobrança' : 'Emissão própria do Asaas', 'Fica desligada para não duplicar nota.'),
           ]),
         ),
         _gap(),

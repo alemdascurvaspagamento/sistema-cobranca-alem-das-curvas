@@ -75,6 +75,11 @@ Deno.serve(async (req) => {
     );
     const marked = mark.ok ? await mark.json() : [];
     if (!marked.length) continue;
+    // Agenda Grátis não recebe e-mails: só quem está no teste, em dia ou cortesia.
+    const plan = await fetch(`${URL_}/rest/v1/rpc/_cf_has_plan`, {
+      method: 'POST', headers: { ...admin, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_owner: row.owner_id }),
+    });
+    if (!plan.ok || (await plan.json()) !== true) continue;
     const to = await emailOf(row.owner_id);
     if (to && (await send(to, row.payload, date))) sent++;
   }

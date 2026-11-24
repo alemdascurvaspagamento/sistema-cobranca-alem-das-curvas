@@ -34,5 +34,12 @@ class AppConfig {
   static bool get hidePricing =>
       !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
 
+  /// iPhone e iPad: o app tem só a agenda (Agenda Grátis) para todos, mesmo para quem assina pela web.
+  /// Exigência da Apple (regras 3.1.1 e 3.1.3(b)): nada pago pode ser liberado no app sem a compra pela Apple.
+  static bool get agendaOnly => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// Texto curto para recurso que não existe no app do iPhone/iPad ou na conta.
+  static String get unavailableHere => agendaOnly ? 'não está disponível neste app' : 'não está disponível na sua conta';
+
   static bool get cloudEnabled => !offline && supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
 }

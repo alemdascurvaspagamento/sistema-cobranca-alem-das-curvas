@@ -4,7 +4,7 @@ import '../config.dart';
 import 'cf_theme.dart';
 
 /// Versão dos textos legais. Muda quando os termos mudarem (fica gravada no cadastro).
-const legalVersion = '2026-11-19';
+const legalVersion = '2026-11-23';
 
 enum LegalDoc { terms, privacy }
 
@@ -27,13 +27,13 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
             'Você é responsável pelas informações que cadastra e por manter a senha em segredo. Cada conta é de uma pessoa. É preciso ter 18 anos ou mais.'),
         if (AppConfig.hidePricing)
           _Item('5. Acesso à conta',
-              'O acesso é pessoal, com o e-mail e a senha da sua conta. Se houver alguma pendência na conta, ela pode ficar só para consulta: você continua vendo e baixando seus dados, e nada é apagado.')
+              'O acesso é pessoal, com o e-mail e a senha da sua conta. A agenda e o cadastro de clientes ficam sempre liberados. Alguns recursos podem não estar disponíveis na sua conta; seus dados nunca são apagados por isso.')
         else
-        _Item('5. Teste grátis e planos',
- 'O teste grátis dura 30 dias, sem cartão. Depois, para continuar editando, é preciso assinar um plano. Plano Essencial: R\$ 34,90 por mês ou R\$ 349 por ano, até 15 clientes ativos. Plano Profissional: R\$ 59,90 por mês ou R\$ 599 por ano, clientes ilimitados, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Oferta de fundador: Profissional por R\$ 39,90 por mês, para as primeiras 100 contas que assinarem durante o teste grátis. Quem entra nessa oferta mantém esse preço enquanto a assinatura estiver ativa, sem interrupção.'),
+        _Item('5. Agenda Grátis, teste e planos',
+ 'A agenda é grátis para sempre (plano Agenda Grátis): agenda, cadastro de clientes, presença, faltas, remarcações e feriados, sem custo e sem prazo. Nos primeiros 30 dias, todos os recursos ficam liberados para teste, sem cartão. Depois, cobrança, financeiro e relatórios exigem um plano. Plano Essencial: R\$ 34,90 por mês ou R\$ 349 por ano, com cobrança pelo WhatsApp com Pix e financeiro. Plano Profissional: R\$ 59,90 por mês ou R\$ 599 por ano, com tudo do Essencial, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Nenhum plano limita o número de clientes. Oferta de fundador: Profissional por R\$ 39,90 por mês, para as primeiras 100 contas que assinarem durante o teste grátis. Quem entra nessa oferta mantém esse preço enquanto a assinatura estiver ativa, sem interrupção.'),
         if (!AppConfig.hidePricing)
         _Item('6. Pagamento e renovação',
-            'A assinatura é cobrada de forma antecipada, pelos meios mostrados na hora de assinar, e renova sozinha pelo mesmo período (mensal ou anual) até você cancelar. Os pagamentos são processados pelo Asaas. Podemos mudar os preços para novas assinaturas. Para quem já assina, avisamos com 30 dias de antecedência e o novo valor só vale na próxima renovação. Se um pagamento falhar, avisamos por e-mail. Sem regularização, a conta passa a ser só para consulta: você continua vendo e baixando seus dados, e nada é apagado.'),
+            'A assinatura é cobrada de forma antecipada, pelos meios mostrados na hora de assinar, e renova sozinha pelo mesmo período (mensal ou anual) até você cancelar. Os pagamentos são processados pelo Asaas. Podemos mudar os preços para novas assinaturas. Para quem já assina, avisamos com 30 dias de antecedência e o novo valor só vale na próxima renovação. Se um pagamento falhar, avisamos por e-mail. Sem regularização, a conta passa para o Agenda Grátis: a agenda continua funcionando, cobrança, financeiro e relatórios ficam pausados, e nada é apagado.'),
         if (!AppConfig.hidePricing)
         _Item('7. Cancelamento e devolução',
             'Você pode cancelar quando quiser, sem multa e sem fidelidade. O acesso continua até o fim do período já pago. Por ser uma contratação feita à distância, você pode desistir em até 7 dias depois de assinar e receber o valor de volta por inteiro. Depois disso, não devolvemos valores já pagos de períodos que já começaram, salvo cobrança indevida ou erro nosso.'),

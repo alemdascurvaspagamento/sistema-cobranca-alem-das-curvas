@@ -37,6 +37,13 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = BillingStore.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    // Léguno Fiscal (demonstração): nos apps, só aparece para contas de teste.
+    loadFiscalBeta();
+  }
+
   /// Excluir a conta (exigência da Apple e da LGPD). Pede para digitar EXCLUIR.
   Future<void> _deleteAccount() async {
     final typed = TextEditingController();
@@ -112,11 +119,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: AppConfig.hidePricing ? 'Conta' : 'Plano',
             value: store.subscription == null
                 ? 'Demonstração'
-                : (AppConfig.hidePricing ? 'Ativa' : store.subscription!.planName),
+                : (AppConfig.agendaOnly ? 'Agenda' : AppConfig.hidePricing ? 'Ativa' : store.subscription!.planName),
             color: CF.amber,
             accent: true,
           ),
-          KpiCard(
+          if (!AppConfig.agendaOnly) KpiCard(
             icon: Icons.qr_code_2_rounded,
             label: 'Pix',
             value: store.pixKey.isEmpty ? 'Sem chave' : 'Ativo',
@@ -134,8 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ]),
       ),
-      const SizedBox(height: 14),
-      AnimatedBuilder(
+      // Pix serve à cobrança, que não existe no app do iPhone/iPad.
+      if (!AppConfig.agendaOnly) const SizedBox(height: 14),
+      if (!AppConfig.agendaOnly) AnimatedBuilder(
         animation: store,
         builder: (context, _) => Panel(
           icon: Icons.qr_code_2_rounded,
@@ -228,14 +236,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () => openConfirmTemplate(context),
         ),
       ),
-      if (cloud) ...[
+      // Agenda Grátis não recebe e-mails (resumo da manhã só para quem tem plano).
+      if (cloud && !store.isFree) ...[
         const SizedBox(height: 14),
         const _MorningBriefPanel(),
       ],
-      if (fiscalDemoEnabled) ...[
-        const SizedBox(height: 14),
-        const FiscalDemoEntry(),
-      ],
+      ValueListenableBuilder<bool>(
+        valueListenable: fiscalBetaAllowed,
+        builder: (_, __, ___) => fiscalDemoEnabled
+            ? const Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [SizedBox(height: 14), FiscalDemoEntry()])
+            : const SizedBox.shrink(),
+      ),
       const SizedBox(height: 14),
       Panel(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -373,7 +384,12 @@ class _SubscriptionPanel extends StatelessWidget {
           CF.green,
         ),
       'grace' => ('Pagamento em atraso', 'Acesso garantido até ${date(sub!.currentPeriodEnd?.add(const Duration(days: 7)))}.', CF.red),
-      'read_only' => ('Somente leitura', AppConfig.hidePricing ? 'Você vê e baixa seus dados.' : 'Você vê e baixa seus dados. Para voltar a lançar, assine um plano.', CF.red),
+      'read_only' => (
+          'Agenda Grátis',
+          'Sua agenda e seus alunos ficam liberados para sempre, sem custo. Para cobrar no WhatsApp, '
+              'controlar o financeiro e ver relatórios, escolha um plano abaixo.',
+          CF.brand,
+        ),
       _ => (
           'Teste grátis',
           sub == null
@@ -386,10 +402,10 @@ class _SubscriptionPanel extends StatelessWidget {
     final storeApp = AppConfig.hidePricing;
     // Nas lojas não aparecem plano, cobrança nem teste grátis (regra da Apple e do Google).
     if (storeApp) {
-      final ro = sub?.state == 'read_only';
-      title = ro ? 'Somente leitura' : 'Acesso liberado';
-      detail = ro ? 'Você vê e baixa seus dados.' : 'Sua conta está ativa.';
-      color = ro ? CF.red : CF.green;
+      final free = AppConfig.agendaOnly || sub?.state == 'read_only';
+      title = free ? 'Agenda liberada' : 'Acesso liberado';
+      detail = free ? 'Sua agenda e seus alunos estão liberados.' : 'Sua conta está ativa.';
+      color = free ? CF.brand : CF.green;
     }
     return Panel(
       icon: Icons.workspace_premium_rounded,
