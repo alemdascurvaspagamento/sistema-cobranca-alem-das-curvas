@@ -401,7 +401,7 @@ class _SubscriptionPanel extends StatelessWidget {
     final storeApp = AppConfig.hidePricing;
     // Nas lojas não aparecem plano, cobrança nem teste grátis (regra da Apple e do Google).
     if (storeApp) {
-      final free = sub?.state == 'read_only';
+      final free = AppConfig.agendaOnly || sub?.state == 'read_only';
       title = free ? 'Agenda liberada' : 'Acesso liberado';
       detail = free ? 'Sua agenda e seus alunos estão liberados.' : 'Sua conta está ativa.';
       color = free ? CF.brand : CF.green;

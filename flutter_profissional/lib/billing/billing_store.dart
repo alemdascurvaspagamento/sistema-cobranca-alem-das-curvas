@@ -44,10 +44,10 @@ class BillingStore extends ChangeNotifier {
   bool get canEdit => !isCloud || (subscription?.canWrite ?? true);
 
   /// Conta no plano Agenda Grátis: agenda liberada, cobrança e financeiro travados.
-  bool get isFree => isCloud && (subscription?.isFree ?? false);
+  bool get isFree => AppConfig.agendaOnly || (isCloud && (subscription?.isFree ?? false));
 
   static String get freeMessage => AppConfig.hidePricing
-      ? 'Este recurso não está disponível na sua conta. A agenda continua liberada.'
+      ? 'Este recurso ${AppConfig.unavailableHere}. A agenda continua liberada.'
       : 'No Agenda Grátis a agenda é liberada para sempre. Para lançar pagamentos, despesas e entradas, '
           'escolha um plano em Configurações.';
 
@@ -59,7 +59,7 @@ class BillingStore extends ChangeNotifier {
   }
 
   /// Funções do Profissional liberadas? (Na demonstração, sim.)
-  bool get isPro => !isCloud || (subscription?.pro ?? true);
+  bool get isPro => !AppConfig.agendaOnly && (!isCloud || (subscription?.pro ?? true));
 
   static String get lockedMessage => AppConfig.hidePricing
       ? 'Sua conta está no modo somente leitura; seus dados continuam aqui.'

@@ -30,7 +30,7 @@ class ProGate {
           title: Text(AppConfig.hidePricing ? 'Recurso indisponível' : 'Recurso do plano Profissional'),
           content: Text(
             AppConfig.hidePricing
-                ? '$feature não está disponível na sua conta.'
+                ? '$feature ${AppConfig.unavailableHere}.'
                 : '$feature faz parte do plano Profissional. Você pode trocar de plano em Configurações, na parte Assinatura.',
             style: CF.body(15.5, color: CF.text, height: 1.4),
           ),
@@ -72,7 +72,7 @@ class ProLockedView extends StatelessWidget {
               Text(title, textAlign: TextAlign.center, style: CF.body(22, weight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
-                AppConfig.hidePricing ? '$what Não está disponível na sua conta.' : '$what Faz parte do plano Profissional.',
+                AppConfig.hidePricing ? '$what ${_cap(AppConfig.unavailableHere)}.' : '$what Faz parte do plano Profissional.',
                 textAlign: TextAlign.center,
                 style: CF.body(15.5, color: CF.muted, height: 1.4),
               ),
@@ -126,7 +126,7 @@ class FreeLockedView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               web ? '$what Sua agenda continua grátis; esta parte vem com os planos Essencial e Profissional.'
-                  : '$what Não está disponível na sua conta. A agenda continua liberada.',
+                  : '$what ${_cap(AppConfig.unavailableHere)}. A agenda continua liberada.',
               textAlign: TextAlign.center,
               style: CF.body(15.5, color: CF.muted, height: 1.4),
             ),
@@ -192,3 +192,5 @@ class FreeInviteCard extends StatelessWidget {
     );
   }
 }
+
+String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
