@@ -119,11 +119,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: AppConfig.hidePricing ? 'Conta' : 'Plano',
             value: store.subscription == null
                 ? 'Demonstração'
-                : (AppConfig.hidePricing ? 'Ativa' : store.subscription!.planName),
+                : (AppConfig.agendaOnly ? 'Agenda' : AppConfig.hidePricing ? 'Ativa' : store.subscription!.planName),
             color: CF.amber,
             accent: true,
           ),
-          KpiCard(
+          if (!AppConfig.agendaOnly) KpiCard(
             icon: Icons.qr_code_2_rounded,
             label: 'Pix',
             value: store.pixKey.isEmpty ? 'Sem chave' : 'Ativo',
@@ -141,8 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ]),
       ),
-      const SizedBox(height: 14),
-      AnimatedBuilder(
+      // Pix serve à cobrança, que não existe no app do iPhone/iPad.
+      if (!AppConfig.agendaOnly) const SizedBox(height: 14),
+      if (!AppConfig.agendaOnly) AnimatedBuilder(
         animation: store,
         builder: (context, _) => Panel(
           icon: Icons.qr_code_2_rounded,

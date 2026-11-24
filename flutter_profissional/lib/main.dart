@@ -425,7 +425,14 @@ extension SectionDetails on Section {
 }
 
 /// Itens da barra inferior no celular. Os demais ficam em "Mais".
-const _bottomSections = [Section.inicio, Section.agenda, Section.cobrancas, Section.clientes];
+/// Abas de baixo. No iPhone/iPad só ficam as da agenda (exigência da Apple).
+List<Section> get _bottomSections => AppConfig.agendaOnly
+    ? const [Section.inicio, Section.agenda, Section.clientes]
+    : const [Section.inicio, Section.agenda, Section.cobrancas, Section.clientes];
+
+/// Partes de cobrança e dinheiro, que não existem no app do iPhone/iPad.
+bool _hiddenHere(Section s) =>
+    AppConfig.agendaOnly && (s == Section.cobrancas || s == Section.financeiro || s == Section.relatorios);
 
 class CoachFlowShell extends StatefulWidget {
   const CoachFlowShell({super.key, this.demo = false, this.cloud, this.email, this.onLeave, this.onLogin});
@@ -648,10 +655,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
               child: Text('Mais', style: CF.body(22, weight: FontWeight.w700)),
             ),
             for (final (section, detail) in <(Section, String)>[
-              (Section.financeiro, 'Previsão do mês, entradas e despesas'),
-              (Section.relatorios, 'Meta do ano, relatório do mês e ano mês a mês'),
+              if (!AppConfig.agendaOnly) (Section.financeiro, 'Previsão do mês, entradas e despesas'),
+              if (!AppConfig.agendaOnly) (Section.relatorios, 'Meta do ano, relatório do mês e ano mês a mês'),
               (Section.regras, 'Faltas, feriados, remarcações e profissão'),
-              (Section.mais, 'Chave Pix e sincronização de agenda'),
+              (Section.mais, AppConfig.agendaOnly ? 'Conta, perfil e ajuda' : 'Chave Pix e sincronização de agenda'),
               if (AdminAccess.isAdmin.value) (Section.admin, 'Contas, uso e financeiro do Léguno'),
             ])
               ListTile(
@@ -783,7 +790,7 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                 ValueListenableBuilder<bool>(
                   valueListenable: AdminAccess.isAdmin,
                   builder: (context, isAdmin, _) {
-                    final visible = [for (final s in Section.values) if (s != Section.admin || isAdmin) s];
+                    final visible = [for (final s in Section.values) if ((s != Section.admin || isAdmin) && !_hiddenHere(s)) s];
                     return NavigationRail(
                   backgroundColor: CF.ink,
                   selectedIndex: visible.contains(selected) ? visible.indexOf(selected) : 0,
@@ -884,9 +891,9 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
                         : NavigationDestinationLabelBehavior.alwaysShow,
                     backgroundColor: CF.surface,
                     indicatorColor: CF.ink.withValues(alpha: .12),
-                    selectedIndex: bottomIndex < 0 ? 4 : bottomIndex,
+                    selectedIndex: bottomIndex < 0 ? _bottomSections.length : bottomIndex,
                     onDestinationSelected: (i) {
-                      if (i == 4) {
+                      if (i == _bottomSections.length) {
                         openMore();
                       } else {
                         go(_bottomSections[i]);
