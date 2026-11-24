@@ -25,20 +25,27 @@ List<_Item> _items(LegalDoc d) => d == LegalDoc.terms
             'Ao criar a conta e marcar “Li e concordo”, você aceita estes Termos e a Política de Privacidade. Guardamos a versão aceita, a data e a hora do aceite. Se os termos mudarem de forma importante, pediremos um novo aceite.'),
         _Item('4. Sua conta',
             'Você é responsável pelas informações que cadastra e por manter a senha em segredo. Cada conta é de uma pessoa. É preciso ter 18 anos ou mais.'),
-        if (AppConfig.hidePricing)
+        if (AppConfig.appleIap) ...[
+          _Item('5. Agenda Grátis e planos no iPhone e iPad',
+              'A agenda é grátis para sempre: agenda, cadastro de clientes, presença, faltas, remarcações e feriados, sem custo e sem prazo. Cobrança, financeiro, relatórios e automações exigem uma assinatura. No iPhone e no iPad: Plano Essencial por R\$ 39,90 por mês ou R\$ 349 por ano; Plano Profissional por R\$ 69,90 por mês ou R\$ 599 por ano, com tudo do Essencial, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Nenhum plano limita o número de clientes.'),
+          _Item('6. Pagamento e renovação pela Apple',
+              'No iPhone e no iPad a assinatura é comprada pela App Store e cobrada na sua conta da Apple ao confirmar a compra. Ela renova automaticamente ao fim de cada período (mensal ou anual), pelo mesmo valor, a menos que seja cancelada até 24 horas antes do fim. Você gerencia ou cancela em Ajustes › seu nome › Assinaturas. Se a assinatura acabar, a conta passa para o Agenda Grátis e nada é apagado.'),
+          _Item('7. Cancelamento e reembolso',
+              'Você pode cancelar quando quiser, sem multa e sem fidelidade; o acesso continua até o fim do período já pago. Pedidos de reembolso de compras feitas pela App Store são analisados pela Apple, em reportaproblem.apple.com.'),
+        ] else if (AppConfig.hidePricing)
           _Item('5. Acesso à conta',
               'O acesso é pessoal, com o e-mail e a senha da sua conta. A agenda e o cadastro de clientes ficam sempre liberados. Alguns recursos podem não estar disponíveis na sua conta; seus dados nunca são apagados por isso.')
         else
         _Item('5. Agenda Grátis, teste e planos',
  'A agenda é grátis para sempre (plano Agenda Grátis): agenda, cadastro de clientes, presença, faltas, remarcações e feriados, sem custo e sem prazo. Nos primeiros 30 dias, todos os recursos ficam liberados para teste, sem cartão. Depois, cobrança, financeiro e relatórios exigem um plano. Plano Essencial: R\$ 34,90 por mês ou R\$ 349 por ano, com cobrança pelo WhatsApp com Pix e financeiro. Plano Profissional: R\$ 59,90 por mês ou R\$ 599 por ano, com tudo do Essencial, agendamento online, confirmação pelo WhatsApp, agenda no Outlook e Google e relatórios. Nenhum plano limita o número de clientes. Oferta de fundador: Profissional por R\$ 39,90 por mês, para as primeiras 100 contas que assinarem durante o teste grátis. Quem entra nessa oferta mantém esse preço enquanto a assinatura estiver ativa, sem interrupção.'),
-        if (!AppConfig.hidePricing)
+        if (!AppConfig.hidePricing && !AppConfig.appleIap)
         _Item('6. Pagamento e renovação',
             'A assinatura é cobrada de forma antecipada, pelos meios mostrados na hora de assinar, e renova sozinha pelo mesmo período (mensal ou anual) até você cancelar. Os pagamentos são processados pelo Asaas. Podemos mudar os preços para novas assinaturas. Para quem já assina, avisamos com 30 dias de antecedência e o novo valor só vale na próxima renovação. Se um pagamento falhar, avisamos por e-mail. Sem regularização, a conta passa para o Agenda Grátis: a agenda continua funcionando, cobrança, financeiro e relatórios ficam pausados, e nada é apagado.'),
-        if (!AppConfig.hidePricing)
+        if (!AppConfig.hidePricing && !AppConfig.appleIap)
         _Item('7. Cancelamento e devolução',
             'Você pode cancelar quando quiser, sem multa e sem fidelidade. O acesso continua até o fim do período já pago. Por ser uma contratação feita à distância, você pode desistir em até 7 dias depois de assinar e receber o valor de volta por inteiro. Depois disso, não devolvemos valores já pagos de períodos que já começaram, salvo cobrança indevida ou erro nosso.'),
         _Item('8. Dados dos seus clientes',
-            'Você decide quais dados dos seus clientes colocar no app (nome, telefone, horários, valores). Para esses dados, você é o responsável e nós somos o operador: tratamos os dados só para prestar o serviço, seguindo o que você faz no app. Você declara que tem o direito de guardar esses dados e que avisou seus clientes. Não cadastre dados de saúde nem anotações clínicas: o app não é prontuário. Usamos fornecedores para operar o app (${AppConfig.hidePricing ? 'Supabase, Vercel e Resend' : 'Supabase, Vercel, Resend e Asaas'}) e avisaremos você se houver um incidente de segurança que afete seus dados. O Léguno não usa serviços de inteligência artificial de terceiros e não envia seus dados nem os dos seus clientes a esse tipo de serviço.'),
+            'Você decide quais dados dos seus clientes colocar no app (nome, telefone, horários, valores). Para esses dados, você é o responsável e nós somos o operador: tratamos os dados só para prestar o serviço, seguindo o que você faz no app. Você declara que tem o direito de guardar esses dados e que avisou seus clientes. Não cadastre dados de saúde nem anotações clínicas: o app não é prontuário. Usamos fornecedores para operar o app (${AppConfig.appleIap ? 'Supabase, Vercel, Resend e Apple' : AppConfig.hidePricing ? 'Supabase, Vercel e Resend' : 'Supabase, Vercel, Resend e Asaas'}) e avisaremos você se houver um incidente de segurança que afete seus dados. O Léguno não usa serviços de inteligência artificial de terceiros e não envia seus dados nem os dos seus clientes a esse tipo de serviço.'),
         _Item('9. Seus dados e a exclusão da conta',
             'Seus dados são seus. Você pode baixar tudo em planilha em Configurações, “Seus dados”. Pode excluir a conta em Ajustes, “Excluir minha conta”, ou pedir pelo e-mail acima. A exclusão apaga seus dados do Léguno. Cópias de segurança do servidor são substituídas em até 30 dias.'),
         _Item('10. O que pode e o que não pode',

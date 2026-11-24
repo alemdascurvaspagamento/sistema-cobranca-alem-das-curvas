@@ -36,7 +36,20 @@ class AppConfig {
 
   /// iPhone e iPad: o app tem só a agenda (Agenda Grátis) para todos, mesmo para quem assina pela web.
   /// Exigência da Apple (regras 3.1.1 e 3.1.3(b)): nada pago pode ser liberado no app sem a compra pela Apple.
-  static bool get agendaOnly => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  static bool get agendaOnly => _ios && !appleIapEnabled;
+
+  /// Plano C: assinatura comprada dentro do iPhone/iPad (compra pela Apple).
+  /// Desligado até a Apple aprovar os produtos; liga na montagem com --dart-define=APPLE_IAP=true.
+  static const _appleIapFlag = bool.fromEnvironment('APPLE_IAP');
+
+  /// Só para testes automáticos.
+  static bool? debugAppleIap;
+  static bool get appleIapEnabled => debugAppleIap ?? _appleIapFlag;
+
+  /// iPhone/iPad com a compra pela Apple ligada.
+  static bool get appleIap => _ios && appleIapEnabled;
+
+  static bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   /// Texto curto para recurso que não existe no app do iPhone/iPad ou na conta.
   static String get unavailableHere => agendaOnly ? 'não está disponível neste app' : 'não está disponível na sua conta';

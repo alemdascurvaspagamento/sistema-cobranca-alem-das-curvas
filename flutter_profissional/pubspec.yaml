@@ -11,6 +11,9 @@ dependencies:
     sdk: flutter
   supabase_flutter: ^2.9.1
   url_launcher: ^6.3.1
+  # Compra pela Apple no iPhone (Plano C). Só a parte do iPhone: o Android não ganha cobrança do Google.
+  in_app_purchase_storekit: ^0.4.0
+  in_app_purchase_platform_interface: ^1.4.0
   google_fonts: ^6.2.1
   qr_flutter: ^4.1.0
   excel: ^4.0.6

@@ -16,6 +16,9 @@ class ProGate {
 
   static bool get isPro => BillingStore.instance.isPro;
 
+  /// Pode mostrar planos e o botão de assinar: no navegador (Asaas) ou no iPhone com a compra pela Apple.
+  static bool get canSell => !AppConfig.hidePricing || AppConfig.appleIap;
+
   /// Devolve true se pode seguir. Se não puder, mostra o aviso.
   static bool check(BuildContext context, String feature) {
     if (isPro) return true;
@@ -27,15 +30,17 @@ class ProGate {
         context: context,
         builder: (ctx) => AlertDialog(
           icon: const Icon(Icons.lock_rounded, color: CF.brand, size: 34),
-          title: Text(AppConfig.hidePricing ? 'Recurso indisponível' : 'Recurso do plano Profissional'),
+          title: Text(!canSell ? 'Recurso indisponível' : 'Recurso do plano Profissional'),
           content: Text(
-            AppConfig.hidePricing
+            !canSell
                 ? '$feature ${AppConfig.unavailableHere}.'
-                : '$feature faz parte do plano Profissional. Você pode trocar de plano em Configurações, na parte Assinatura.',
+                : AppConfig.appleIap
+                    ? '$feature faz parte do plano Profissional.'
+                    : '$feature faz parte do plano Profissional. Você pode trocar de plano em Configurações, na parte Assinatura.',
             style: CF.body(15.5, color: CF.text, height: 1.4),
           ),
           actions: [
-            if (!AppConfig.hidePricing && openPlans != null)
+            if (canSell && openPlans != null)
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -72,11 +77,11 @@ class ProLockedView extends StatelessWidget {
               Text(title, textAlign: TextAlign.center, style: CF.body(22, weight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
-                AppConfig.hidePricing ? '$what ${_cap(AppConfig.unavailableHere)}.' : '$what Faz parte do plano Profissional.',
+                !ProGate.canSell ? '$what ${_cap(AppConfig.unavailableHere)}.' : '$what Faz parte do plano Profissional.',
                 textAlign: TextAlign.center,
                 style: CF.body(15.5, color: CF.muted, height: 1.4),
               ),
-              if (!AppConfig.hidePricing && ProGate.openPlans != null) ...[
+              if (ProGate.canSell && ProGate.openPlans != null) ...[
                 const SizedBox(height: 18),
                 FilledButton.icon(
                   onPressed: ProGate.openPlans,
@@ -108,7 +113,7 @@ class FreeLockedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = freeMonthValue();
-    final web = !AppConfig.hidePricing;
+    final web = ProGate.canSell;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
@@ -164,7 +169,7 @@ class FreeInviteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (AppConfig.hidePricing) return const SizedBox.shrink();
+    if (!ProGate.canSell) return const SizedBox.shrink();
     final value = freeMonthValue();
     return Container(
       margin: const EdgeInsets.only(bottom: 14),

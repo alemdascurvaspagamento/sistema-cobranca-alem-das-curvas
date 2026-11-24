@@ -8,6 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'agenda_events.dart';
 import 'booking.dart';
 import 'calendar_feed.dart';
+import 'billing/apple_paywall.dart';
+import 'billing/apple_store.dart';
 import 'billing/billing_engine.dart';
 import 'billing/billing_screen.dart';
 import 'billing/billing_store.dart';
@@ -460,7 +462,10 @@ class _CoachFlowShellState extends State<CoachFlowShell> {
   @override
   void initState() {
     super.initState();
-    ProGate.openPlans = () => go(Section.mais);
+    // iPhone com a compra pela Apple: os planos abrem a tela da App Store; no navegador, Configurações.
+    ProGate.openPlans = AppConfig.appleIap ? () => showApplePaywall(context) : () => go(Section.mais);
+    // Compras que ficaram pela metade (ex.: internet caiu) voltam da Apple ao abrir o app.
+    if (AppConfig.appleIap && widget.cloud != null) appleStore.load();
     BillingStore.instance.onLocked = _showLocked;
     AgendaEvents.instance.onError = (msg) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));

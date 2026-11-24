@@ -5,6 +5,8 @@ import '../config.dart';
 import '../ui/legal.dart';
 import '../ui/support_request.dart';
 
+import '../billing/apple_paywall.dart';
+import '../billing/apple_products.dart';
 import '../billing/billing_screen.dart' show openPixSettings, openSecondPixSettings;
 import '../billing/billing_store.dart';
 import '../billing/checkout.dart';
@@ -399,8 +401,8 @@ class _SubscriptionPanel extends StatelessWidget {
         ),
     };
     final t = store.terms;
-    final storeApp = AppConfig.hidePricing;
-    // Nas lojas não aparecem plano, cobrança nem teste grátis (regra da Apple e do Google).
+    // Nas lojas não aparecem plano nem preço (regra da Apple e do Google), salvo no iPhone com a compra pela Apple.
+    final storeApp = AppConfig.hidePricing && !AppConfig.appleIap;
     if (storeApp) {
       final free = AppConfig.agendaOnly || sub?.state == 'read_only';
       title = free ? 'Agenda liberada' : 'Acesso liberado';
@@ -414,7 +416,23 @@ class _SubscriptionPanel extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(title, style: CF.body(18, weight: FontWeight.w700, color: color)),
         Text(detail, style: CF.body(14.5, color: CF.muted, height: 1.35)),
-        if (sub?.isCourtesy != true && !storeApp) ...[
+        if (AppConfig.appleIap && sub?.isCourtesy != true) ...[
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            FilledButton.icon(
+              onPressed: () => showApplePaywall(context),
+              icon: const Icon(Icons.workspace_premium_rounded),
+              label: const Text('Ver planos'),
+            ),
+            if (sub?.source == 'apple')
+              OutlinedButton.icon(
+                onPressed: () => launchUrl(Uri.parse(AppleProducts.manageUrl), mode: LaunchMode.externalApplication),
+                icon: const Icon(Icons.settings_rounded),
+                label: const Text('Gerenciar assinatura'),
+              ),
+          ]),
+        ],
+        if (sub?.isCourtesy != true && !AppConfig.hidePricing) ...[
           const SizedBox(height: 12),
           PlanChooser(store: store, clients: t.clients, clientsTitle: t.clientsTitle),
           if (sub?.state == 'trialing' || sub == null) ...[

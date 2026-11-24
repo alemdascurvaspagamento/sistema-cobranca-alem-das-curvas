@@ -11,7 +11,15 @@ class SubscriptionInfo {
     this.pro = true,
     this.cycle = 'monthly',
     this.hasSubscription = false,
+    this.source = 'asaas',
+    this.appleProduct,
   });
+
+  /// De onde vem a assinatura: `asaas` (site) ou `apple` (compra no iPhone).
+  final String source;
+
+  /// Produto comprado na Apple (quando `source` é `apple`).
+  final String? appleProduct;
 
   /// `essencial` ou `profissional`.
   final String plan;
@@ -52,6 +60,8 @@ class SubscriptionInfo {
         pro: j['pro'] as bool? ?? true,
         cycle: j['cycle'] as String? ?? 'monthly',
         hasSubscription: j['has_subscription'] as bool? ?? false,
+        source: j['source'] as String? ?? 'asaas',
+        appleProduct: j['apple_product'] as String?,
       );
 
   /// A agenda sempre pode ser usada (também no Agenda Grátis).

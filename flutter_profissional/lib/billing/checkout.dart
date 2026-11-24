@@ -137,6 +137,22 @@ class _PlanChooserState extends State<PlanChooser> {
 /// Assina (ou troca de plano) e abre a página de pagamento.
 Future<void> startCheckout(BuildContext context, BillingStore store, String plan, String cycle) async {
   final sub = store.subscription;
+  // Assinatura comprada no iPhone: muda-se pela Apple, para não pagar duas vezes.
+  if (sub != null && sub.source == 'apple' && (sub.state == 'active' || sub.state == 'grace')) {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Assinatura feita pelo iPhone'),
+        content: Text(
+          'Sua assinatura foi comprada pela App Store. Para trocar de plano ou cancelar, use o iPhone ou o iPad: '
+          'Ajustes › seu nome › Assinaturas. Assim você não paga duas vezes.',
+          style: CF.body(15, height: 1.4),
+        ),
+        actions: [FilledButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Entendi'))],
+      ),
+    );
+    return;
+  }
   final paying = sub != null && sub.hasSubscription && (sub.state == 'active' || sub.state == 'grace');
   final name = plan == 'essencial' ? 'Essencial' : 'Profissional';
   Map<String, dynamic> body = {'plan': plan, 'cycle': cycle};
