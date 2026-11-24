@@ -102,6 +102,7 @@ void main() {
     await tester.tap(find.text('Restaurar compras'));
     expect(store.restores, 1);
     await tester.binding.setSurfaceSize(null);
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('quem já paga pelo site não vê compra (evita pagar duas vezes)', (tester) async {
@@ -113,6 +114,7 @@ void main() {
     expect(find.text('Sua assinatura já está ativa'), findsOneWidget);
     expect(find.textContaining('Assinar o'), findsNothing);
     await tester.binding.setSurfaceSize(null);
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('quem assinou pela Apple vê o plano atual e onde gerenciar', (tester) async {
@@ -128,5 +130,6 @@ void main() {
     expect(find.text('Seu plano atual'), findsOneWidget);
     expect(find.text('Gerenciar assinatura'), findsOneWidget);
     await tester.binding.setSurfaceSize(null);
+    debugDefaultTargetPlatformOverride = null;
   });
 }
