@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:coachflow_profissional/billing/billing_engine.dart';
 import 'package:coachflow_profissional/billing/billing_store.dart';
-import 'package:coachflow_profissional/fiscal/fiscal_demo.dart';
 import 'package:coachflow_profissional/main.dart';
 import 'package:coachflow_profissional/profile/profession_profile.dart';
 import 'package:coachflow_profissional/ui/cf_theme.dart';
@@ -44,7 +43,8 @@ void main() {
     CF.testCondensedFamily = 'BarlowCondensed';
   });
 
-  Future<void> shoot(WidgetTester tester, String name, Widget home, Future<void> Function()? act) async {
+  Future<void> shoot(WidgetTester tester, String name, Widget home, Future<void> Function()? act,
+      {Size size = logical, double dpr = 3}) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     final original = FlutterError.onError;
     FlutterError.onError = (d) {
@@ -53,8 +53,8 @@ void main() {
     };
     try {
       BillingStore.instance.seed(professionById('personal'), BillingModel.perSession);
-      tester.view.physicalSize = logical * 3;
-      tester.view.devicePixelRatio = 3;
+      tester.view.physicalSize = size * dpr;
+      tester.view.devicePixelRatio = dpr;
       final key = GlobalKey();
       final base = CF.theme();
       await tester.pumpWidget(RepaintBoundary(
@@ -79,7 +79,7 @@ void main() {
       }
       final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       await tester.runAsync(() async {
-        final img = await boundary.toImage(pixelRatio: 3);
+        final img = await boundary.toImage(pixelRatio: dpr);
         final png = await img.toByteData(format: ui.ImageByteFormat.png);
         File('${out.path}/$name.png').writeAsBytesSync(png!.buffer.asUint8List());
       });
@@ -90,39 +90,36 @@ void main() {
     }
   }
 
-  final app = <String, IconData?>{
-    'cel-1-inicio': null,
-    'cel-2-agenda': Icons.calendar_month_rounded,
-    'cel-3-cobrancas': Icons.receipt_long_rounded,
-  };
-  for (final e in app.entries) {
-    testWidgets('Celular ${e.key}', (tester) async {
-      await shoot(tester, e.key, const CoachFlowShell(), e.value == null
-          ? null
-          : () async {
-              final rail = find.byType(NavigationRail);
-              final bar = find.byType(NavigationBar);
-              final scope = rail.evaluate().isNotEmpty ? rail : bar;
-              await tester.tap(find.descendant(of: scope, matching: find.byIcon(e.value!)).first);
-            });
-    });
+  // App do iPhone/iPad: só a agenda (Caminho 1 da Apple). Celular 1290x2796 e iPad 2048x2732.
+  Future<void> go(WidgetTester tester, IconData? icon, String? text) async {
+    if (icon != null) {
+      final rail = find.byType(NavigationRail);
+      final bar = find.byType(NavigationBar);
+      final scope = rail.evaluate().isNotEmpty ? rail : bar;
+      await tester.tap(find.descendant(of: scope, matching: find.byIcon(icon)).first);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+    }
+    if (text != null && find.text(text).evaluate().isNotEmpty) {
+      await tester.tap(find.text(text).first);
+    }
   }
 
-  final fiscal = <String, String?>{
-    'fiscal-1-painel': null,
-    'fiscal-2-emitir': 'Emitir nota',
-    'fiscal-3-historico': 'Histórico',
-    'fiscal-4-automacao': 'Automação',
-    'fiscal-5-fechar': 'Fechar o mês',
-    'fiscal-6-planos': 'Planos',
+  final screens = <String, (IconData?, String?)>{
+    '1-inicio': (null, null),
+    '2-agenda-semana': (Icons.calendar_month_rounded, 'Semana'),
+    '3-agenda-mes': (Icons.calendar_month_rounded, 'Mês'),
+    '4-alunos': (Icons.groups_rounded, null),
   };
-  for (final e in fiscal.entries) {
-    testWidgets('Fiscal ${e.key}', (tester) async {
-      await shoot(tester, e.key, const FiscalDemoScreen(), e.value == null
-          ? null
-          : () async {
-              await tester.tap(find.text(e.value!).first);
-            });
-    });
+  for (final device in <(String, Size, double)>[('iphone', logical, 3), ('ipad', const Size(1024, 1366), 2)]) {
+    for (final e in screens.entries) {
+      testWidgets('${device.$1} ${e.key}', (tester) async {
+        final (icon, text) = e.value;
+        await shoot(tester, '${device.$1}-${e.key}', const CoachFlowShell(),
+            icon == null && text == null ? null : () => go(tester, icon, text),
+            size: device.$2, dpr: device.$3);
+      });
+    }
   }
 }
