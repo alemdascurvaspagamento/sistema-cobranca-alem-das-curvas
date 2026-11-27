@@ -757,14 +757,16 @@ class _ConfirmBar extends StatelessWidget {
               ),
               if (!all)
                 FilledButton.icon(
-                  onPressed: () => c.send(context, pending.first.$1, pending.first.$2),
+                  onPressed: () => pending.length > 1
+                      ? showConfirmQueue(context, list, tomorrow: tomorrow)
+                      : c.send(context, pending.first.$1, pending.first.$2),
                   style: FilledButton.styleFrom(
                     backgroundColor: CF.whatsapp,
                     minimumSize: const Size(0, 40),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                   icon: const Icon(Icons.chat_rounded, size: 18),
-                  label: Text(done == 0 ? 'Confirmar' : 'Próximo'),
+                  label: Text(pending.length > 1 ? 'Confirmar todos (${pending.length})' : 'Confirmar'),
                 ),
             ]),
           );
