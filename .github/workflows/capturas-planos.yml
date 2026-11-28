@@ -1,0 +1,55 @@
+# Gera as telas do Léguno em tamanho de iPad para a App Store (não publica nada).
+name: Capturas da tela de planos
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [capturas-planos]
+    paths:
+      - 'flutter_profissional/test_shots/**'
+      - '.github/workflows/capturas-ipad.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: flutter_profissional
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Baixar a fonte Barlow
+        run: |
+          mkdir -p fonts
+          for w in Regular Medium SemiBold Bold ExtraBold; do
+            curl -fsSL -o fonts/Barlow-$w.ttf "https://github.com/google/fonts/raw/main/ofl/barlow/Barlow-$w.ttf"
+          done
+          for w in Medium SemiBold Bold ExtraBold; do
+            curl -fsSL -o fonts/BarlowCondensed-$w.ttf "https://github.com/google/fonts/raw/main/ofl/barlowcondensed/BarlowCondensed-$w.ttf"
+          done
+          ls -la fonts
+      - name: Gerar as telas
+        run: flutter test test_shots/extra_shots_test.dart --reporter expanded
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: telas-extra
+          path: flutter_profissional/shots_extra/*.png
+      - name: Guardar as telas na pasta de teste
+        working-directory: .
+        run: |
+          mkdir -p capturas/extra
+          cp flutter_profissional/shots_extra/*.png capturas/extra/ && ls capturas/extra
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add capturas/extra
+          git commit -m "Telas extras (celular e Fiscal) geradas automaticamente" || echo "nada novo"
+          git push
