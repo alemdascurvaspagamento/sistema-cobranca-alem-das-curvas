@@ -39,3 +39,4 @@ build 2026-11-19T15:38:52Z auditoria final: sem nome do plano e sem faixa de tes
 build 2026-11-23T12:54:41Z TestFlight: Léguno Fiscal (demonstração) só para contas de teste
 build 2026-11-24T09:05:25Z Caminho 1 da Apple: iPhone/iPad só com a agenda; Agenda Grátis, sem limite, link de confirmação
 build 2026-11-28T14:51:20Z 1.0.2: assinaturas pela Apple no iPhone (Plano C), Confirmar todos
+1.0.2: 'Aguarde…' só no plano tocado (28/11)
