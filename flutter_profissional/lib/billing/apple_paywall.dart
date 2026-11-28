@@ -165,7 +165,7 @@ class _PlanCard extends StatelessWidget {
           const SizedBox(height: 10),
           FilledButton(
             onPressed: current || store.busy || !store.available ? null : () => store.buy(productId),
-            child: Text(current ? 'Seu plano atual' : (store.busy ? 'Aguarde…' : 'Assinar o $name')),
+            child: Text(current ? 'Seu plano atual' : (store.buying == productId ? 'Aguarde…' : 'Assinar o $name')),
           ),
         ]),
       ),

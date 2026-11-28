@@ -9,6 +9,9 @@ abstract class AppleStoreBase extends ChangeNotifier {
   /// Compra ou restauração em andamento.
   bool get busy;
 
+  /// Plano que está sendo comprado agora (para mostrar "Aguarde…" só nele), ou null.
+  String? get buying => null;
+
   /// Último problema, em palavras simples (ou null).
   String? get error;
 

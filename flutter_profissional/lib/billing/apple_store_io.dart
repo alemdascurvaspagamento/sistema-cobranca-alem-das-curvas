@@ -20,6 +20,7 @@ class _AppleStoreIO extends AppleStoreBase {
   final Map<String, ProductDetails> _products = {};
   bool _available = false;
   bool _busy = false;
+  String? _buying;
   String? _error;
   String? _notice;
   bool _ready = false;
@@ -30,6 +31,8 @@ class _AppleStoreIO extends AppleStoreBase {
   bool get available => _available;
   @override
   bool get busy => _busy;
+  @override
+  String? get buying => _busy ? _buying : null;
   @override
   String? get error => _error;
   @override
@@ -52,6 +55,7 @@ class _AppleStoreIO extends AppleStoreBase {
 
   void _set({bool? busy, String? error, String? notice, bool clear = false}) {
     if (busy != null) _busy = busy;
+    if (busy == false) _buying = null;
     if (clear) {
       _error = null;
       _notice = null;
@@ -91,6 +95,7 @@ class _AppleStoreIO extends AppleStoreBase {
       _set(error: 'Plano indisponível no momento.');
       return;
     }
+    _buying = productId;
     _set(busy: true, clear: true);
     try {
       // O id da conta vai junto (appAccountToken): a compra fica ligada a esta conta do Léguno.

@@ -2,7 +2,7 @@
 // recebe a compra assinada pela Apple, confere e libera a conta de quem está logado.
 // Os avisos da Apple (apple-notifications) cuidam das renovações e cancelamentos depois.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { iso, ownerFrom, PRODUCTS, verifyTransaction } from "../_shared/apple.ts";
+import { describe, iso, ownerFrom, PRODUCTS, verifyTransaction } from "../_shared/apple.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   try {
     tx = await verifyTransaction(signed);
   } catch (e) {
-    console.error("apple-verify: compra recusada:", (e as Error).message);
+    console.error("apple-verify: compra recusada:", describe(e));
     return json({ error: "Não foi possível confirmar a compra com a Apple." }, 400);
   }
   const product = String(tx.productId ?? "");

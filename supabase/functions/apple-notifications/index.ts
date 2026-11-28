@@ -3,7 +3,7 @@
 // A proteção é a assinatura digital da Apple: aviso que não passa na conferência é recusado.
 // Precisa ficar com a verificação de login do Supabase DESLIGADA (verify_jwt=false): quem chama é a Apple.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { iso, ownerFrom, PRODUCTS, verifyNotification, verifyRenewal, verifyTransaction } from "../_shared/apple.ts";
+import { describe, iso, ownerFrom, PRODUCTS, verifyNotification, verifyRenewal, verifyTransaction } from "../_shared/apple.ts";
 
 type Kind = "active" | "expired" | "refunded" | "revoked";
 
@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
   try {
     n = await verifyNotification(body.signedPayload);
   } catch (e) {
-    console.error("apple-notifications: assinatura recusada:", (e as Error).message);
+    console.error("apple-notifications: assinatura recusada:", describe(e));
     return new Response("assinatura inválida", { status: 401 });
   }
 
