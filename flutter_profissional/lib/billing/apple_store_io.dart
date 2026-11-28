@@ -147,7 +147,7 @@ class _AppleStoreIO extends AppleStoreBase {
       return (finished: true, error: null);
     } on FunctionException catch (e) {
       final msg = (e.details is Map ? (e.details as Map)['error'] : null)?.toString();
-      final permanent = e.status == 400 || e.status == 409;
+      final permanent = e.status == 400 || e.status == 403 || e.status == 409;
       return (finished: permanent, error: msg ?? 'Não foi possível confirmar a compra. Ela será conferida de novo.');
     } catch (e) {
       debugPrint('Léguno: falha ao confirmar compra: $e');

@@ -65,6 +65,10 @@ Deno.serve(async (req) => {
     console.error("apple-verify:", error.message);
     return json({ error: "Erro ao liberar a conta. Tente de novo." }, 500);
   }
+  // Compra de teste (TestFlight) feita por uma conta que não é de teste: não libera nada.
+  if (data?.result === "sandbox_ignorado") {
+    return json({ error: "Esta é uma compra de teste. Ela só vale para as contas de teste do Léguno." }, 403);
+  }
   // Compra já ligada a outra conta (alguém usou a compra de outra pessoa).
   if (data?.owner && String(data.owner) !== String(user.id)) {
     return json({ error: "Esta compra pertence a outra conta do Léguno." }, 409);
