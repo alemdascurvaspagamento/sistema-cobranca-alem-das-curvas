@@ -43,10 +43,14 @@ class CF {
   /// Desligado nos testes automáticos, que não têm internet para baixar fontes.
   static bool useGoogleFonts = true;
 
+  /// Só para gerar imagens nos testes: fonte já carregada no teste (no app fica vazio).
+  static String? testFontFamily;
+  static String? testCondensedFamily;
+
   static TextStyle _barlow({double? fontSize, FontWeight? fontWeight, Color? color, double? height}) =>
       useGoogleFonts
           ? GoogleFonts.barlow(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height)
-          : TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height);
+          : TextStyle(fontFamily: testFontFamily, fontSize: fontSize, fontWeight: fontWeight, color: color, height: height);
 
   static TextStyle _condensed({
     double? fontSize,
@@ -58,7 +62,9 @@ class CF {
       useGoogleFonts
           ? GoogleFonts.barlowCondensed(
               fontSize: fontSize, fontWeight: fontWeight, color: color, height: height, fontFeatures: fontFeatures)
-          : TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color, height: height, fontFeatures: fontFeatures);
+          : TextStyle(
+              fontFamily: testCondensedFamily ?? testFontFamily,
+              fontSize: fontSize, fontWeight: fontWeight, color: color, height: height, fontFeatures: fontFeatures);
 
   static TextStyle score(double size, {Color color = text, FontWeight weight = FontWeight.w700}) =>
       _condensed(
